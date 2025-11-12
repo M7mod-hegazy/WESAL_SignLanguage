@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import theme from '../theme/designSystem';
+import BottomNav from '../components/BottomNav';
 
 const SimulationModePage = ({ onBack, onHome, onNotifications, onSelectCategory }) => {
   const navigate = useNavigate();
