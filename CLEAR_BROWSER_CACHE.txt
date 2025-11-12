@@ -1,0 +1,13 @@
+🧹 CLEAR BROWSER CACHE NOW
+
+Open browser console (F12) and paste this:
+
+localStorage.clear();
+window.location.reload();
+
+This will:
+✅ Clear all old post references
+✅ Clear old images from localStorage  
+✅ Reload the page with fresh data
+
+After this, the app will be FAST! 🚀

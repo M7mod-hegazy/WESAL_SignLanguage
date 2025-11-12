@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Test Posts - مسح المنشورات التجريبية</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #F5F5F0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            direction: rtl;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 {
+            color: #F18A21;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #F18A21;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            transition: background 0.3s ease;
+        }
+        button:hover {
+            background: #d97a1a;
+        }
+        .success {
+            color: #4CAF50;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .info {
+            color: #005593;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 مسح المنشورات التجريبية</h1>
+        <p class="info">
+            هذه الأداة ستقوم بمسح جميع المنشورات التجريبية من التخزين المحلي<br>
+            وإعادة تحميل المنشورات من قاعدة البيانات
+        </p>
+        
+        <button onclick="clearTestPosts()">مسح المنشورات التجريبية</button>
+        <button onclick="clearAllLocalStorage()">مسح كل التخزين المحلي</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function clearTestPosts() {
+            try {
+                // Remove test posts
+                localStorage.removeItem('communityPosts');
+                
+                // Remove old version keys
+                localStorage.removeItem('sharedPosts');
+                localStorage.removeItem('communityDataVersion');
+                
+                // Remove user-specific test data (keep user auth)
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('sharedPosts_') || 
+                        key.startsWith('userLikes_') || 
+                        key.startsWith('userSaves_') || 
+                        key.startsWith('userShares_')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                
+                document.getElementById('result').innerHTML = 
+                    '<p class="success">✅ تم مسح المنشورات التجريبية بنجاح!<br>يرجى إعادة تحميل الصفحة</p>';
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    '<p style="color: red;">❌ حدث خطأ: ' + error.message + '</p>';
+            }
+        }
+        
+        function clearAllLocalStorage() {
+            if (confirm('هل أنت متأكد من مسح كل التخزين المحلي؟ سيتم تسجيل خروجك.')) {
+                localStorage.clear();
+                document.getElementById('result').innerHTML = 
+                    '<p class="success">✅ تم مسح كل التخزين المحلي!<br>يرجى إعادة تسجيل الدخول</p>';
+                
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+            }
+        }
+    </script>
+</body>
+</html>
