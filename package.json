@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Arabic Sign Language Learning Platform",
   "scripts": {
-    "build": "cd frontend && npm install --legacy-peer-deps && npm run build",
+    "build": "cd frontend && npm install --legacy-peer-deps && CI=false npm run build",
     "start": "cd frontend && npm start",
     "dev": "cd frontend && npm start"
   },

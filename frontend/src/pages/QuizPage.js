@@ -28,7 +28,7 @@ const QuizPage = () => {
     }
   }, [mode, timeLimit, firstPlayer, players, category]);
   
-  const [quizBackHandler, setQuizBackHandler] = useState(null);
+  const [quizBackHandler] = useState(null);
 
   const handleBack = () => {
     if (quizBackHandler) {
