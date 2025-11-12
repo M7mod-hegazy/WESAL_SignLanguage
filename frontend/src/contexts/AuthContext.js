@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth } from '../config/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
 
@@ -20,7 +21,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Listen to Firebase auth state changes
-    const unsubscribe = onAuthChange(async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         // Set user from Firebase immediately
         const userData = {
@@ -36,7 +37,7 @@ export const AuthProvider = ({ children }) => {
         try {
           // Try to get user data from backend
           const token = await firebaseUser.getIdToken();
-          const response = await axios.get('http://localhost:8000/api/auth/me', {
+          const response = await axios.get(`${API_BASE_URL}/auth/me`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           
@@ -82,7 +83,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const token = await user.getIdToken();
         console.log('📤 Sending coins to backend:', newCoins);
-        const response = await axios.post('http://localhost:8000/api/auth/update-coins', 
+        const response = await axios.post(`${API_BASE_URL}/auth/update-coins`, 
           { coins: newCoins },
           { headers: { Authorization: `Bearer ${token}` } }
         );
