@@ -15,26 +15,6 @@
   ],
   "routes": [
     {
-      "src": "/api/auth/(.*)",
-      "dest": "/api/auth?auth=$1"
-    },
-    {
-      "src": "/api/posts/(.*)",
-      "dest": "/api/posts?posts=$1"
-    },
-    {
-      "src": "/api/stories/(.*)",
-      "dest": "/api/stories?stories=$1"
-    },
-    {
-      "src": "/api/signs/(.*)",
-      "dest": "/api/signs?signs=$1"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
       "src": "/(.*)",
       "dest": "/frontend/$1"
     }
