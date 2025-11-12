@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
 import theme from '../theme/designSystem';
+import { API_BASE_URL } from '../config/api';
 import { getDefaultProfileIcon } from '../utils/getProfileIcon';
 import CreatePostModal from './CreatePostModal';
 import CreateStoryModal from './CreateStoryModal';
@@ -159,7 +160,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       
       console.log('📡 [FRONTEND] Fetching posts from MongoDB...');
       const fetchStart = performance.now();
-      const response = await axios.get('http://localhost:8000/api/posts?page=1&limit=3', { 
+      const response = await axios.get(`${API_BASE_URL}/posts?page=1&limit=3`, { 
         headers,
         timeout: 3000 // 3 second timeout - load only 3 posts for speed
       });
@@ -277,7 +278,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
   const fetchStories = useCallback(async () => {
     // Load stories from MongoDB
     try {
-      const response = await axios.get('http://localhost:8000/api/stories', {
+      const response = await axios.get(`${API_BASE_URL}/stories`, {
         timeout: 10000
       });
       
