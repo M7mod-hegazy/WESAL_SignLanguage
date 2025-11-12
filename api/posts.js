@@ -75,7 +75,7 @@ export default async function handler(req, res) {
 
     // Parse URL to get route
     const { query } = req;
-    const path = query.posts || [];
+    const path = query.posts ? query.posts.split('/').filter(Boolean) : [];
 
     // Authenticate user for protected routes
     let user = null;

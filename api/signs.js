@@ -73,7 +73,7 @@ export default async function handler(req, res) {
 
     // Parse URL to get route
     const { query } = req;
-    const path = query.signs || [];
+    const path = query.signs ? query.signs.split('/').filter(Boolean) : [];
 
     // Route handling
     if (req.method === 'GET' && path.length === 1 && path[0] === 'random_quiz') {

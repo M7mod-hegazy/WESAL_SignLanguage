@@ -73,7 +73,7 @@ export default async function handler(req, res) {
 
     // Parse URL to get route
     const { query } = req;
-    const path = query.auth || [];
+    const path = query.auth ? query.auth.split('/').filter(Boolean) : [];
 
     // Authenticate user
     let user = null;
