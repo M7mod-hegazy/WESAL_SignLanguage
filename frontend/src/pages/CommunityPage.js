@@ -61,48 +61,16 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
   // Expose getUserProfileStats globally for profile page
   useEffect(() => {
     if (window) {
-      window.getUserProfileStats = getUserProfileStats;
     }
-  }, [getUserProfileStats]);
+  }, [getUserProfileStats, user]);
 
   // Fetch posts from API (old migration code - can be removed later)
   useEffect(() => {
-    const userId = user?.uid || 'guest';
-    const globalPostsKey = 'communityPosts'; // Global posts shared by all users
-    const oldKey = 'sharedPosts';
-    const versionKey = 'communityDataVersion';
-    const currentVersion = '4.0'; // Increment this to force reset (4.0 = clear test posts)
-    
-    // Check version - if old version, migrate data
-    const storedVersion = localStorage.getItem(versionKey);
-    
-    if (storedVersion !== currentVersion) {
-      console.log('🧹 Clearing old test posts (version upgrade to', currentVersion + ')');
-      
-      // Version 4.0: Clear ALL test posts and start fresh
-      localStorage.removeItem(globalPostsKey);
-      localStorage.removeItem(oldKey);
-      localStorage.removeItem(versionKey);
-      
-      // Remove all user-specific post data
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('sharedPosts_') || 
-            key.startsWith('userLikes_') || 
-            key.startsWith('userSaves_') || 
-            key.startsWith('userShares_')) {
-          localStorage.removeItem(key);
-        }
-      });
-      
-      localStorage.setItem(versionKey, currentVersion);
-    }
-    
-    // Load posts and stories directly from MongoDB
+    // Load posts and stories directly from MongoDB only
     setLoading(true);
     fetchPosts();
     fetchStories();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, fetchPosts, fetchStories]);
 
   // Infinite scroll handler
   useEffect(() => {
@@ -153,24 +121,8 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       if (response.data.success && response.data.posts) {
         console.log('✅ Loaded', response.data.posts.length, 'posts from MongoDB');
         
-        // Use only MongoDB posts - no localStorage merging
-        const userId = user?.uid || 'guest';
-        
-        // Get user-specific interaction states from localStorage (for UI state only)
-        const userLikes = JSON.parse(localStorage.getItem(`userLikes_${userId}`) || '[]');
-        const userSaves = JSON.parse(localStorage.getItem(`userSaves_${userId}`) || '[]');
-        const userShares = JSON.parse(localStorage.getItem(`userShares_${userId}`) || '[]');
-        
-        // Apply user-specific UI states to MongoDB posts
-        const postsWithStates = response.data.posts.map(post => ({
-          ...post,
-          isLiked: userLikes.includes(post.id),
-          isSaved: userSaves.includes(post.id),
-          isSharedByCurrentUser: userShares.includes(post.originalPostId || post.id) || 
-                                 (post.isShared && post.sharedBy?.uid === user?.uid)
-        }));
-        
-        setPosts(postsWithStates);
+        // Use MongoDB posts directly - no localStorage
+        setPosts(response.data.posts);
         
         setHasMore(response.data.pagination?.pages > 1);
         setLoading(false);
@@ -186,28 +138,8 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       console.warn('⚠️ MongoDB timeout - showing empty feed. Please run: node scripts/clearPosts.js');
       setPostsLoading(false);
       
-      // Show empty feed instead of old localStorage posts
+      // Show empty feed - no localStorage fallback
       setPosts([]);
-      setLoading(false);
-      
-      // Optionally try localStorage as last resort
-      const savedSharedPosts = JSON.parse(localStorage.getItem('communityPosts') || '[]');
-      const userId = user?.uid || 'guest';
-      
-      // Apply user-specific states
-      const userLikes = JSON.parse(localStorage.getItem(`userLikes_${userId}`) || '[]');
-      const userSaves = JSON.parse(localStorage.getItem(`userSaves_${userId}`) || '[]');
-      const userShares = JSON.parse(localStorage.getItem(`userShares_${userId}`) || '[]');
-      
-      const postsWithUserStates = savedSharedPosts.map(post => ({
-        ...post,
-        isLiked: userLikes.includes(post.id),
-        isSaved: userSaves.includes(post.id),
-        isSharedByCurrentUser: userShares.includes(post.id)
-      }));
-      
-      console.log('📦 Using localStorage posts:', postsWithUserStates.length);
-      setPosts(postsWithUserStates);
       setLoading(false);
       setPostsLoading(false);
     }
