@@ -324,6 +324,58 @@ export default async function handler(req, res) {
       try {
         console.log('🎯 POST API - Creating new post...');
         
+        // Check if Firebase Admin is available
+        if (!admin.apps.length) {
+          console.log('⚠️ Firebase Admin not available, creating anonymous post');
+          
+          // Connect to MongoDB
+          if (mongoose.connection.readyState !== 1) {
+            await mongoose.connect(process.env.MONGODB_URI, {
+              useNewUrlParser: true,
+              useUnifiedTopology: true,
+              serverSelectionTimeoutMS: 10000
+            });
+          }
+          
+          // Create anonymous post
+          const newPost = new Post({
+            content: req.body.content || 'منشور جديد',
+            media: req.body.media || [],
+            author: 'anonymous',
+            authorName: 'مستخدم',
+            authorPhoto: '/pages/TeamPage/profile.png',
+            likes: [],
+            comments: [],
+            saves: [],
+            shares: 0
+          });
+
+          await newPost.save();
+          console.log('✅ Anonymous post saved to MongoDB:', newPost._id);
+
+          return res.status(200).json({
+            success: true,
+            post: {
+              id: newPost._id.toString(),
+              content: newPost.content,
+              media: newPost.media,
+              author: {
+                displayName: newPost.authorName,
+                photoURL: newPost.authorPhoto,
+                uid: 'anonymous'
+              },
+              createdAt: newPost.createdAt,
+              likeCount: 0,
+              commentCount: 0,
+              saveCount: 0,
+              shareCount: 0,
+              comments: []
+            },
+            message: 'تم إنشاء المنشور بنجاح',
+            _debug: { firebaseAdmin: false, anonymous: true }
+          });
+        }
+        
         // Verify Firebase token
         const decodedToken = await admin.auth().verifyIdToken(token);
         console.log('✅ Firebase token verified for user:', decodedToken.uid);

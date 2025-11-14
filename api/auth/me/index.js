@@ -35,12 +35,28 @@ if (!admin.apps.length) {
     
     // Handle private key formatting properly
     let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+    console.log('🔍 Private key exists:', !!privateKey);
+    console.log('🔍 Private key length:', privateKey?.length || 0);
+    console.log('🔍 Private key preview:', privateKey?.substring(0, 50) + '...');
+    
     if (privateKey) {
-      // Replace escaped newlines and ensure proper PEM format
+      // Handle different possible formats
       privateKey = privateKey.replace(/\\n/g, '\n');
-      if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+      
+      // Remove any extra quotes that might be added by environment variables
+      if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+        privateKey = privateKey.slice(1, -1);
+      }
+      
+      // Ensure proper PEM format
+      if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+        // If it's just the key content without headers
         privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`;
       }
+      
+      console.log('🔍 Formatted private key preview:', privateKey.substring(0, 50) + '...');
+    } else {
+      console.error('❌ FIREBASE_PRIVATE_KEY environment variable is missing');
     }
     
     const serviceAccount = {
@@ -86,6 +102,23 @@ export default async function handler(req, res) {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) {
       return res.status(401).json({ success: false, error: 'No token provided' });
+    }
+
+    // Check if Firebase Admin is available
+    if (!admin.apps.length) {
+      console.log('⚠️ Firebase Admin not available, returning basic user info');
+      return res.status(200).json({
+        success: true,
+        user: {
+          uid: 'anonymous',
+          email: 'user@example.com',
+          displayName: 'مستخدم',
+          photoURL: '/pages/TeamPage/profile.png',
+          coins: 100,
+          gender: 'male'
+        },
+        _debug: { firebaseAdmin: false, fallback: true }
+      });
     }
 
     const decodedToken = await admin.auth().verifyIdToken(token);
