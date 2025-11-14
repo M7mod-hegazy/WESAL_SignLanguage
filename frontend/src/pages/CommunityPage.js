@@ -243,11 +243,10 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     
     setPosts(posts.map(post => {
       if (post.id === postId) {
-        const currentCount = post.likeCount || 0;
         return {
           ...post,
           isLiked: newLikedState,
-          likeCount: newLikedState ? currentCount + 1 : Math.max(0, currentCount - 1)
+          likeCount: (post.likeCount || 0) + (newLikedState ? 1 : -1)
         };
       }
       return post;
@@ -320,8 +319,8 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
           if (p.id === postId || p.id.endsWith('_' + actualPostId)) {
             return {
               ...p,
-              likeCount: updatedPost.likeCount ?? Math.max(0, (p.likeCount || 0) + (newLikedState ? 1 : -1)),
-              isLiked: newLikedState
+              likeCount: updatedPost.likeCount ?? p.likeCount,
+              isLiked: updatedPost.isLiked ?? newLikedState
             };
           }
           return p;
@@ -426,7 +425,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
             return {
               ...p,
               comments: updatedPost.comments || p.comments,
-              commentCount: updatedPost.commentCount ?? (p.commentCount || 0)
+              commentCount: updatedPost.commentCount ?? p.commentCount
             };
           }
           return p;
@@ -506,7 +505,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
           if (p.id === postId || p.id.endsWith('_' + actualPostId)) {
             return {
               ...p,
-              saveCount: updatedPost.saveCount ?? (p.saveCount || 0),
+              saveCount: updatedPost.saveCount ?? p.saveCount,
               isSaved: updatedPost.isSaved ?? newSavedState
             };
           }
@@ -1258,7 +1257,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                 marginBottom: '12px'
               }}>
                 <img 
-                  src={post.originalAuthor?.photo || post.author?.photo || '/pages/TeamPage/profile.png'}
+                  src={getDefaultProfileIcon(post.author?.photo || post.author?.photoURL || post.originalAuthor?.photo, post.author?.gender)}
                   alt={post.originalAuthor?.name || post.author?.name}
                   style={{
                     width: '40px',

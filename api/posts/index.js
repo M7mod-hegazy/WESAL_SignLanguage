@@ -81,7 +81,7 @@ const postSchema = new mongoose.Schema({
 // Create model only if it doesn't exist
 const Post = mongoose.models.Post || mongoose.model('Post', postSchema);
 
-function formatPost(postDoc) {
+function formatPost(postDoc, requesterId = 'anonymous') {
   if (!postDoc) return null;
   return {
     id: postDoc._id.toString(),
@@ -104,8 +104,8 @@ function formatPost(postDoc) {
     shares: postDoc.shares || 0,
     createdAt: postDoc.createdAt,
     updatedAt: postDoc.updatedAt,
-    isLiked: Array.isArray(postDoc.likes) ? postDoc.likes.includes('anonymous') : false,
-    isSaved: Array.isArray(postDoc.saves) ? postDoc.saves.includes('anonymous') : false
+    isLiked: Array.isArray(postDoc.likes) ? postDoc.likes.includes(requesterId) : false,
+    isSaved: Array.isArray(postDoc.saves) ? postDoc.saves.includes(requesterId) : false
   };
 }
 
@@ -275,22 +275,7 @@ export default async function handler(req, res) {
         }
 
         // Format posts for frontend
-        const formattedPosts = posts.map(post => ({
-          id: post._id.toString(),
-          content: post.content || 'منشور من قاعدة البيانات',
-          media: post.media || [],
-          author: {
-            displayName: post.authorName || 'مستخدم',
-            photoURL: post.authorPhoto || '/pages/TeamPage/profile.png',
-            uid: post.author
-          },
-          createdAt: post.createdAt,
-          likeCount: post.likes?.length || 0,
-          commentCount: post.comments?.length || 0,
-          saveCount: post.saves?.length || 0,
-          shareCount: post.shares || 0,
-          comments: post.comments || []
-        }));
+        const formattedPosts = posts.map(post => formatPost(post, requesterId));
 
         console.log('✅ Returning MongoDB posts to frontend');
         return res.status(200).json({
@@ -404,9 +389,10 @@ export default async function handler(req, res) {
           });
         }
         
-        // Verify Firebase token
+        const token = req.headers.authorization?.replace('Bearer ', '');
         const decodedToken = await admin.auth().verifyIdToken(token);
-        console.log('✅ Firebase token verified for user:', decodedToken.uid);
+        const requesterId = decodedToken.uid || 'anonymous';
+        console.log('Requester ID:', requesterId);
         
         // Connect to MongoDB
         if (mongoose.connection.readyState !== 1) {
