@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
 import theme from '../theme/designSystem';
+import { API_BASE_URL } from '../config/api';
 
 const CreateStoryModal = ({ onClose, onStoryCreated }) => {
   const { user } = useAuth();
@@ -37,7 +38,7 @@ const CreateStoryModal = ({ onClose, onStoryCreated }) => {
     try {
       const token = await user.getIdToken();
 
-      const response = await axios.post('http://localhost:8000/api/stories', {
+      const response = await axios.post(`${API_BASE_URL}/stories`, {
         media: {
           type: mediaFile.type,
           url: mediaFile.url

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
 import theme from '../theme/designSystem';
+import { API_BASE_URL } from '../config/api';
 
 const CreatePostModal = ({ onClose, onPostCreated }) => {
   const { user } = useAuth();
@@ -48,7 +49,7 @@ const CreatePostModal = ({ onClose, onPostCreated }) => {
         url: media.url
       }));
 
-      const response = await axios.post('http://localhost:8000/api/posts', {
+      const response = await axios.post(`${API_BASE_URL}/posts`, {
         content: postContent,
         media: mediaPayload
       }, {

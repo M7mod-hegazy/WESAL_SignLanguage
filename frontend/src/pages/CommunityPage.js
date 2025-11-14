@@ -241,7 +241,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       }
       
       const nextPage = page + 1;
-      const response = await axios.get(`http://localhost:8000/api/posts?page=${nextPage}&limit=10`, { 
+      const response = await axios.get(`${API_BASE_URL}/posts?page=${nextPage}&limit=10`, { 
         headers,
         timeout: 1000 // 1 second timeout
       });
@@ -387,7 +387,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     try {
       const token = await user.getIdToken();
       const response = await axios.post(
-        `http://localhost:8000/api/posts/${actualPostId}/like`,
+        `${API_BASE_URL}/posts/${actualPostId}/like`,
         {},
         { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
       );
@@ -494,7 +494,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     try {
       const token = await user.getIdToken();
       const response = await axios.post(
-        `http://localhost:8000/api/posts/${actualPostId}/comment`,
+        `${API_BASE_URL}/posts/${actualPostId}/comment`,
         { text: commentTextValue },
         { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
       );
@@ -590,7 +590,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     try {
       const token = await user.getIdToken();
       const response = await axios.post(
-        `http://localhost:8000/api/posts/${actualPostId}/save`,
+        `${API_BASE_URL}/posts/${actualPostId}/save`,
         {},
         { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
       );
@@ -705,7 +705,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     try {
       const token = await user.getIdToken();
       const response = await axios.post(
-        'http://localhost:8000/api/posts',
+        `${API_BASE_URL}/posts`,
         {
           content: originalPost.content,
           media: originalPost.media,
@@ -726,7 +726,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
         // Try to update the share count on original post (if it exists in MongoDB)
         try {
           await axios.post(
-            `http://localhost:8000/api/posts/${postId}/share`,
+            `${API_BASE_URL}/posts/${postId}/share`,
             {},
             { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
           );
@@ -780,7 +780,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     try {
       const token = await user.getIdToken();
       const response = await axios.put(
-        `http://localhost:8000/api/posts/${postId}`,
+        `${API_BASE_URL}/posts/${postId}`,
         { content: editContent, media: editMedia },
         { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
       );
@@ -845,7 +845,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     try {
       const token = await user.getIdToken();
       const response = await axios.delete(
-        `http://localhost:8000/api/posts/${postId}`,
+        `${API_BASE_URL}/posts/${postId}`,
         { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
       );
 
