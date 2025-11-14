@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const Post = require('../../backend/models/Post');
+const User = require('../../backend/models/User');
 
 // MongoDB connection
 let cachedDb = null;
@@ -84,13 +86,66 @@ export default async function handler(req, res) {
     const dbConnection = await connectToDatabase();
 
     if (req.method === 'GET') {
-      // Get all posts
+      // Get all posts from MongoDB
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
 
-      // Return sample posts for demo (since MongoDB might not be available)
+      if (dbConnection) {
+        try {
+          const posts = await Post.find()
+            .populate('author', 'displayName photoURL firebaseUid')
+            .populate('comments.author', 'displayName photoURL')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+          const totalPosts = await Post.countDocuments();
+          const totalPages = Math.ceil(totalPosts / limit);
+
+          // Convert MongoDB posts to frontend format
+          const formattedPosts = posts.map(post => ({
+            id: post._id.toString(),
+            content: post.content,
+            media: post.media || [],
+            author: {
+              displayName: post.author?.displayName || 'مستخدم',
+              photoURL: post.author?.photoURL || '/pages/TeamPage/profile.png',
+              uid: post.author?.firebaseUid
+            },
+            createdAt: post.createdAt,
+            likeCount: post.likeCount || 0,
+            commentCount: post.comments?.length || 0,
+            saveCount: post.saveCount || 0,
+            shareCount: post.shareCount || 0,
+            comments: post.comments || [],
+            isShared: post.isShared || false,
+            originalPostId: post.originalPostId,
+            sharedBy: post.sharedBy
+          }));
+
+          return res.status(200).json({
+            success: true,
+            posts: formattedPosts,
+            pagination: {
+              currentPage: page,
+              totalPages,
+              totalPosts,
+              hasMore: page < totalPages
+            },
+            _debug: {
+              mongoConnected: true,
+              timestamp: new Date().toISOString()
+            }
+          });
+        } catch (dbError) {
+          console.error('Database query error:', dbError);
+        }
+      }
+
+      // Fallback to sample posts if MongoDB unavailable
       const samplePosts = generateSamplePosts(limit);
-      
       return res.status(200).json({
         success: true,
         posts: samplePosts,
@@ -101,37 +156,101 @@ export default async function handler(req, res) {
           hasMore: false
         },
         _debug: {
-          mongoConnected: !!dbConnection,
+          mongoConnected: false,
+          fallback: true,
           timestamp: new Date().toISOString()
         }
       });
     }
 
     if (req.method === 'POST') {
-      // Create new post
+      // Create new post in MongoDB
       const token = req.headers.authorization?.replace('Bearer ', '');
       
-      // Create post (simplified for demo)
-      const newPost = {
-        id: `post_${Date.now()}`,
-        content: req.body.content || 'منشور جديد',
-        media: req.body.media || [],
-        author: {
-          displayName: 'المستخدم',
-          photoURL: '/pages/TeamPage/profile.png'
-        },
-        createdAt: new Date(),
-        likeCount: 0,
-        commentCount: 0,
-        saveCount: 0,
-        shareCount: 0,
-        comments: []
-      };
+      if (!token) {
+        return res.status(401).json({ success: false, error: 'Authentication required' });
+      }
 
+      try {
+        // Verify Firebase token
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        
+        if (dbConnection) {
+          // Find or create user in MongoDB
+          let user = await User.findOne({ firebaseUid: decodedToken.uid });
+          if (!user) {
+            user = new User({
+              firebaseUid: decodedToken.uid,
+              email: decodedToken.email,
+              displayName: decodedToken.name || 'مستخدم',
+              photoURL: decodedToken.picture || '/pages/TeamPage/profile.png'
+            });
+            await user.save();
+          }
+
+          // Create new post
+          const newPost = new Post({
+            content: req.body.content || 'منشور جديد',
+            media: req.body.media || [],
+            author: user._id,
+            likeCount: 0,
+            saveCount: 0,
+            shareCount: 0,
+            comments: [],
+            isShared: req.body.isShared || false,
+            originalPostId: req.body.originalPostId,
+            sharedBy: req.body.sharedBy
+          });
+
+          await newPost.save();
+          await newPost.populate('author', 'displayName photoURL firebaseUid');
+
+          const formattedPost = {
+            id: newPost._id.toString(),
+            content: newPost.content,
+            media: newPost.media,
+            author: {
+              displayName: newPost.author.displayName,
+              photoURL: newPost.author.photoURL,
+              uid: newPost.author.firebaseUid
+            },
+            createdAt: newPost.createdAt,
+            likeCount: 0,
+            commentCount: 0,
+            saveCount: 0,
+            shareCount: 0,
+            comments: []
+          };
+
+          return res.status(200).json({
+            success: true,
+            post: formattedPost,
+            message: 'تم إنشاء المنشور بنجاح'
+          });
+        }
+      } catch (authError) {
+        console.error('Auth error:', authError);
+      }
+
+      // Fallback response
       return res.status(200).json({
         success: true,
-        post: newPost,
-        message: 'تم إنشاء المنشور بنجاح'
+        post: {
+          id: `post_${Date.now()}`,
+          content: req.body.content || 'منشور جديد',
+          media: req.body.media || [],
+          author: {
+            displayName: 'المستخدم',
+            photoURL: '/pages/TeamPage/profile.png'
+          },
+          createdAt: new Date(),
+          likeCount: 0,
+          commentCount: 0,
+          saveCount: 0,
+          shareCount: 0,
+          comments: []
+        },
+        message: 'تم إنشاء المنشور بنجاح (وضع تجريبي)'
       });
     }
 
