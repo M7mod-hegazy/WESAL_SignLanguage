@@ -40,23 +40,60 @@ export default async function handler(req, res) {
     VERCEL_ENV: process.env.VERCEL_ENV || 'NOT_SET'
   };
 
-  // Test MongoDB connection
-  let mongoTest = { connected: false, error: null };
+  // Test MongoDB connection with detailed diagnostics
+  let mongoTest = { 
+    connected: false, 
+    error: null,
+    connectionTime: null,
+    connectionState: null,
+    dbName: null,
+    collections: null,
+    uriPreview: null
+  };
+  
   try {
     const mongoose = require('mongoose');
     if (process.env.MONGODB_URI) {
+      mongoTest.uriPreview = process.env.MONGODB_URI.substring(0, 50) + '...';
+      
+      console.log('🧪 Testing MongoDB connection in debug endpoint...');
+      const connectionStart = Date.now();
+      
       const connection = await mongoose.connect(process.env.MONGODB_URI, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        maxPoolSize: 1
       });
+      
+      mongoTest.connectionTime = Date.now() - connectionStart;
       mongoTest.connected = true;
+      mongoTest.connectionState = mongoose.connection.readyState;
       mongoTest.dbName = connection.connection.db.databaseName;
+      
+      // Try to list collections
+      try {
+        const collections = await mongoose.connection.db.listCollections().toArray();
+        mongoTest.collections = collections.map(c => c.name);
+        mongoTest.collectionCount = collections.length;
+      } catch (listError) {
+        mongoTest.collectionsError = listError.message;
+      }
+      
       await mongoose.disconnect();
+      console.log('✅ MongoDB test successful in debug endpoint');
     } else {
       mongoTest.error = 'MONGODB_URI not set';
     }
   } catch (error) {
-    mongoTest.error = error.message;
+    mongoTest.error = {
+      message: error.message,
+      name: error.name,
+      code: error.code,
+      codeName: error.codeName
+    };
+    console.error('❌ MongoDB test failed in debug endpoint:', error.message);
   }
 
   // Test Firebase Admin
