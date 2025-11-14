@@ -65,26 +65,6 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
   }, [getUserProfileStats, user]);
 
 
-  // Infinite scroll handler
-  useEffect(() => {
-    const handleScroll = (e) => {
-      const container = e.target;
-      const scrollTop = container.scrollTop;
-      const scrollHeight = container.scrollHeight;
-      const clientHeight = container.clientHeight;
-      
-      // Load more when user scrolls to bottom (with 200px threshold)
-      if (scrollHeight - scrollTop - clientHeight < 200 && !loadingMore && hasMore) {
-        loadMorePosts();
-      }
-    };
-
-    const container = document.querySelector('[data-community-scroll]');
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
-  }, [loadingMore, hasMore, page]);
 
   const fetchPosts = useCallback(async () => {
     const startTime = performance.now();
@@ -141,7 +121,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     console.log(`🎯 [FRONTEND] Total fetchPosts time: ${totalTime.toFixed(0)}ms`);
   }, [user]);
 
-  const loadMorePosts = async () => {
+  const loadMorePosts = useCallback(async () => {
     if (loadingMore || !hasMore) return;
     
     setLoadingMore(true);
@@ -186,7 +166,28 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     } finally {
       setLoadingMore(false);
     }
-  };
+  }, [loadingMore, hasMore, user, posts, page]);
+
+  // Infinite scroll handler
+  useEffect(() => {
+    const handleScroll = (e) => {
+      const container = e.target;
+      const scrollTop = container.scrollTop;
+      const scrollHeight = container.scrollHeight;
+      const clientHeight = container.clientHeight;
+      
+      // Load more when user scrolls to bottom (with 200px threshold)
+      if (scrollHeight - scrollTop - clientHeight < 200 && !loadingMore && hasMore) {
+        loadMorePosts();
+      }
+    };
+
+    const container = document.querySelector('[data-community-scroll]');
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, [loadingMore, hasMore, loadMorePosts]);
 
   const fetchStories = useCallback(async () => {
     // Load stories from MongoDB
