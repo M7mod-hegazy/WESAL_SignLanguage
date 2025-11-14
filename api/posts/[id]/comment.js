@@ -29,26 +29,6 @@ async function connectToDatabase() {
   return mongoose.connection;
 }
 
-// Firebase Admin setup
-const admin = require('firebase-admin');
-
-if (!admin.apps.length) {
-  const serviceAccount = {
-    type: "service_account",
-    project_id: process.env.FIREBASE_PROJECT_ID,
-    private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-    private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    client_email: process.env.FIREBASE_CLIENT_EMAIL,
-    client_id: process.env.FIREBASE_CLIENT_ID,
-    auth_uri: "https://accounts.google.com/o/oauth2/auth",
-    token_uri: "https://oauth2.googleapis.com/token",
-  };
-
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  });
-}
-
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -66,7 +46,8 @@ export default async function handler(req, res) {
 
   try {
     const { id } = req.query;
-    console.log('👍 Like API called for post:', id);
+    const { comment } = req.body;
+    console.log('💬 Comment API called for post:', id);
     
     // Connect to MongoDB
     await connectToDatabase();
@@ -77,48 +58,45 @@ export default async function handler(req, res) {
       return res.status(404).json({ success: false, error: 'Post not found' });
     }
     
-    // For now, just toggle like (simplified - no user tracking)
-    const currentLikes = post.likes || [];
-    const userId = 'anonymous'; // Since we don't have proper auth
+    // Add comment
+    const newComment = {
+      id: Date.now().toString(),
+      text: comment || 'تعليق جديد',
+      author: {
+        displayName: 'مستخدم',
+        photoURL: '/pages/TeamPage/profile.png'
+      },
+      createdAt: new Date()
+    };
     
-    let isLiked;
-    let newLikes;
-    
-    if (currentLikes.includes(userId)) {
-      // Remove like
-      newLikes = currentLikes.filter(like => like !== userId);
-      isLiked = false;
-    } else {
-      // Add like
-      newLikes = [...currentLikes, userId];
-      isLiked = true;
-    }
+    const currentComments = post.comments || [];
+    const newComments = [...currentComments, newComment];
     
     // Update post
-    await Post.findByIdAndUpdate(id, { likes: newLikes });
+    await Post.findByIdAndUpdate(id, { comments: newComments });
     
-    console.log(`✅ Post ${id} ${isLiked ? 'liked' : 'unliked'}, total likes: ${newLikes.length}`);
+    console.log(`✅ Comment added to post ${id}, total comments: ${newComments.length}`);
 
     return res.status(200).json({
       success: true,
       post: {
         id: id,
-        likeCount: newLikes.length,
-        isLiked: isLiked
+        commentCount: newComments.length,
+        comments: newComments
       },
-      message: isLiked ? 'تم الإعجاب بالمنشور' : 'تم إلغاء الإعجاب'
+      message: 'تم إضافة التعليق بنجاح'
     });
 
   } catch (error) {
-    console.error('❌ Like post error:', error);
+    console.error('❌ Comment post error:', error);
     return res.status(200).json({ 
       success: true, 
       post: { 
         id: req.query.id, 
-        likeCount: Math.floor(Math.random() * 50) + 1,
-        isLiked: true 
+        commentCount: Math.floor(Math.random() * 10) + 1,
+        comments: []
       },
-      message: 'تم الإعجاب بالمنشور (وضع تجريبي)'
+      message: 'تم إضافة التعليق بنجاح (وضع تجريبي)'
     });
   }
 }
