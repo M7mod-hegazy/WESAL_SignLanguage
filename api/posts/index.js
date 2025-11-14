@@ -149,73 +149,77 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Try to connect to database
-    console.log('🎯 Posts API called, attempting database connection...');
-    const dbConnection = await connectToDatabase();
-    console.log('🔗 Database connection result:', !!dbConnection);
-
     if (req.method === 'GET') {
       // Get all posts from MongoDB
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const skip = (page - 1) * limit;
 
-      if (dbConnection) {
-        try {
-          console.log('🔍 Querying MongoDB for posts...');
-          const queryStart = Date.now();
-          
-          // Optimized query - no populate, no separate count
-          const posts = await Post.find()
-            .select('content authorName authorPhoto media likes comments saves shares isShared originalPostId sharedBy createdAt')
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .lean()
-            .maxTimeMS(10000); // 10 second query timeout
-
-          const queryTime = Date.now() - queryStart;
-          console.log(`⏱️ MongoDB query took: ${queryTime}ms`);
-
-          // Convert MongoDB posts to frontend format (fast)
-          const formattedPosts = posts.map(post => ({
-            id: post._id.toString(),
-            content: post.content,
-            media: post.media || [],
-            author: {
-              displayName: post.authorName || 'مستخدم',
-              photoURL: post.authorPhoto || '/pages/TeamPage/profile.png',
-              uid: post.author
-            },
-            createdAt: post.createdAt,
-            likeCount: post.likes?.length || 0,
-            commentCount: post.comments?.length || 0,
-            saveCount: post.saves?.length || 0,
-            shareCount: post.shares || 0,
-            comments: post.comments || [],
-            isShared: post.isShared || false,
-            originalPostId: post.originalPostId,
-            sharedBy: post.sharedBy
-          }));
-
-          return res.status(200).json({
-            success: true,
-            posts: formattedPosts,
-            pagination: {
-              currentPage: page,
-              totalPages: Math.max(1, Math.ceil(posts.length / limit)),
-              totalPosts: posts.length,
-              hasMore: posts.length === limit
-            },
-            _debug: {
-              mongoConnected: true,
-              queryTime: `${queryTime}ms`,
-              timestamp: new Date().toISOString()
-            }
+      // Try MongoDB connection and query directly
+      try {
+        console.log('🎯 Posts API - Direct MongoDB attempt...');
+        
+        // Force fresh connection
+        if (mongoose.connection.readyState !== 1) {
+          await mongoose.connect(process.env.MONGODB_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 10000,
+            socketTimeoutMS: 45000
           });
-        } catch (dbError) {
-          console.error('Database query error:', dbError);
         }
+
+        console.log('🔍 Querying MongoDB for posts...');
+        const queryStart = Date.now();
+        
+        // Simple query to get posts
+        const posts = await Post.find()
+          .select('content authorName authorPhoto media likes comments saves shares createdAt')
+          .sort({ createdAt: -1 })
+          .limit(limit)
+          .lean()
+          .maxTimeMS(8000);
+
+        const queryTime = Date.now() - queryStart;
+        console.log(`⏱️ MongoDB query successful: ${queryTime}ms, found ${posts.length} posts`);
+
+        // Format posts for frontend
+        const formattedPosts = posts.map(post => ({
+          id: post._id.toString(),
+          content: post.content || 'منشور من قاعدة البيانات',
+          media: post.media || [],
+          author: {
+            displayName: post.authorName || 'مستخدم',
+            photoURL: post.authorPhoto || '/pages/TeamPage/profile.png',
+            uid: post.author
+          },
+          createdAt: post.createdAt,
+          likeCount: post.likes?.length || 0,
+          commentCount: post.comments?.length || 0,
+          saveCount: post.saves?.length || 0,
+          shareCount: post.shares || 0,
+          comments: post.comments || []
+        }));
+
+        return res.status(200).json({
+          success: true,
+          posts: formattedPosts,
+          pagination: {
+            currentPage: page,
+            totalPages: Math.max(1, Math.ceil(posts.length / limit)),
+            totalPosts: posts.length,
+            hasMore: posts.length === limit
+          },
+          _debug: {
+            mongoConnected: true,
+            queryTime: `${queryTime}ms`,
+            postsFound: posts.length,
+            timestamp: new Date().toISOString()
+          }
+        });
+      } catch (mongoError) {
+        console.error('❌ MongoDB error in posts API:', mongoError.message);
+        // Continue to fallback below
       }
 
       // Fallback to sample posts if MongoDB unavailable
