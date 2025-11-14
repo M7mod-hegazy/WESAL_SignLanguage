@@ -1,8 +1,6 @@
 const mongoose = require('mongoose');
-const Post = require('../../backend/models/Post');
-const User = require('../../backend/models/User');
 
-// MongoDB connection
+// MongoDB connection with optimizations
 let cachedDb = null;
 
 async function connectToDatabase() {
@@ -10,18 +8,58 @@ async function connectToDatabase() {
     return cachedDb;
   }
 
+  if (!process.env.MONGODB_URI) {
+    console.error('MONGODB_URI environment variable not set');
+    return null;
+  }
+
   try {
     const connection = await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      maxPoolSize: 10, // Maintain up to 10 socket connections
+      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      bufferCommands: false, // Disable mongoose buffering
+      bufferMaxEntries: 0 // Disable mongoose buffering
     });
+    
     cachedDb = connection;
+    console.log('✅ MongoDB connected successfully');
     return connection;
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error('❌ MongoDB connection error:', error);
     return null;
   }
 }
+
+// Simple Post schema for serverless (avoid complex model imports)
+const postSchema = new mongoose.Schema({
+  content: String,
+  author: mongoose.Schema.Types.Mixed,
+  authorName: String,
+  authorPhoto: String,
+  media: Array,
+  likes: Array,
+  comments: Array,
+  saves: Array,
+  shares: { type: Number, default: 0 },
+  isShared: { type: Boolean, default: false },
+  originalPostId: String,
+  sharedBy: Object
+}, { timestamps: true });
+
+// Create model only if it doesn't exist
+const Post = mongoose.models.Post || mongoose.model('Post', postSchema);
+
+const userSchema = new mongoose.Schema({
+  firebaseUid: String,
+  email: String,
+  displayName: String,
+  photoURL: String
+}, { timestamps: true });
+
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 // Firebase Admin setup
 const admin = require('firebase-admin');
@@ -93,32 +131,36 @@ export default async function handler(req, res) {
 
       if (dbConnection) {
         try {
+          console.log('🔍 Querying MongoDB for posts...');
+          const queryStart = Date.now();
+          
+          // Optimized query - no populate, no separate count
           const posts = await Post.find()
-            .populate('author', 'displayName photoURL firebaseUid')
-            .populate('comments.author', 'displayName photoURL')
+            .select('content authorName authorPhoto media likes comments saves shares isShared originalPostId sharedBy createdAt')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
-            .lean();
+            .lean()
+            .maxTimeMS(10000); // 10 second query timeout
 
-          const totalPosts = await Post.countDocuments();
-          const totalPages = Math.ceil(totalPosts / limit);
+          const queryTime = Date.now() - queryStart;
+          console.log(`⏱️ MongoDB query took: ${queryTime}ms`);
 
-          // Convert MongoDB posts to frontend format
+          // Convert MongoDB posts to frontend format (fast)
           const formattedPosts = posts.map(post => ({
             id: post._id.toString(),
             content: post.content,
             media: post.media || [],
             author: {
-              displayName: post.author?.displayName || 'مستخدم',
-              photoURL: post.author?.photoURL || '/pages/TeamPage/profile.png',
-              uid: post.author?.firebaseUid
+              displayName: post.authorName || 'مستخدم',
+              photoURL: post.authorPhoto || '/pages/TeamPage/profile.png',
+              uid: post.author
             },
             createdAt: post.createdAt,
-            likeCount: post.likeCount || 0,
+            likeCount: post.likes?.length || 0,
             commentCount: post.comments?.length || 0,
-            saveCount: post.saveCount || 0,
-            shareCount: post.shareCount || 0,
+            saveCount: post.saves?.length || 0,
+            shareCount: post.shares || 0,
             comments: post.comments || [],
             isShared: post.isShared || false,
             originalPostId: post.originalPostId,
@@ -130,12 +172,13 @@ export default async function handler(req, res) {
             posts: formattedPosts,
             pagination: {
               currentPage: page,
-              totalPages,
-              totalPosts,
-              hasMore: page < totalPages
+              totalPages: Math.max(1, Math.ceil(posts.length / limit)),
+              totalPosts: posts.length,
+              hasMore: posts.length === limit
             },
             _debug: {
               mongoConnected: true,
+              queryTime: `${queryTime}ms`,
               timestamp: new Date().toISOString()
             }
           });
