@@ -81,6 +81,34 @@ const postSchema = new mongoose.Schema({
 // Create model only if it doesn't exist
 const Post = mongoose.models.Post || mongoose.model('Post', postSchema);
 
+function formatPost(postDoc) {
+  if (!postDoc) return null;
+  return {
+    id: postDoc._id.toString(),
+    content: postDoc.content || 'منشور من قاعدة البيانات',
+    media: postDoc.media || [],
+    author: postDoc.author || {
+      displayName: postDoc.authorName || 'مستخدم',
+      photoURL: postDoc.authorPhoto || '/pages/TeamPage/profile.png',
+      uid: postDoc.author?.uid || 'anonymous'
+    },
+    authorName: postDoc.authorName || 'مستخدم',
+    authorPhoto: postDoc.authorPhoto || '/pages/TeamPage/profile.png',
+    likeCount: (postDoc.likes || []).length,
+    commentCount: (postDoc.comments || []).length,
+    saveCount: (postDoc.saves || []).length,
+    shareCount: postDoc.shares || 0,
+    comments: postDoc.comments || [],
+    likes: postDoc.likes || [],
+    saves: postDoc.saves || [],
+    shares: postDoc.shares || 0,
+    createdAt: postDoc.createdAt,
+    updatedAt: postDoc.updatedAt,
+    isLiked: Array.isArray(postDoc.likes) ? postDoc.likes.includes('anonymous') : false,
+    isSaved: Array.isArray(postDoc.saves) ? postDoc.saves.includes('anonymous') : false
+  };
+}
+
 const userSchema = new mongoose.Schema({
   firebaseUid: String,
   email: String,
@@ -523,11 +551,11 @@ export default async function handler(req, res) {
               isLiked = true;
             }
             
-            await Post.findByIdAndUpdate(id, { likes: newLikes });
+            const updated = await Post.findByIdAndUpdate(id, { likes: newLikes }, { new: true }).lean();
             
             return res.status(200).json({
               success: true,
-              post: { id, likeCount: newLikes.length, isLiked },
+              post: formatPost(updated),
               message: isLiked ? 'تم الإعجاب بالمنشور' : 'تم إلغاء الإعجاب'
             });
           }
@@ -543,11 +571,11 @@ export default async function handler(req, res) {
             const currentComments = post.comments || [];
             const newComments = [...currentComments, newComment];
             
-            await Post.findByIdAndUpdate(id, { comments: newComments });
+            const updated = await Post.findByIdAndUpdate(id, { comments: newComments }, { new: true }).lean();
             
             return res.status(200).json({
               success: true,
-              post: { id, commentCount: newComments.length, comments: newComments },
+              post: formatPost(updated),
               message: 'تم إضافة التعليق بنجاح'
             });
           }
@@ -565,11 +593,11 @@ export default async function handler(req, res) {
               isSaved = true;
             }
             
-            await Post.findByIdAndUpdate(id, { saves: newSaves });
+            const updated = await Post.findByIdAndUpdate(id, { saves: newSaves }, { new: true }).lean();
             
             return res.status(200).json({
               success: true,
-              post: { id, saveCount: newSaves.length, isSaved },
+              post: formatPost(updated),
               message: isSaved ? 'تم حفظ المنشور' : 'تم إلغاء حفظ المنشور'
             });
           }
@@ -578,11 +606,11 @@ export default async function handler(req, res) {
             const currentShares = post.shares || 0;
             const newShares = currentShares + 1;
             
-            await Post.findByIdAndUpdate(id, { shares: newShares });
+            const updated = await Post.findByIdAndUpdate(id, { shares: newShares }, { new: true }).lean();
             
             return res.status(200).json({
               success: true,
-              post: { id, shareCount: newShares },
+              post: formatPost(updated),
               message: 'تم مشاركة المنشور بنجاح'
             });
           }

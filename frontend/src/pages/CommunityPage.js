@@ -315,15 +315,13 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       
       if (response.data.success) {
         console.log('✅ Like synced to MongoDB');
-        // Refresh post data from server to ensure consistency
-        const updatedPost = response.data.post;
-        // Update both original and shared versions
+        const updatedPost = response.data.post || {};
         setPosts(posts.map(p => {
           if (p.id === postId || p.id.endsWith('_' + actualPostId)) {
-            return { 
-              ...updatedPost, 
-              id: p.id, // Keep original ID
-              isLiked: newLikedState // Preserve the like state we just set
+            return {
+              ...p,
+              likeCount: updatedPost.likeCount ?? Math.max(0, (p.likeCount || 0) + (newLikedState ? 1 : -1)),
+              isLiked: newLikedState
             };
           }
           return p;
@@ -422,12 +420,14 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       
       if (response.data.success) {
         console.log('✅ Comment synced to MongoDB');
-        // Replace temp comment with real one from server
-        const updatedPost = response.data.post;
-        // Update both original and shared versions
+        const updatedPost = response.data.post || {};
         setPosts(posts.map(p => {
           if (p.id === postId || p.id.endsWith('_' + actualPostId)) {
-            return { ...updatedPost, id: p.id };
+            return {
+              ...p,
+              comments: updatedPost.comments || p.comments,
+              commentCount: updatedPost.commentCount ?? (p.commentCount || 0)
+            };
           }
           return p;
         }));
@@ -501,17 +501,13 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       
       if (response.data.success) {
         console.log('✅ Save synced to MongoDB');
-        const updatedPost = response.data.post;
-        // Update both original and shared versions - preserve existing states
+        const updatedPost = response.data.post || {};
         setPosts(posts.map(p => {
           if (p.id === postId || p.id.endsWith('_' + actualPostId)) {
-            return { 
-              ...updatedPost,
-              id: p.id, // Preserve original ID
-              isLiked: p.isLiked, // Preserve existing like state
-              likeCount: p.likeCount, // Preserve existing like count
-              isSharedByCurrentUser: p.isSharedByCurrentUser, // Preserve share state
-              saveCount: updatedPost.saveCount || p.saveCount // Use updated count
+            return {
+              ...p,
+              saveCount: updatedPost.saveCount ?? (p.saveCount || 0),
+              isSaved: updatedPost.isSaved ?? newSavedState
             };
           }
           return p;
