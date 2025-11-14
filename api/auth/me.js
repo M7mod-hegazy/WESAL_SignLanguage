@@ -1,21 +1,29 @@
 const mongoose = require('mongoose');
-const User = require('../../backend/models/User');
 
-// MongoDB connection
-let cachedDb = null;
+// Simple User schema for serverless
+const userSchema = new mongoose.Schema({
+  firebaseUid: String,
+  email: String,
+  displayName: String,
+  photoURL: String,
+  coins: { type: Number, default: 100 },
+  gender: { type: String, default: 'male' }
+}, { timestamps: true });
+
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 async function connectToDatabase() {
-  if (cachedDb) {
-    return cachedDb;
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
   }
 
-  const connection = await mongoose.connect(process.env.MONGODB_URI, {
+  await mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 10000
   });
 
-  cachedDb = connection;
-  return connection;
+  return mongoose.connection;
 }
 
 // Firebase Admin setup

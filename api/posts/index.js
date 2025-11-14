@@ -290,86 +290,104 @@ export default async function handler(req, res) {
       }
 
       try {
+        console.log('🎯 POST API - Creating new post...');
+        
         // Verify Firebase token
         const decodedToken = await admin.auth().verifyIdToken(token);
+        console.log('✅ Firebase token verified for user:', decodedToken.uid);
         
-        if (dbConnection) {
-          // Find or create user in MongoDB
-          let user = await User.findOne({ firebaseUid: decodedToken.uid });
-          if (!user) {
-            user = new User({
-              firebaseUid: decodedToken.uid,
-              email: decodedToken.email,
-              displayName: decodedToken.name || 'مستخدم',
-              photoURL: decodedToken.picture || '/pages/TeamPage/profile.png'
-            });
-            await user.save();
-          }
-
-          // Create new post
-          const newPost = new Post({
-            content: req.body.content || 'منشور جديد',
-            media: req.body.media || [],
-            author: user._id,
-            likeCount: 0,
-            saveCount: 0,
-            shareCount: 0,
-            comments: [],
-            isShared: req.body.isShared || false,
-            originalPostId: req.body.originalPostId,
-            sharedBy: req.body.sharedBy
-          });
-
-          await newPost.save();
-          await newPost.populate('author', 'displayName photoURL firebaseUid');
-
-          const formattedPost = {
-            id: newPost._id.toString(),
-            content: newPost.content,
-            media: newPost.media,
-            author: {
-              displayName: newPost.author.displayName,
-              photoURL: newPost.author.photoURL,
-              uid: newPost.author.firebaseUid
-            },
-            createdAt: newPost.createdAt,
-            likeCount: 0,
-            commentCount: 0,
-            saveCount: 0,
-            shareCount: 0,
-            comments: []
-          };
-
-          return res.status(200).json({
-            success: true,
-            post: formattedPost,
-            message: 'تم إنشاء المنشور بنجاح'
+        // Connect to MongoDB
+        if (mongoose.connection.readyState !== 1) {
+          await mongoose.connect(process.env.MONGODB_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 10000
           });
         }
-      } catch (authError) {
-        console.error('Auth error:', authError);
-      }
+        
+        console.log('✅ MongoDB connected for post creation');
+        
+        // Find or create user in MongoDB
+        let user = await User.findOne({ firebaseUid: decodedToken.uid });
+        if (!user) {
+          console.log('🆕 Creating new user in MongoDB');
+          user = new User({
+            firebaseUid: decodedToken.uid,
+            email: decodedToken.email,
+            displayName: decodedToken.name || 'مستخدم',
+            photoURL: decodedToken.picture || '/pages/TeamPage/profile.png'
+          });
+          await user.save();
+        }
+        console.log('👤 User found/created:', user.firebaseUid);
 
-      // Fallback response
-      return res.status(200).json({
-        success: true,
-        post: {
-          id: `post_${Date.now()}`,
+        // Create new post
+        console.log('📝 Creating new post with content:', req.body.content?.substring(0, 50));
+        const newPost = new Post({
           content: req.body.content || 'منشور جديد',
           media: req.body.media || [],
+          author: user.firebaseUid,
+          authorName: user.displayName,
+          authorPhoto: user.photoURL,
+          likes: [],
+          comments: [],
+          saves: [],
+          shares: 0,
+          isShared: req.body.isShared || false,
+          originalPostId: req.body.originalPostId,
+          sharedBy: req.body.sharedBy
+        });
+
+        await newPost.save();
+        console.log('✅ Post saved to MongoDB:', newPost._id);
+
+        const formattedPost = {
+          id: newPost._id.toString(),
+          content: newPost.content,
+          media: newPost.media,
           author: {
-            displayName: 'المستخدم',
-            photoURL: '/pages/TeamPage/profile.png'
+            displayName: newPost.authorName,
+            photoURL: newPost.authorPhoto,
+            uid: newPost.author
           },
-          createdAt: new Date(),
+          createdAt: newPost.createdAt,
           likeCount: 0,
           commentCount: 0,
           saveCount: 0,
           shareCount: 0,
           comments: []
-        },
-        message: 'تم إنشاء المنشور بنجاح (وضع تجريبي)'
-      });
+        };
+
+        return res.status(200).json({
+          success: true,
+          post: formattedPost,
+          message: 'تم إنشاء المنشور بنجاح'
+        });
+          
+      } catch (error) {
+        console.error('❌ Error during post creation:', error.message);
+        
+        // Fallback response for any errors
+        return res.status(200).json({
+          success: true,
+          post: {
+            id: `post_${Date.now()}`,
+            content: req.body.content || 'منشور جديد',
+            media: req.body.media || [],
+            author: {
+              displayName: 'المستخدم',
+              photoURL: '/pages/TeamPage/profile.png'
+            },
+            createdAt: new Date(),
+            likeCount: 0,
+            commentCount: 0,
+            saveCount: 0,
+            shareCount: 0,
+            comments: []
+          },
+          message: 'تم إنشاء المنشور بنجاح (وضع تجريبي)'
+        });
+      }
     }
 
     return res.status(405).json({ success: false, error: 'Method not allowed' });

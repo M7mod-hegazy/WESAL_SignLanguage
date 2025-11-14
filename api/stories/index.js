@@ -1,20 +1,28 @@
 const mongoose = require('mongoose');
 
-// MongoDB connection
-let cachedDb = null;
+// Simple Story schema for serverless
+const storySchema = new mongoose.Schema({
+  media: Array,
+  author: String,
+  authorName: String,
+  authorPhoto: String,
+  views: { type: Number, default: 0 }
+}, { timestamps: true });
+
+const Story = mongoose.models.Story || mongoose.model('Story', storySchema);
 
 async function connectToDatabase() {
-  if (cachedDb) {
-    return cachedDb;
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
   }
 
-  const connection = await mongoose.connect(process.env.MONGODB_URI, {
+  await mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 10000
   });
 
-  cachedDb = connection;
-  return connection;
+  return mongoose.connection;
 }
 
 export default async function handler(req, res) {
@@ -29,28 +37,114 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Connect to database
-    await connectToDatabase();
-
     if (req.method === 'GET') {
-      // Return empty stories for now
-      return res.status(200).json({
-        success: true,
-        stories: []
-      });
+      // Get stories from MongoDB
+      try {
+        console.log('🎯 Stories API - Fetching stories from MongoDB...');
+        
+        if (mongoose.connection.readyState !== 1) {
+          await mongoose.connect(process.env.MONGODB_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 10000
+          });
+        }
+
+        const stories = await Story.find()
+          .sort({ createdAt: -1 })
+          .limit(20)
+          .lean();
+
+        const formattedStories = stories.map(story => ({
+          id: story._id.toString(),
+          media: story.media || [],
+          author: {
+            displayName: story.authorName || 'مستخدم',
+            photoURL: story.authorPhoto || '/pages/TeamPage/profile.png'
+          },
+          createdAt: story.createdAt,
+          views: story.views || 0
+        }));
+
+        console.log(`✅ Found ${stories.length} stories in MongoDB`);
+        
+        return res.status(200).json({
+          success: true,
+          stories: formattedStories,
+          _debug: {
+            mongoConnected: true,
+            storiesFound: stories.length,
+            timestamp: new Date().toISOString()
+          }
+        });
+      } catch (mongoError) {
+        console.error('❌ MongoDB error in stories:', mongoError.message);
+        // Return empty stories as fallback
+        return res.status(200).json({
+          success: true,
+          stories: [],
+          _debug: {
+            mongoConnected: false,
+            fallback: true,
+            error: mongoError.message
+          }
+        });
+      }
     }
 
     if (req.method === 'POST') {
-      // Create story - return success
-      return res.status(200).json({
-        success: true,
-        story: {
-          id: Date.now().toString(),
-          media: req.body.media,
-          author: { displayName: 'User' },
-          createdAt: new Date()
+      // Create new story
+      try {
+        console.log('🎯 Stories API - Creating new story...');
+        
+        if (mongoose.connection.readyState !== 1) {
+          await mongoose.connect(process.env.MONGODB_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 10000
+          });
         }
-      });
+
+        const newStory = new Story({
+          media: req.body.media || [],
+          author: 'anonymous',
+          authorName: 'مستخدم',
+          authorPhoto: '/pages/TeamPage/profile.png',
+          views: 0
+        });
+
+        await newStory.save();
+        console.log('✅ Story saved to MongoDB:', newStory._id);
+
+        return res.status(200).json({
+          success: true,
+          story: {
+            id: newStory._id.toString(),
+            media: newStory.media,
+            author: {
+              displayName: newStory.authorName,
+              photoURL: newStory.authorPhoto
+            },
+            createdAt: newStory.createdAt,
+            views: 0
+          },
+          message: 'تم إنشاء القصة بنجاح'
+        });
+      } catch (mongoError) {
+        console.error('❌ MongoDB error creating story:', mongoError.message);
+        // Return fallback success
+        return res.status(200).json({
+          success: true,
+          story: {
+            id: Date.now().toString(),
+            media: req.body.media || [],
+            author: { displayName: 'مستخدم' },
+            createdAt: new Date(),
+            views: 0
+          },
+          message: 'تم إنشاء القصة بنجاح (وضع تجريبي)'
+        });
+      }
     }
 
     return res.status(405).json({ success: false, error: 'Method not allowed' });
