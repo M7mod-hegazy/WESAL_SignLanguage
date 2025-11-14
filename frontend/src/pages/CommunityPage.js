@@ -83,7 +83,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       const fetchStart = performance.now();
       const response = await axios.get(`${API_BASE_URL}/posts?page=1&limit=3`, { 
         headers,
-        timeout: 3000 // 3 second timeout - load only 3 posts for speed
+        timeout: 15000 // 15 second timeout for MongoDB connection
       });
       
       const fetchTime = performance.now() - fetchStart;
