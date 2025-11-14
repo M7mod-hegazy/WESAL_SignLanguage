@@ -64,13 +64,6 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     }
   }, [getUserProfileStats, user]);
 
-  // Fetch posts from API (old migration code - can be removed later)
-  useEffect(() => {
-    // Load posts and stories directly from MongoDB only
-    setLoading(true);
-    fetchPosts();
-    fetchStories();
-  }, [user, fetchPosts, fetchStories]);
 
   // Infinite scroll handler
   useEffect(() => {
@@ -232,6 +225,13 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       // Silently continue with empty stories - app works in offline mode
     }
   }, []);
+
+  // Load posts and stories on component mount
+  useEffect(() => {
+    setLoading(true);
+    fetchPosts();
+    fetchStories();
+  }, [fetchPosts, fetchStories]);
 
   const handleLike = async (postId) => {
     if (!user) return;
