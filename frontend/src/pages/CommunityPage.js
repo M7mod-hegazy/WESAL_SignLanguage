@@ -2032,4 +2032,5 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
   );
 };
 
+// eslint-disable-next-line import/no-default-export
 export default CommunityPage;
