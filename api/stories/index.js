@@ -123,6 +123,11 @@ export default async function handler(req, res) {
           });
         }
 
+        console.log('📝 Creating story with data:', {
+          mediaCount: req.body.media?.length || 0,
+          mediaPreview: req.body.media?.[0]?.substring(0, 50) || 'no media'
+        });
+        
         const newStory = new Story({
           media: req.body.media || [],
           author: 'anonymous',
@@ -162,7 +167,12 @@ export default async function handler(req, res) {
           message: 'تم إنشاء القصة بنجاح'
         });
       } catch (mongoError) {
-        console.error('❌ MongoDB error creating story:', mongoError.message);
+        console.error('❌ MongoDB error creating story:', {
+          message: mongoError.message,
+          name: mongoError.name,
+          stack: mongoError.stack?.split('\n')[0]
+        });
+        
         // Return fallback success
         return res.status(200).json({
           success: true,
@@ -173,7 +183,8 @@ export default async function handler(req, res) {
             createdAt: new Date(),
             views: 0
           },
-          message: 'تم إنشاء القصة بنجاح (وضع تجريبي)'
+          message: 'تم إنشاء القصة بنجاح (وضع تجريبي)',
+          _debug: { mongoError: mongoError.message, fallback: true }
         });
       }
     }
