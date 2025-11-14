@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug API - Posts & MongoDB</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔍 API Debug Tool</h1>
+    
+    <div class="test-section">
+        <h2>1. Test API Connection</h2>
+        <button onclick="testAPI()">Test /api/test</button>
+        <div id="api-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test Posts API (GET)</h2>
+        <button onclick="testGetPosts()">Get Posts</button>
+        <div id="get-posts-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test Create Post (No Auth)</h2>
+        <button onclick="testCreatePostNoAuth()">Create Post (No Auth)</button>
+        <div id="create-no-auth-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Test Create Post (With Fake Auth)</h2>
+        <button onclick="testCreatePostFakeAuth()">Create Post (Fake Auth)</button>
+        <div id="create-fake-auth-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. Environment Check</h2>
+        <button onclick="checkEnvironment()">Check Environment</button>
+        <div id="env-result"></div>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.innerHTML = '<div class="info">Testing API connection...</div>';
+            
+            try {
+                const response = await fetch('/api/test');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="success">✅ API Connection: SUCCESS</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">❌ API Connection: FAILED</div>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+        
+        async function testGetPosts() {
+            const resultDiv = document.getElementById('get-posts-result');
+            resultDiv.innerHTML = '<div class="info">Getting posts...</div>';
+            
+            try {
+                const response = await fetch('/api/posts?page=1&limit=5');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="success">✅ Get Posts: SUCCESS</div>
+                    <div><strong>Posts Count:</strong> ${data.posts ? data.posts.length : 0}</div>
+                    <div><strong>MongoDB Connected:</strong> ${data._debug?.mongoConnected || 'Unknown'}</div>
+                    <div><strong>Total Posts:</strong> ${data.pagination?.totalPosts || 0}</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">❌ Get Posts: FAILED</div>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+        
+        async function testCreatePostNoAuth() {
+            const resultDiv = document.getElementById('create-no-auth-result');
+            resultDiv.innerHTML = '<div class="info">Creating post without auth...</div>';
+            
+            try {
+                const response = await fetch('/api/posts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        content: 'Test post from debug tool - No Auth - ' + new Date().toLocaleString(),
+                        media: []
+                    })
+                });
+                
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="${data.success ? 'success' : 'error'}">
+                        ${data.success ? '✅' : '❌'} Create Post (No Auth): ${data.success ? 'SUCCESS' : 'FAILED'}
+                    </div>
+                    <div><strong>Status:</strong> ${response.status}</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">❌ Create Post (No Auth): FAILED</div>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+        
+        async function testCreatePostFakeAuth() {
+            const resultDiv = document.getElementById('create-fake-auth-result');
+            resultDiv.innerHTML = '<div class="info">Creating post with fake auth...</div>';
+            
+            try {
+                const response = await fetch('/api/posts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer fake-token-for-testing'
+                    },
+                    body: JSON.stringify({
+                        content: 'Test post from debug tool - Fake Auth - ' + new Date().toLocaleString(),
+                        media: []
+                    })
+                });
+                
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="${data.success ? 'success' : 'error'}">
+                        ${data.success ? '✅' : '❌'} Create Post (Fake Auth): ${data.success ? 'SUCCESS' : 'FAILED'}
+                    </div>
+                    <div><strong>Status:</strong> ${response.status}</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">❌ Create Post (Fake Auth): FAILED</div>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+        
+        async function checkEnvironment() {
+            const resultDiv = document.getElementById('env-result');
+            resultDiv.innerHTML = '<div class="info">Checking environment...</div>';
+            
+            // This will show what we can determine from the client side
+            const info = {
+                userAgent: navigator.userAgent,
+                location: window.location.href,
+                timestamp: new Date().toISOString(),
+                // Try to determine if we're in production
+                isProduction: window.location.hostname !== 'localhost'
+            };
+            
+            resultDiv.innerHTML = `
+                <div class="info">📊 Environment Information</div>
+                <pre>${JSON.stringify(info, null, 2)}</pre>
+                <div class="info">
+                    <strong>Note:</strong> Check Vercel dashboard for environment variables:
+                    <ul>
+                        <li>MONGODB_URI</li>
+                        <li>FIREBASE_PROJECT_ID</li>
+                        <li>FIREBASE_PRIVATE_KEY</li>
+                        <li>FIREBASE_CLIENT_EMAIL</li>
+                        <li>And others...</li>
+                    </ul>
+                </div>
+            `;
+        }
+        
+        // Auto-run basic tests on page load
+        window.onload = function() {
+            testAPI();
+            setTimeout(testGetPosts, 1000);
+        };
+    </script>
+</body>
+</html>
