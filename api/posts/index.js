@@ -95,6 +95,7 @@ const admin = require('firebase-admin');
 
 if (!admin.apps.length) {
   try {
+    console.log('🔥 Initializing Firebase Admin...');
     const serviceAccount = {
       type: "service_account",
       project_id: process.env.FIREBASE_PROJECT_ID,
@@ -109,9 +110,12 @@ if (!admin.apps.length) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
+    console.log('✅ Firebase Admin initialized successfully');
   } catch (error) {
-    console.error('Firebase Admin initialization error:', error);
+    console.error('❌ Firebase Admin initialization error:', error);
   }
+} else {
+  console.log('🔄 Firebase Admin already initialized');
 }
 
 // Generate sample posts for demo
