@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {
+  auth,
   loginWithEmail,
   registerWithEmail,
   loginWithGoogle,
@@ -10,8 +11,9 @@ import {
   onAuthChange,
   updateUserProfile
 } from '../config/firebase';
+import { API_BASE_URL } from '../config/api';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+const API_URL = API_BASE_URL;
 
 // Axios instance with auth token
 const api = axios.create({
