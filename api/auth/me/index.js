@@ -30,20 +30,40 @@ async function connectToDatabase() {
 const admin = require('firebase-admin');
 
 if (!admin.apps.length) {
-  const serviceAccount = {
-    type: "service_account",
-    project_id: process.env.FIREBASE_PROJECT_ID,
-    private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-    private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    client_email: process.env.FIREBASE_CLIENT_EMAIL,
-    client_id: process.env.FIREBASE_CLIENT_ID,
-    auth_uri: "https://accounts.google.com/o/oauth2/auth",
-    token_uri: "https://oauth2.googleapis.com/token",
-  };
+  try {
+    console.log('🔥 Initializing Firebase Admin in auth/me...');
+    
+    // Handle private key formatting properly
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+    if (privateKey) {
+      // Replace escaped newlines and ensure proper PEM format
+      privateKey = privateKey.replace(/\\n/g, '\n');
+      if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+        privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`;
+      }
+    }
+    
+    const serviceAccount = {
+      type: "service_account",
+      project_id: process.env.FIREBASE_PROJECT_ID,
+      private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+      private_key: privateKey,
+      client_email: process.env.FIREBASE_CLIENT_EMAIL,
+      client_id: process.env.FIREBASE_CLIENT_ID,
+      auth_uri: "https://accounts.google.com/o/oauth2/auth",
+      token_uri: "https://oauth2.googleapis.com/token",
+    };
 
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  });
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+    
+    console.log('✅ Firebase Admin initialized successfully in auth/me');
+  } catch (error) {
+    console.error('❌ Firebase Admin initialization error in auth/me:', error.message);
+  }
+} else {
+  console.log('🔄 Firebase Admin already initialized in auth/me');
 }
 
 export default async function handler(req, res) {

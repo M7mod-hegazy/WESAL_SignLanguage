@@ -95,12 +95,23 @@ const admin = require('firebase-admin');
 
 if (!admin.apps.length) {
   try {
-    console.log('🔥 Initializing Firebase Admin...');
+    console.log('🔥 Initializing Firebase Admin in posts...');
+    
+    // Handle private key formatting properly
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+    if (privateKey) {
+      // Replace escaped newlines and ensure proper PEM format
+      privateKey = privateKey.replace(/\\n/g, '\n');
+      if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+        privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`;
+      }
+    }
+    
     const serviceAccount = {
       type: "service_account",
       project_id: process.env.FIREBASE_PROJECT_ID,
       private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-      private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      private_key: privateKey,
       client_email: process.env.FIREBASE_CLIENT_EMAIL,
       client_id: process.env.FIREBASE_CLIENT_ID,
       auth_uri: "https://accounts.google.com/o/oauth2/auth",
@@ -110,12 +121,12 @@ if (!admin.apps.length) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
-    console.log('✅ Firebase Admin initialized successfully');
+    console.log('✅ Firebase Admin initialized successfully in posts');
   } catch (error) {
-    console.error('❌ Firebase Admin initialization error:', error);
+    console.error('❌ Firebase Admin initialization error in posts:', error.message);
   }
 } else {
-  console.log('🔄 Firebase Admin already initialized');
+  console.log('🔄 Firebase Admin already initialized in posts');
 }
 
 // Generate sample posts for demo
