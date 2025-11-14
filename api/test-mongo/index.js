@@ -1,5 +1,6 @@
-export default async function handler(req, res) {
-  // Enable CORS
+const mongoose = require('mongoose');
+
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -8,8 +9,6 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const mongoose = require('mongoose');
-  
   const testResults = {
     timestamp: new Date().toISOString(),
     environment: {
@@ -31,28 +30,24 @@ export default async function handler(req, res) {
 
   if (process.env.MONGODB_URI) {
     try {
-      console.log('🧪 Testing MongoDB connection...');
+      console.log('🧪 Testing MongoDB connection (index.js route)...');
       const connectionStart = Date.now();
-      
+
       testResults.connectionTest.attempted = true;
-      
-      // Test connection with minimal options
+
       const connection = await mongoose.connect(process.env.MONGODB_URI, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 10000, // 10 second timeout
+        serverSelectionTimeoutMS: 10000,
         socketTimeoutMS: 45000,
-        maxPoolSize: 1 // Single connection for test
+        maxPoolSize: 1
       });
-      
+
       testResults.connectionTest.connectionTime = Date.now() - connectionStart;
       testResults.connectionTest.success = true;
       testResults.connectionTest.connectionState = mongoose.connection.readyState;
       testResults.connectionTest.databaseName = mongoose.connection.db?.databaseName;
-      
-      console.log('✅ MongoDB connection test successful');
-      
-      // Test a simple query
+
       try {
         const collections = await mongoose.connection.db.listCollections().toArray();
         testResults.connectionTest.collections = collections.map(c => c.name);
@@ -60,10 +55,9 @@ export default async function handler(req, res) {
       } catch (queryError) {
         testResults.connectionTest.queryError = queryError.message;
       }
-      
-      // Close connection
+
       await mongoose.disconnect();
-      
+      console.log('✅ MongoDB connection test successful (index.js route)');
     } catch (error) {
       testResults.connectionTest.success = false;
       testResults.connectionTest.error = {
@@ -72,7 +66,7 @@ export default async function handler(req, res) {
         code: error.code,
         codeName: error.codeName
       };
-      console.error('❌ MongoDB connection test failed:', error.message);
+      console.error('❌ MongoDB connection test failed (index.js route):', error.message);
     }
   }
 
@@ -81,4 +75,4 @@ export default async function handler(req, res) {
     testResults,
     message: 'MongoDB connection test completed'
   });
-}
+};
