@@ -85,45 +85,11 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       localStorage.removeItem(versionKey);
       
       // Remove all user-specific post data
-      Object.keys(localStorage).forEach(key => {
         if (key.startsWith('sharedPosts_') || 
             key.startsWith('userLikes_') || 
             key.startsWith('userSaves_') || 
             key.startsWith('userShares_')) {
           localStorage.removeItem(key);
-        }
-      });
-      
-      localStorage.setItem(versionKey, currentVersion);
-      console.log('✅ Test posts cleared, will load from MongoDB');
-    }
-    
-    // Load global posts and apply user-specific interaction states
-    const allPosts = JSON.parse(localStorage.getItem(globalPostsKey) || '[]');
-    
-    // Get user-specific interactions
-    const userLikes = JSON.parse(localStorage.getItem(`userLikes_${userId}`) || '[]');
-    const userSaves = JSON.parse(localStorage.getItem(`userSaves_${userId}`) || '[]');
-    const userShares = JSON.parse(localStorage.getItem(`userShares_${userId}`) || '[]');
-    
-    // Apply user-specific states to posts (keep global counts)
-    const postsWithUserStates = allPosts.map(post => ({
-      ...post,
-      isLiked: userLikes.includes(post.id),
-      isSaved: userSaves.includes(post.id),
-      isSharedByCurrentUser: userShares.includes(post.id)
-      // likeCount, saveCount, shareCount remain global
-    }));
-    
-    setPosts(postsWithUserStates);
-    setLoading(false);
-    
-    // Then fetch from backend in background
-    fetchPosts();
-    fetchStories();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
   // Infinite scroll handler
   useEffect(() => {
     const handleScroll = (e) => {
@@ -173,17 +139,25 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       if (response.data.success && response.data.posts) {
         console.log('✅ Loaded', response.data.posts.length, 'posts from MongoDB');
         
-        // Get user-specific states
+        // Use only MongoDB posts - no localStorage merging
         const userId = user?.uid || 'guest';
+        
+        // Get user-specific interaction states from localStorage (for UI state only)
+        const userLikes = JSON.parse(localStorage.getItem(`userLikes_${userId}`) || '[]');
+        const userSaves = JSON.parse(localStorage.getItem(`userSaves_${userId}`) || '[]');
         const userShares = JSON.parse(localStorage.getItem(`userShares_${userId}`) || '[]');
         
+        // Apply user-specific UI states to MongoDB posts
         const postsWithStates = response.data.posts.map(post => ({
           ...post,
+          isLiked: userLikes.includes(post.id),
+          isSaved: userSaves.includes(post.id),
           isSharedByCurrentUser: userShares.includes(post.originalPostId || post.id) || 
                                  (post.isShared && post.sharedBy?.uid === user?.uid)
         }));
         
         setPosts(postsWithStates);
+        
         setHasMore(response.data.pagination?.pages > 1);
         setLoading(false);
         setPostsLoading(false);
@@ -569,23 +543,6 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     localStorage.setItem(`userSaves_${userId}`, JSON.stringify(userSaves));
     console.log(`💾 Save state saved to localStorage for post: ${postId}`);
     
-    if (!isMongoPost) {
-      console.log('⚠️ Local-only post, also updating communityPosts');
-      // Save to localStorage for persistence
-      const savedPosts = JSON.parse(localStorage.getItem('communityPosts') || '[]');
-      const updatedPosts = savedPosts.map(post => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            saveCount: newSavedState ? (post.saveCount || 0) + 1 : Math.max(0, (post.saveCount || 0) - 1)
-          };
-        }
-        return post;
-      });
-      localStorage.setItem('communityPosts', JSON.stringify(updatedPosts));
-      return; // Don't try to sync to MongoDB
-    }
-    
     // Send to MongoDB (use actualPostId for shared posts)
     try {
       const token = await user.getIdToken();
@@ -901,6 +858,12 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     setPosts([postWithStates, ...posts]);
     
     console.log('✅ Post added to feed');
+  };
+
+  const handlePostCreated = (newPost) => {
+    // Refresh posts from MongoDB to get the latest data
+    console.log('✅ New post created, refreshing feed from MongoDB');
+    fetchPosts();
   };
 
   const formatTime = (dateString) => {
@@ -2059,7 +2022,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
         <CreatePostModal 
           onClose={() => setShowCreatePost(false)}
           onPostCreated={(newPost) => {
-            handleCreatePost(newPost);
+            handlePostCreated(newPost);
             setShowCreatePost(false);
           }}
         />
