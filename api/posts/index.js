@@ -1,34 +1,33 @@
 const mongoose = require('mongoose');
 
 // MongoDB connection with optimizations
-let cachedDb = null;
+let isConnected = false;
 
 async function connectToDatabase() {
-  if (cachedDb) {
-    console.log('🔄 Using cached MongoDB connection');
-    return cachedDb;
+  // Check if already connected
+  if (isConnected && mongoose.connection.readyState === 1) {
+    console.log('🔄 Using existing MongoDB connection');
+    return mongoose.connection;
   }
 
   console.log('🔍 Checking MongoDB environment...');
   
   if (!process.env.MONGODB_URI) {
     console.error('❌ MONGODB_URI environment variable not set');
-    console.log('📋 Available env vars:', Object.keys(process.env).filter(key => key.includes('MONGO')));
     return null;
   }
 
   console.log('✅ MONGODB_URI found, length:', process.env.MONGODB_URI.length);
-  console.log('🔗 MongoDB URI preview:', process.env.MONGODB_URI.substring(0, 30) + '...');
 
   try {
     console.log('🚀 Attempting MongoDB connection...');
     const connectionStart = Date.now();
     
-    const connection = await mongoose.connect(process.env.MONGODB_URI, {
+    await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 8000, // Increased timeout
+      serverSelectionTimeoutMS: 8000,
       socketTimeoutMS: 45000,
       bufferCommands: false,
       bufferMaxEntries: 0
@@ -39,8 +38,8 @@ async function connectToDatabase() {
     console.log('📊 Connection state:', mongoose.connection.readyState);
     console.log('🏷️ Database name:', mongoose.connection.db?.databaseName);
     
-    cachedDb = connection;
-    return connection;
+    isConnected = true;
+    return mongoose.connection;
   } catch (error) {
     console.error('❌ MongoDB connection failed:', error.message);
     console.error('🔍 Error details:', {
@@ -48,6 +47,7 @@ async function connectToDatabase() {
       code: error.code,
       codeName: error.codeName
     });
+    isConnected = false;
     return null;
   }
 }
