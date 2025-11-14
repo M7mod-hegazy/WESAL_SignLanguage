@@ -4,14 +4,18 @@ const mongoose = require('mongoose');
 let isConnected = false;
 
 async function connectToDatabase() {
-  // Check if already connected
-  if (isConnected && mongoose.connection.readyState === 1) {
-    console.log('🔄 Using existing MongoDB connection');
+  console.log('🔍 Posts API - Checking MongoDB connection...');
+  
+  // Check current connection state
+  const currentState = mongoose.connection.readyState;
+  console.log('📊 Current connection state:', currentState);
+  
+  if (currentState === 1) {
+    console.log('🔄 MongoDB already connected, reusing connection');
+    isConnected = true;
     return mongoose.connection;
   }
 
-  console.log('🔍 Checking MongoDB environment...');
-  
   if (!process.env.MONGODB_URI) {
     console.error('❌ MONGODB_URI environment variable not set');
     return null;
@@ -20,28 +24,34 @@ async function connectToDatabase() {
   console.log('✅ MONGODB_URI found, length:', process.env.MONGODB_URI.length);
 
   try {
-    console.log('🚀 Attempting MongoDB connection...');
+    console.log('🚀 Posts API - Attempting MongoDB connection...');
     const connectionStart = Date.now();
+    
+    // Disconnect first if in a bad state
+    if (currentState !== 0) {
+      console.log('🔄 Disconnecting existing connection...');
+      await mongoose.disconnect();
+    }
     
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 8000,
+      serverSelectionTimeoutMS: 10000, // Increased timeout
       socketTimeoutMS: 45000,
       bufferCommands: false,
       bufferMaxEntries: 0
     });
     
     const connectionTime = Date.now() - connectionStart;
-    console.log(`✅ MongoDB connected successfully in ${connectionTime}ms`);
-    console.log('📊 Connection state:', mongoose.connection.readyState);
+    console.log(`✅ Posts API - MongoDB connected successfully in ${connectionTime}ms`);
+    console.log('📊 Final connection state:', mongoose.connection.readyState);
     console.log('🏷️ Database name:', mongoose.connection.db?.databaseName);
     
     isConnected = true;
     return mongoose.connection;
   } catch (error) {
-    console.error('❌ MongoDB connection failed:', error.message);
+    console.error('❌ Posts API - MongoDB connection failed:', error.message);
     console.error('🔍 Error details:', {
       name: error.name,
       code: error.code,
