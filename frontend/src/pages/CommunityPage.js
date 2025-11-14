@@ -307,9 +307,9 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     // Send to MongoDB (use actualPostId for shared posts)
     try {
       const token = await user.getIdToken();
-      const response = await axios.post(
-        `${API_BASE_URL}/posts/${actualPostId}/like`,
-        {},
+      const response = await axios.put(
+        `${API_BASE_URL}/posts?id=${actualPostId}`,
+        { action: 'like' },
         { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
       );
       
@@ -414,9 +414,9 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     // Send to MongoDB (use actualPostId for shared posts)
     try {
       const token = await user.getIdToken();
-      const response = await axios.post(
-        `${API_BASE_URL}/posts/${actualPostId}/comment`,
-        { text: commentTextValue },
+      const response = await axios.put(
+        `${API_BASE_URL}/posts?id=${actualPostId}`,
+        { action: 'comment', data: { comment: commentTextValue } },
         { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
       );
       
@@ -493,9 +493,9 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     // Send to MongoDB (use actualPostId for shared posts)
     try {
       const token = await user.getIdToken();
-      const response = await axios.post(
-        `${API_BASE_URL}/posts/${actualPostId}/save`,
-        {},
+      const response = await axios.put(
+        `${API_BASE_URL}/posts?id=${actualPostId}`,
+        { action: 'save' },
         { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
       );
       
@@ -629,9 +629,9 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
         
         // Try to update the share count on original post (if it exists in MongoDB)
         try {
-          await axios.post(
-            `${API_BASE_URL}/posts/${postId}/share`,
-            {},
+          await axios.put(
+            `${API_BASE_URL}/posts?id=${postId}`,
+            { action: 'share' },
             { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
           );
         } catch (shareError) {
