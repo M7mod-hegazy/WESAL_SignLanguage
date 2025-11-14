@@ -157,20 +157,41 @@ export default async function handler(req, res) {
 
       // Try MongoDB connection and query directly
       try {
-        console.log('🎯 Posts API - Direct MongoDB attempt...');
+        console.log('🎯 Posts API - Starting MongoDB attempt...');
+        console.log('📋 Environment check:', {
+          mongoUri: !!process.env.MONGODB_URI,
+          mongoUriLength: process.env.MONGODB_URI?.length || 0,
+          nodeEnv: process.env.NODE_ENV,
+          vercel: !!process.env.VERCEL
+        });
         
-        // Force fresh connection
+        console.log('📊 Initial connection state:', mongoose.connection.readyState);
+        
+        // Force fresh connection if needed
         if (mongoose.connection.readyState !== 1) {
+          console.log('🚀 Connecting to MongoDB...');
+          const connectStart = Date.now();
+          
           await mongoose.connect(process.env.MONGODB_URI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
             serverSelectionTimeoutMS: 10000,
-            socketTimeoutMS: 45000
+            socketTimeoutMS: 45000,
+            maxPoolSize: 5
           });
+          
+          const connectTime = Date.now() - connectStart;
+          console.log(`✅ Connected in ${connectTime}ms, state: ${mongoose.connection.readyState}`);
+          console.log('🏷️ Database:', mongoose.connection.db?.databaseName);
+        } else {
+          console.log('🔄 Already connected, reusing connection');
         }
 
         console.log('🔍 Querying MongoDB for posts...');
         const queryStart = Date.now();
+        
+        // Test if Post model works
+        console.log('📝 Post model check:', !!Post);
         
         // Simple query to get posts
         const posts = await Post.find()
@@ -181,7 +202,17 @@ export default async function handler(req, res) {
           .maxTimeMS(8000);
 
         const queryTime = Date.now() - queryStart;
-        console.log(`⏱️ MongoDB query successful: ${queryTime}ms, found ${posts.length} posts`);
+        console.log(`⏱️ MongoDB query completed: ${queryTime}ms`);
+        console.log(`📊 Query results: found ${posts.length} posts`);
+        
+        if (posts.length > 0) {
+          console.log('📄 First post sample:', {
+            id: posts[0]._id?.toString(),
+            content: posts[0].content?.substring(0, 50) + '...',
+            hasAuthor: !!posts[0].authorName,
+            createdAt: posts[0].createdAt
+          });
+        }
 
         // Format posts for frontend
         const formattedPosts = posts.map(post => ({
@@ -201,6 +232,7 @@ export default async function handler(req, res) {
           comments: post.comments || []
         }));
 
+        console.log('✅ Returning MongoDB posts to frontend');
         return res.status(200).json({
           success: true,
           posts: formattedPosts,
@@ -214,11 +246,19 @@ export default async function handler(req, res) {
             mongoConnected: true,
             queryTime: `${queryTime}ms`,
             postsFound: posts.length,
+            connectionState: mongoose.connection.readyState,
+            databaseName: mongoose.connection.db?.databaseName,
             timestamp: new Date().toISOString()
           }
         });
       } catch (mongoError) {
-        console.error('❌ MongoDB error in posts API:', mongoError.message);
+        console.error('❌ MongoDB error in posts API:', {
+          message: mongoError.message,
+          name: mongoError.name,
+          code: mongoError.code,
+          stack: mongoError.stack?.split('\n')[0]
+        });
+        console.log('🔄 Falling back to sample posts...');
         // Continue to fallback below
       }
 
