@@ -212,6 +212,23 @@ export default async function handler(req, res) {
             hasAuthor: !!posts[0].authorName,
             createdAt: posts[0].createdAt
           });
+          console.log('📄 All post IDs:', posts.map(p => p._id.toString()));
+        } else {
+          console.log('⚠️ No posts found in MongoDB - checking collection...');
+          try {
+            const totalCount = await Post.countDocuments();
+            console.log('📊 Total posts in collection:', totalCount);
+            if (totalCount > 0) {
+              const allPosts = await Post.find().limit(5).lean();
+              console.log('📄 Sample posts from DB:', allPosts.map(p => ({
+                id: p._id.toString(),
+                content: p.content?.substring(0, 30),
+                createdAt: p.createdAt
+              })));
+            }
+          } catch (countError) {
+            console.error('❌ Error counting posts:', countError.message);
+          }
         }
 
         // Format posts for frontend
@@ -340,6 +357,19 @@ export default async function handler(req, res) {
 
         await newPost.save();
         console.log('✅ Post saved to MongoDB:', newPost._id);
+        
+        // Verify the post was actually saved
+        const savedPost = await Post.findById(newPost._id);
+        if (savedPost) {
+          console.log('✅ Post verified in database:', {
+            id: savedPost._id.toString(),
+            content: savedPost.content?.substring(0, 50),
+            author: savedPost.authorName,
+            createdAt: savedPost.createdAt
+          });
+        } else {
+          console.error('❌ Post not found after save!');
+        }
 
         const formattedPost = {
           id: newPost._id.toString(),

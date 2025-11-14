@@ -68,6 +68,24 @@ export default async function handler(req, res) {
 
         console.log(`✅ Found ${stories.length} stories in MongoDB`);
         
+        if (stories.length === 0) {
+          console.log('⚠️ No stories found - checking collection...');
+          try {
+            const totalCount = await Story.countDocuments();
+            console.log('📊 Total stories in collection:', totalCount);
+            if (totalCount > 0) {
+              const allStories = await Story.find().limit(3).lean();
+              console.log('📄 Sample stories from DB:', allStories.map(s => ({
+                id: s._id.toString(),
+                author: s.authorName,
+                createdAt: s.createdAt
+              })));
+            }
+          } catch (countError) {
+            console.error('❌ Error counting stories:', countError.message);
+          }
+        }
+        
         return res.status(200).json({
           success: true,
           stories: formattedStories,
@@ -115,6 +133,19 @@ export default async function handler(req, res) {
 
         await newStory.save();
         console.log('✅ Story saved to MongoDB:', newStory._id);
+        
+        // Verify the story was actually saved
+        const savedStory = await Story.findById(newStory._id);
+        if (savedStory) {
+          console.log('✅ Story verified in database:', {
+            id: savedStory._id.toString(),
+            author: savedStory.authorName,
+            mediaCount: savedStory.media?.length || 0,
+            createdAt: savedStory.createdAt
+          });
+        } else {
+          console.error('❌ Story not found after save!');
+        }
 
         return res.status(200).json({
           success: true,
