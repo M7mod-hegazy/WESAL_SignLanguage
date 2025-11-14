@@ -5,30 +5,49 @@ let cachedDb = null;
 
 async function connectToDatabase() {
   if (cachedDb) {
+    console.log('🔄 Using cached MongoDB connection');
     return cachedDb;
   }
 
+  console.log('🔍 Checking MongoDB environment...');
+  
   if (!process.env.MONGODB_URI) {
-    console.error('MONGODB_URI environment variable not set');
+    console.error('❌ MONGODB_URI environment variable not set');
+    console.log('📋 Available env vars:', Object.keys(process.env).filter(key => key.includes('MONGO')));
     return null;
   }
 
+  console.log('✅ MONGODB_URI found, length:', process.env.MONGODB_URI.length);
+  console.log('🔗 MongoDB URI preview:', process.env.MONGODB_URI.substring(0, 30) + '...');
+
   try {
+    console.log('🚀 Attempting MongoDB connection...');
+    const connectionStart = Date.now();
+    
     const connection = await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      maxPoolSize: 10, // Maintain up to 10 socket connections
-      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-      bufferCommands: false, // Disable mongoose buffering
-      bufferMaxEntries: 0 // Disable mongoose buffering
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 8000, // Increased timeout
+      socketTimeoutMS: 45000,
+      bufferCommands: false,
+      bufferMaxEntries: 0
     });
     
+    const connectionTime = Date.now() - connectionStart;
+    console.log(`✅ MongoDB connected successfully in ${connectionTime}ms`);
+    console.log('📊 Connection state:', mongoose.connection.readyState);
+    console.log('🏷️ Database name:', mongoose.connection.db?.databaseName);
+    
     cachedDb = connection;
-    console.log('✅ MongoDB connected successfully');
     return connection;
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
+    console.error('❌ MongoDB connection failed:', error.message);
+    console.error('🔍 Error details:', {
+      name: error.name,
+      code: error.code,
+      codeName: error.codeName
+    });
     return null;
   }
 }
@@ -121,7 +140,9 @@ export default async function handler(req, res) {
 
   try {
     // Try to connect to database
+    console.log('🎯 Posts API called, attempting database connection...');
     const dbConnection = await connectToDatabase();
+    console.log('🔗 Database connection result:', !!dbConnection);
 
     if (req.method === 'GET') {
       // Get all posts from MongoDB
