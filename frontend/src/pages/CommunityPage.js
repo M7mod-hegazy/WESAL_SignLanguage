@@ -85,11 +85,25 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       localStorage.removeItem(versionKey);
       
       // Remove all user-specific post data
+      Object.keys(localStorage).forEach(key => {
         if (key.startsWith('sharedPosts_') || 
             key.startsWith('userLikes_') || 
             key.startsWith('userSaves_') || 
             key.startsWith('userShares_')) {
           localStorage.removeItem(key);
+        }
+      });
+      
+      localStorage.setItem(versionKey, currentVersion);
+    }
+    
+    // Load posts and stories directly from MongoDB
+    setLoading(true);
+    fetchPosts();
+    fetchStories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
   // Infinite scroll handler
   useEffect(() => {
     const handleScroll = (e) => {
