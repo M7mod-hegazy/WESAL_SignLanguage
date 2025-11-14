@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test MongoDB API</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>Test MongoDB Posts API</h1>
+    
+    <div>
+        <h2>Create Post</h2>
+        <textarea id="postContent" placeholder="Enter post content...">Test post from HTML - MongoDB integration test</textarea><br>
+        <button onclick="createPost()">Create Post</button>
+    </div>
+    
+    <div>
+        <h2>Get Posts</h2>
+        <button onclick="getPosts()">Fetch Posts</button>
+        <div id="posts"></div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        
+        async function createPost() {
+            const content = document.getElementById('postContent').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/posts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer test-token'
+                    },
+                    body: JSON.stringify({
+                        content: content,
+                        media: []
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Create response:', data);
+                
+                if (data.success) {
+                    alert('Post created successfully!');
+                    getPosts(); // Refresh posts
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error creating post:', error);
+                alert('Error creating post: ' + error.message);
+            }
+        }
+        
+        async function getPosts() {
+            try {
+                const response = await fetch(`${API_BASE}/posts?page=1&limit=10`);
+                const data = await response.json();
+                console.log('Get posts response:', data);
+                
+                const postsDiv = document.getElementById('posts');
+                
+                if (data.success && data.posts) {
+                    postsDiv.innerHTML = '<h3>Posts from MongoDB:</h3>';
+                    data.posts.forEach(post => {
+                        postsDiv.innerHTML += `
+                            <div style="border: 1px solid #ccc; margin: 10px; padding: 10px;">
+                                <strong>ID:</strong> ${post.id}<br>
+                                <strong>Content:</strong> ${post.content}<br>
+                                <strong>Author:</strong> ${post.author.displayName}<br>
+                                <strong>Created:</strong> ${new Date(post.createdAt).toLocaleString()}<br>
+                                <strong>Likes:</strong> ${post.likeCount} | 
+                                <strong>Saves:</strong> ${post.saveCount} | 
+                                <strong>Shares:</strong> ${post.shareCount}
+                            </div>
+                        `;
+                    });
+                    
+                    postsDiv.innerHTML += `<p><strong>Total posts:</strong> ${data.pagination.totalPosts}</p>`;
+                    postsDiv.innerHTML += `<p><strong>MongoDB connected:</strong> ${data._debug.mongoConnected}</p>`;
+                } else {
+                    postsDiv.innerHTML = '<p>No posts found or API error</p>';
+                }
+            } catch (error) {
+                console.error('Error fetching posts:', error);
+                document.getElementById('posts').innerHTML = '<p>Error fetching posts: ' + error.message + '</p>';
+            }
+        }
+        
+        // Load posts on page load
+        window.onload = getPosts;
+    </script>
+</body>
+</html>
