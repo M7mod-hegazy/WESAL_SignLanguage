@@ -719,7 +719,8 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
         const mediaType = file.type.startsWith('image/') ? 'image' : 'video';
         setEditMedia(prev => [...prev, {
           type: mediaType,
-          url: event.target.result
+          url: event.target.result, // For preview
+          file: file // Store the actual file object for upload
         }]);
       };
       reader.readAsDataURL(file);
@@ -739,23 +740,30 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     try {
       const token = await user.getIdToken();
 
-      // Use FormData to send files instead of base64
+      // Use FormData to send files
       const formData = new FormData();
       formData.append('content', editContent);
       
+      console.log('📝 [Edit] Saving with', editMedia.length, 'media items');
+      
       // Append all media files (only actual files, not base64 data URLs)
-      editMedia.forEach((media) => {
-        // Check if it's a file object or base64 data URL
+      editMedia.forEach((media, index) => {
+        console.log(`📁 [Edit] Media ${index}:`, {
+          hasFile: !!media.file,
+          urlType: media.url?.startsWith('data:') ? 'base64' : 'cloudinary',
+          type: media.type
+        });
+        
+        // Check if it's a file object (new file added during edit)
         if (media.file) {
-          // New file added during edit
+          console.log(`✅ [Edit] Appending new file: ${media.file.name}`);
           formData.append('media', media.file);
-        } else if (media.url && !media.url.startsWith('data:')) {
-          // Existing Cloudinary URL - keep as is by sending the URL
-          formData.append('existingMedia', JSON.stringify(media));
         }
         // Skip base64 data URLs - they shouldn't be sent
+        // Existing Cloudinary URLs will be kept by the backend (no media files = keep existing)
       });
 
+      console.log('📤 [Edit] Sending request to backend');
       const response = await axios.put(
         `${API_BASE_URL}/posts/${postId}`,
         formData,
