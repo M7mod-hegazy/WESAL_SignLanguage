@@ -551,6 +551,22 @@ async function handleCreateStory(req, res) {
 // ============================================
 
 module.exports = async (req, res) => {
+  // Ensure res has status method (for Node.js http.createServer compatibility)
+  if (!res.status) {
+    res.status = function(code) {
+      this.statusCode = code;
+      return this;
+    };
+  }
+  
+  // Ensure res has json method (for Node.js http.createServer compatibility)
+  if (!res.json) {
+    res.json = function(data) {
+      this.setHeader('Content-Type', 'application/json');
+      this.end(JSON.stringify(data));
+    };
+  }
+
   enableCORS(res);
 
   if (req.method === 'OPTIONS') {
@@ -560,7 +576,7 @@ module.exports = async (req, res) => {
   try {
     // Handle file uploads
     if (!req.files && req.method === 'POST') {
-      // Use express-fileupload to parse multipart/form-data
+      // Use busboy to parse multipart/form-data
       const busboy = require('busboy');
       const bb = busboy({ headers: req.headers });
       const files = {};
