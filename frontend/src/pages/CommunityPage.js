@@ -201,26 +201,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     }
   }, [loadingMore, hasMore, user, posts, page]);
 
-  // Infinite scroll handler
-  useEffect(() => {
-    const handleScroll = (e) => {
-      const container = e.target;
-      const scrollTop = container.scrollTop;
-      const scrollHeight = container.scrollHeight;
-      const clientHeight = container.clientHeight;
-      
-      // Load more when user scrolls to bottom (with 200px threshold)
-      if (scrollHeight - scrollTop - clientHeight < 200 && !loadingMore && hasMore) {
-        loadMorePosts();
-      }
-    };
-
-    const container = document.querySelector('[data-community-scroll]');
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
-  }, [loadingMore, hasMore, loadMorePosts]);
+  // Removed infinite scroll - using "Load More" button instead for better reliability
 
   const fetchStories = useCallback(async () => {
     // Load stories from MongoDB
@@ -2027,6 +2008,38 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
             </div>
             );
           })}
+
+          {/* Load More Button */}
+          {hasMore && !loadingMore && (
+            <button
+              onClick={loadMorePosts}
+              style={{
+                width: '90%',
+                margin: '20px auto',
+                padding: '12px 20px',
+                background: theme.colors.primary.orange,
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                fontFamily: theme.typography.fonts.primary,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 12px rgba(241, 138, 33, 0.3)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#E67E1A';
+                e.currentTarget.style.transform = 'scale(1.02)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = theme.colors.primary.orange;
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+              تحميل المزيد
+            </button>
+          )}
 
           {/* Loading More Indicator */}
           {loadingMore && (
