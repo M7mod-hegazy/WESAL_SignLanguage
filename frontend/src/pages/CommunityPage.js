@@ -1429,6 +1429,31 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                 </div>
               )}
 
+              {/* Shared Post Indicator */}
+              {post.isShared && post.sharedBy && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: '10px',
+                  padding: '8px 10px',
+                  background: '#FFF9F0',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  color: theme.colors.primary.blue,
+                  fontFamily: theme.typography.fonts.secondary
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="18" cy="5" r="3" fill={theme.colors.primary.orange}/>
+                    <circle cx="6" cy="12" r="3" fill={theme.colors.primary.orange}/>
+                    <circle cx="18" cy="19" r="3" fill={theme.colors.primary.orange}/>
+                    <line x1="8.5" y1="13" x2="15.5" y2="18" stroke={theme.colors.primary.orange} strokeWidth="2"/>
+                    <line x1="8.5" y1="11" x2="15.5" y2="6" stroke={theme.colors.primary.orange} strokeWidth="2"/>
+                  </svg>
+                  <span>مشارك من قبل <strong>{post.sharedBy?.name || 'مستخدم'}</strong></span>
+                </div>
+              )}
+
               {/* Post Header */}
               <div style={{
                 display: 'flex',
@@ -1830,8 +1855,8 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                   }}>{post.commentCount || 0}</span>
                 </button>
 
-                {/* Share Button */}
-                {!post.isShared && (
+                {/* Share Button - Hide for shared posts */}
+                {!post.isShared && !post.sharedBy && (
                   <button 
                     onClick={() => handleShare(post.id)}
                     style={{

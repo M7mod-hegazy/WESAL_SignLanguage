@@ -551,11 +551,17 @@ async function handleCreatePost(req, res) {
     process.stderr.write('╚═══════════════════════════════════════════════════════════╝\n');
     process.stderr.write('\n\n');
 
-    const { content } = req.body;
+    const { content, isShared, originalPostId, sharedBy } = req.body;
 
     if (!content) {
       return res.status(400).json({ success: false, error: 'Content is required' });
     }
+
+    console.log('📝 [Post Create] Received data:', {
+      isShared,
+      originalPostId,
+      sharedBy: sharedBy ? { name: sharedBy.name, uid: sharedBy.uid } : null
+    });
 
     // Handle file uploads to Cloudinary
     let mediaData = [];
@@ -627,7 +633,10 @@ async function handleCreatePost(req, res) {
       likes: [],
       comments: [],
       saves: [],
-      shares: 0
+      shares: 0,
+      isShared: isShared || false,
+      originalPostId: originalPostId || null,
+      sharedBy: sharedBy || null
     });
 
     await post.save();
@@ -1037,13 +1046,14 @@ module.exports = async (req, res) => {
         
         await post.save();
         
-        const formattedPost = formatPost(post);
+        const formattedPost = formatPost(post, userId);
         console.log('📊 [Like Debug] formattedPost:', formattedPost);
         console.log('📊 [Like Debug] formattedPost.likeCount:', formattedPost.likeCount);
+        console.log('📊 [Like Debug] formattedPost.isLiked:', formattedPost.isLiked);
         const response = {
           success: true,
           post: formattedPost,
-          isLiked: likeIndex === -1,
+          isLiked: formattedPost.isLiked,
           likeCount: formattedPost.likeCount
         };
         console.log('📊 [Like Debug] Sending response:', response);
@@ -1095,13 +1105,14 @@ module.exports = async (req, res) => {
         
         await post.save();
         
-        const formattedPost = formatPost(post);
+        const formattedPost = formatPost(post, userId);
         console.log('📊 [Save Debug] formattedPost:', formattedPost);
         console.log('📊 [Save Debug] formattedPost.saveCount:', formattedPost.saveCount);
+        console.log('📊 [Save Debug] formattedPost.isSaved:', formattedPost.isSaved);
         const response = {
           success: true,
           post: formattedPost,
-          isSaved: saveIndex === -1,
+          isSaved: formattedPost.isSaved,
           saveCount: formattedPost.saveCount
         };
         console.log('📊 [Save Debug] Sending response:', response);
@@ -1203,7 +1214,7 @@ module.exports = async (req, res) => {
         post.comments.push(comment);
         await post.save();
         
-        const formattedPost = formatPost(post);
+        const formattedPost = formatPost(post, userId);
         console.log('💬 [Comment] Added comment');
         console.log('📊 [Comment Debug] formattedPost:', formattedPost);
         console.log('📊 [Comment Debug] formattedPost.commentCount:', formattedPost.commentCount);
