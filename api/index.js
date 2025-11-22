@@ -17,6 +17,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 // MongoDB connection cache
 let cachedConnection = null;
+let connectionPromise = null;
 
 async function connectToDatabase() {
   // Return cached connection if already connected
@@ -25,36 +26,45 @@ async function connectToDatabase() {
     return cachedConnection;
   }
 
+  // If connection is in progress, wait for it
+  if (connectionPromise) {
+    console.log('⏳ Waiting for MongoDB connection in progress...');
+    return await connectionPromise;
+  }
+
   if (!process.env.MONGODB_URI) {
     console.error('❌ MONGODB_URI environment variable not set');
     return null;
   }
 
-  try {
-    console.log('🔄 Establishing new MongoDB connection...');
-    
-    // Disconnect any existing connection first
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect();
+  // Create a promise for this connection attempt
+  connectionPromise = (async () => {
+    try {
+      console.log('🔄 Establishing new MongoDB connection...');
+      
+      // Don't disconnect - just try to connect
+      // Mongoose will reuse existing connection if available
+      await mongoose.connect(process.env.MONGODB_URI, {
+        maxPoolSize: 10,
+        minPoolSize: 0,
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        family: 4 // Use IPv4
+      });
+      
+      cachedConnection = mongoose.connection;
+      console.log('✅ MongoDB connected successfully');
+      return cachedConnection;
+    } catch (error) {
+      console.error('❌ MongoDB connection failed:', error.message);
+      cachedConnection = null;
+      return null;
+    } finally {
+      connectionPromise = null;
     }
-    
-    // Connect with optimized settings for Vercel
-    await mongoose.connect(process.env.MONGODB_URI, {
-      maxPoolSize: 5,
-      minPoolSize: 1,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-      family: 4 // Use IPv4
-    });
-    
-    cachedConnection = mongoose.connection;
-    console.log('✅ MongoDB connected successfully');
-    return cachedConnection;
-  } catch (error) {
-    console.error('❌ MongoDB connection failed:', error.message);
-    cachedConnection = null;
-    return null;
-  }
+  })();
+
+  return await connectionPromise;
 }
 
 // Firebase Admin setup
