@@ -512,46 +512,47 @@ async function handleCreatePost(req, res) {
     let authorPhoto = req.body.authorPhoto || '/pages/TeamPage/profile.png';
     let author = req.body.author || null;
 
-    console.log('\n\n');
-    console.log('╔═══════════════════════════════════════════════════════════╗');
-    console.log('║ 🔐 [Post Create] AUTHENTICATION DEBUG                     ║');
-    console.log('╚═══════════════════════════════════════════════════════════╝');
-    console.log('📨 RECEIVED FROM FRONTEND:');
-    console.log('   authorName:', req.body.authorName);
-    console.log('   authorPhoto:', req.body.authorPhoto ? 'YES' : 'NO');
-    console.log('   author (UID):', req.body.author);
-    console.log('   token:', token ? `YES (${token.length} chars)` : 'NO');
+    // Use stderr for guaranteed output visibility
+    process.stderr.write('\n\n');
+    process.stderr.write('╔═══════════════════════════════════════════════════════════╗\n');
+    process.stderr.write('║ 🔐 [Post Create] AUTHENTICATION DEBUG                     ║\n');
+    process.stderr.write('╚═══════════════════════════════════════════════════════════╝\n');
+    process.stderr.write(`📨 RECEIVED FROM FRONTEND:\n`);
+    process.stderr.write(`   authorName: ${req.body.authorName}\n`);
+    process.stderr.write(`   authorPhoto: ${req.body.authorPhoto ? 'YES' : 'NO'}\n`);
+    process.stderr.write(`   author (UID): ${req.body.author}\n`);
+    process.stderr.write(`   token: ${token ? `YES (${token.length} chars)` : 'NO'}\n`);
 
     // Try to verify token and override with token data if available
     if (token) {
       try {
         const decodedToken = await admin.auth().verifyIdToken(token);
-        console.log('✅ TOKEN VERIFIED');
-        console.log('   name:', decodedToken.name);
-        console.log('   email:', decodedToken.email);
-        console.log('   picture:', decodedToken.picture ? 'YES' : 'NO');
-        console.log('   uid:', decodedToken.uid);
+        process.stderr.write('✅ TOKEN VERIFIED\n');
+        process.stderr.write(`   name: ${decodedToken.name}\n`);
+        process.stderr.write(`   email: ${decodedToken.email}\n`);
+        process.stderr.write(`   picture: ${decodedToken.picture ? 'YES' : 'NO'}\n`);
+        process.stderr.write(`   uid: ${decodedToken.uid}\n`);
         
         // Prefer token data over body data
         authorName = decodedToken.name || decodedToken.email?.split('@')[0] || req.body.authorName || 'مستخدم';
         authorPhoto = decodedToken.picture || req.body.authorPhoto || '/pages/TeamPage/profile.png';
         author = decodedToken.uid;
       } catch (error) {
-        console.error('❌ TOKEN VERIFICATION FAILED:', error.message);
-        console.log('   Using body data instead');
+        process.stderr.write(`❌ TOKEN VERIFICATION FAILED: ${error.message}\n`);
+        process.stderr.write('   Using body data instead\n');
       }
     } else {
-      console.log('⚠️ NO TOKEN - Using body data');
+      process.stderr.write('⚠️ NO TOKEN - Using body data\n');
     }
     
-    console.log('📝 FINAL VALUES TO SAVE:');
-    console.log('   authorName:', authorName);
-    console.log('   authorPhoto:', authorPhoto ? 'YES' : 'NO');
-    console.log('   author:', author);
-    console.log('╔═══════════════════════════════════════════════════════════╗');
-    console.log('║ END AUTH DEBUG                                            ║');
-    console.log('╚═══════════════════════════════════════════════════════════╝');
-    console.log('\n\n');
+    process.stderr.write('📝 FINAL VALUES TO SAVE:\n');
+    process.stderr.write(`   authorName: ${authorName}\n`);
+    process.stderr.write(`   authorPhoto: ${authorPhoto ? 'YES' : 'NO'}\n`);
+    process.stderr.write(`   author: ${author}\n`);
+    process.stderr.write('╔═══════════════════════════════════════════════════════════╗\n');
+    process.stderr.write('║ END AUTH DEBUG                                            ║\n');
+    process.stderr.write('╚═══════════════════════════════════════════════════════════╝\n');
+    process.stderr.write('\n\n');
 
     const { content } = req.body;
 
@@ -721,45 +722,47 @@ async function handleCreateStory(req, res) {
     let authorPhoto = req.body.authorPhoto || '/pages/TeamPage/profile.png';
     let author = req.body.author || null;
 
-    console.log('═══════════════════════════════════════════════════════════');
-    console.log('🔐 [Story Create] AUTHENTICATION DEBUG');
-    console.log('═══════════════════════════════════════════════════════════');
-    console.log('📨 RECEIVED FROM FRONTEND:');
-    console.log('   authorName:', req.body.authorName);
-    console.log('   authorPhoto:', req.body.authorPhoto ? 'YES' : 'NO');
-    console.log('   author (UID):', req.body.author);
-    console.log('   token:', token ? `YES (${token.length} chars)` : 'NO');
+    // Use stderr for guaranteed output visibility
+    process.stderr.write('\n\n');
+    process.stderr.write('╔═══════════════════════════════════════════════════════════╗\n');
+    process.stderr.write('║ 🔐 [Story Create] AUTHENTICATION DEBUG                    ║\n');
+    process.stderr.write('╚═══════════════════════════════════════════════════════════╝\n');
+    process.stderr.write(`📨 RECEIVED FROM FRONTEND:\n`);
+    process.stderr.write(`   authorName: ${req.body.authorName}\n`);
+    process.stderr.write(`   authorPhoto: ${req.body.authorPhoto ? 'YES' : 'NO'}\n`);
+    process.stderr.write(`   author (UID): ${req.body.author}\n`);
+    process.stderr.write(`   token: ${token ? `YES (${token.length} chars)` : 'NO'}\n`);
 
     // Try to verify token and override with token data if available
     if (token) {
       try {
         const decodedToken = await admin.auth().verifyIdToken(token);
-        console.log('✅ TOKEN VERIFIED');
-        console.log('   name:', decodedToken.name);
-        console.log('   email:', decodedToken.email);
-        console.log('   picture:', decodedToken.picture ? 'YES' : 'NO');
-        console.log('   uid:', decodedToken.uid);
+        process.stderr.write('✅ TOKEN VERIFIED\n');
+        process.stderr.write(`   name: ${decodedToken.name}\n`);
+        process.stderr.write(`   email: ${decodedToken.email}\n`);
+        process.stderr.write(`   picture: ${decodedToken.picture ? 'YES' : 'NO'}\n`);
+        process.stderr.write(`   uid: ${decodedToken.uid}\n`);
         
         // Prefer token data over body data
         authorName = decodedToken.name || decodedToken.email?.split('@')[0] || req.body.authorName || 'مستخدم';
         authorPhoto = decodedToken.picture || req.body.authorPhoto || '/pages/TeamPage/profile.png';
         author = decodedToken.uid;
       } catch (error) {
-        console.error('❌ TOKEN VERIFICATION FAILED:', error.message);
-        console.log('   Using body data instead');
+        process.stderr.write(`❌ TOKEN VERIFICATION FAILED: ${error.message}\n`);
+        process.stderr.write('   Using body data instead\n');
       }
     } else {
-      console.log('⚠️ NO TOKEN - Using body data');
+      process.stderr.write('⚠️ NO TOKEN - Using body data\n');
     }
     
-    console.log('📝 FINAL VALUES TO SAVE:');
-    console.log('   authorName:', authorName);
-    console.log('   authorPhoto:', authorPhoto ? 'YES' : 'NO');
-    console.log('   author:', author);
-    console.log('╔═══════════════════════════════════════════════════════════╗');
-    console.log('║ END AUTH DEBUG                                            ║');
-    console.log('╚═══════════════════════════════════════════════════════════╝');
-    console.log('\n\n');
+    process.stderr.write('📝 FINAL VALUES TO SAVE:\n');
+    process.stderr.write(`   authorName: ${authorName}\n`);
+    process.stderr.write(`   authorPhoto: ${authorPhoto ? 'YES' : 'NO'}\n`);
+    process.stderr.write(`   author: ${author}\n`);
+    process.stderr.write('╔═══════════════════════════════════════════════════════════╗\n');
+    process.stderr.write('║ END AUTH DEBUG                                            ║\n');
+    process.stderr.write('╚═══════════════════════════════════════════════════════════╝\n');
+    process.stderr.write('\n\n');
 
     // Handle file upload to Cloudinary or base64 media
     let mediaData = [];
