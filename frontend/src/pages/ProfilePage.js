@@ -19,8 +19,10 @@ const ProfilePage = ({ onBack }) => {
   const [sharedPosts, setSharedPosts] = useState([]); // Keep for compatibility
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [stats, setStats] = useState({
-    savedCount: 0,
-    postsCount: 0, // User's own posts (نشر)
+    likedCount: 0,      // المحتويات (Likes)
+    sharedCount: 0,     // شير (Shares)
+    savedCount: 0,      // قائمتي (Saved)
+    postsCount: 0,      // User's own posts (نشر)
     challengesCount: 0
   });
 
@@ -163,16 +165,19 @@ const ProfilePage = ({ onBack }) => {
         const challengesCount = getChallengesCount(userProfile);
         console.log('🔍 Calculated challenges count:', challengesCount);
 
-        // Calculate stats
+        // Calculate stats - Count LIKES, SHARES, and SAVES
         setStats({
-          savedCount: saved.length,
-          postsCount: userOwnPosts.length, // User's own posts
-          challengesCount: challengesCount // From MongoDB
+          likedCount: liked.length,           // المحتويات (Likes) - count of liked posts
+          sharedCount: userSharedPosts.length, // شير (Shares) - count of shared posts
+          savedCount: saved.length,            // قائمتي (Saved) - count of saved posts
+          postsCount: userOwnPosts.length,     // User's own posts (نشر)
+          challengesCount: challengesCount     // From MongoDB
         });
 
         console.log('📊 Stats:', {
-          saved: saved.length,
-          shares: userSharedPosts.length,
+          likes: liked.length,                 // المحتويات
+          shares: userSharedPosts.length,      // شير
+          saved: saved.length,                 // قائمتي
           challenges: challengesCount,
           totalPosts: allPosts.length
         });
