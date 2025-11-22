@@ -685,6 +685,12 @@ async function handleGetStories(req, res) {
           stories: [
             {
               id: story._id?.toString() || story.id,
+              authorName: story.authorName || 'مستخدم',
+              author: {
+                uid: story.author,
+                displayName: story.authorName || 'مستخدم',
+                photoURL: story.authorPhoto || '/pages/TeamPage/profile.png'
+              },
               media: story.media && story.media.length > 0 ? story.media[0] : null,
               createdAt: story.createdAt,
               views: story.views || 0,
@@ -1028,9 +1034,11 @@ module.exports = async (req, res) => {
           post.content = req.body.content;
         }
         
-        // Handle media updates
-        let mediaData = [];
+        // Handle media updates - only if new files are provided
         if (req.files && Object.keys(req.files).length > 0) {
+          console.log('📁 [Post Edit] Processing new media files');
+          let mediaData = [];
+          
           // Process new media files
           for (const fileKey of Object.keys(req.files)) {
             const file = req.files[fileKey];
@@ -1046,6 +1054,7 @@ module.exports = async (req, res) => {
                   filename: f.name,
                   mimetype: f.mimetype
                 });
+                console.log('✅ [Post Edit] File uploaded:', f.name);
               } catch (uploadError) {
                 console.error('❌ Cloudinary upload failed:', uploadError.message);
                 // Fallback to base64
@@ -1061,6 +1070,9 @@ module.exports = async (req, res) => {
             }
           }
           post.media = mediaData;
+          console.log('📊 [Post Edit] Media updated, count:', mediaData.length);
+        } else {
+          console.log('📋 [Post Edit] No new media files, keeping existing media');
         }
         
         // Save updated post
