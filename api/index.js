@@ -16,14 +16,13 @@ if (process.env.NODE_ENV !== 'production') {
 // ============================================
 
 // MongoDB connection cache
-let isConnected = false;
+let cachedConnection = null;
 
 async function connectToDatabase() {
-  const currentState = mongoose.connection.readyState;
-  
-  if (currentState === 1) {
-    isConnected = true;
-    return mongoose.connection;
+  // Return cached connection if already connected
+  if (cachedConnection && mongoose.connection.readyState === 1) {
+    console.log('♻️ Using cached MongoDB connection');
+    return cachedConnection;
   }
 
   if (!process.env.MONGODB_URI) {
@@ -32,23 +31,28 @@ async function connectToDatabase() {
   }
 
   try {
-    if (currentState !== 0) {
+    console.log('🔄 Establishing new MongoDB connection...');
+    
+    // Disconnect any existing connection first
+    if (mongoose.connection.readyState !== 0) {
       await mongoose.disconnect();
     }
     
+    // Connect with optimized settings for Vercel
     await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      maxPoolSize: 10,
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 45000
+      maxPoolSize: 5,
+      minPoolSize: 1,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      family: 4 // Use IPv4
     });
     
-    isConnected = true;
-    return mongoose.connection;
+    cachedConnection = mongoose.connection;
+    console.log('✅ MongoDB connected successfully');
+    return cachedConnection;
   } catch (error) {
     console.error('❌ MongoDB connection failed:', error.message);
-    isConnected = false;
+    cachedConnection = null;
     return null;
   }
 }
