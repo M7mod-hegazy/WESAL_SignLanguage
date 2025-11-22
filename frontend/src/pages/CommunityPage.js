@@ -366,9 +366,9 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     // Send to MongoDB (use actualPostId for shared posts)
     try {
       const token = await user.getIdToken();
-      const response = await axios.put(
-        `${API_BASE_URL}/posts?id=${actualPostId}`,
-        { action: 'like' },
+      const response = await axios.post(
+        `${API_BASE_URL}/posts/${actualPostId}/like`,
+        {},
         { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
       );
       
@@ -471,9 +471,9 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     // Send to MongoDB (use actualPostId for shared posts)
     try {
       const token = await user.getIdToken();
-      const response = await axios.put(
-        `${API_BASE_URL}/posts?id=${actualPostId}`,
-        { action: 'comment', data: { comment: commentTextValue } },
+      const response = await axios.post(
+        `${API_BASE_URL}/posts/${actualPostId}/comment`,
+        { text: commentTextValue },
         { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
       );
       
@@ -552,9 +552,9 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     // Send to MongoDB (use actualPostId for shared posts)
     try {
       const token = await user.getIdToken();
-      const response = await axios.put(
-        `${API_BASE_URL}/posts?id=${actualPostId}`,
-        { action: 'save' },
+      const response = await axios.post(
+        `${API_BASE_URL}/posts/${actualPostId}/save`,
+        {},
         { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
       );
       
