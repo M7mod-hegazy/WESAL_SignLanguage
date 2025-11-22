@@ -551,19 +551,19 @@ async function handleCreateStory(req, res) {
 // ============================================
 
 module.exports = async (req, res) => {
-  // Ensure res has status method (for Node.js http.createServer compatibility)
-  if (!res.status) {
+  // Add polyfills for Node.js http.createServer compatibility
+  if (typeof res.status !== 'function') {
     res.status = function(code) {
-      this.statusCode = code;
-      return this;
+      res.statusCode = code;
+      return res;
     };
   }
   
-  // Ensure res has json method (for Node.js http.createServer compatibility)
-  if (!res.json) {
+  if (typeof res.json !== 'function') {
     res.json = function(data) {
-      this.setHeader('Content-Type', 'application/json');
-      this.end(JSON.stringify(data));
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify(data));
+      return res;
     };
   }
 
@@ -674,35 +674,3 @@ module.exports = async (req, res) => {
   }
 };
 
-// ============================================
-// LOCAL DEVELOPMENT SERVER
-// ============================================
-
-// For local development, start an HTTP server
-if (require.main === module) {
-  const http = require('http');
-  const handler = module.exports;
-  
-  const server = http.createServer(handler);
-  const PORT = process.env.PORT || 8000;
-  
-  server.listen(PORT, () => {
-    console.log('');
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('✅ 🚀 MONOLITHIC API STARTED SUCCESSFULLY');
-    console.log('═══════════════════════════════════════════════════════');
-    console.log(`📡 API available at http://localhost:${PORT}/api`);
-    console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('');
-  });
-  
-  server.on('error', (error) => {
-    console.error('❌ Server error:', error.message);
-    if (error.code === 'EADDRINUSE') {
-      console.error(`⚠️  Port ${PORT} is already in use`);
-    }
-    process.exit(1);
-  });
-}
