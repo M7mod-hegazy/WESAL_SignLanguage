@@ -667,6 +667,17 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       const token = await user.getIdToken();
       console.log('🔄 [Share] Original post media:', originalPost.media);
       
+      console.log('🔄 [Share] DEBUG - Original post author:', JSON.stringify(originalPost.author, null, 2));
+      console.log('🔄 [Share] DEBUG - Sending to API:', {
+        isShared: true,
+        originalPostId: postId,
+        originalAuthor: originalPost.author,
+        sharedBy: {
+          name: user.displayName || user.email?.split('@')[0] || 'مستخدم',
+          uid: user.uid
+        }
+      });
+      
       const response = await axios.post(
         `${API_BASE_URL}/posts`,
         {
@@ -685,15 +696,24 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       );
       
       console.log('🔄 [Share] Response post media:', response.data.post?.media);
+      console.log('🔄 [Share] DEBUG - Full response post:', JSON.stringify(response.data.post, null, 2));
+      console.log('🔄 [Share] DEBUG - Response author:', JSON.stringify(response.data.post?.author, null, 2));
+      console.log('🔄 [Share] DEBUG - Response originalAuthor:', JSON.stringify(response.data.post?.originalAuthor, null, 2));
+      console.log('🔄 [Share] DEBUG - Response sharedBy:', JSON.stringify(response.data.post?.sharedBy, null, 2));
       
       if (response.data.success) {
         console.log('✅ Shared post saved to MongoDB');
         
         // Use the MongoDB response data for the shared post
         const mongoSharedPost = response.data.post || sharedPost;
+        console.log('🔄 [Share] DEBUG - mongoSharedPost to add to UI:', JSON.stringify(mongoSharedPost, null, 2));
+        console.log('🔄 [Share] DEBUG - mongoSharedPost.author:', JSON.stringify(mongoSharedPost?.author, null, 2));
+        console.log('🔄 [Share] DEBUG - mongoSharedPost.originalAuthor:', JSON.stringify(mongoSharedPost?.originalAuthor, null, 2));
         
         // Add shared post to the top with MongoDB data
+        console.log('🔄 [Share] DEBUG - Adding shared post to UI. Current posts count:', posts.length);
         setPosts([mongoSharedPost, ...updatedPosts]);
+        console.log('🔄 [Share] DEBUG - After setPosts, new posts count should be:', posts.length + 1);
         
         // Update the share count on original post (if it exists in MongoDB)
         try {

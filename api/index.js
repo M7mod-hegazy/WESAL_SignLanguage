@@ -220,8 +220,16 @@ function formatPost(postDoc, requesterId = 'anonymous') {
   if (!postDoc) return null;
   
   try {
+    console.log('📊 [formatPost] DEBUG - Input postDoc:', {
+      isShared: postDoc.isShared,
+      author: postDoc.author,
+      originalAuthor: postDoc.originalAuthor,
+      sharedBy: postDoc.sharedBy
+    });
+    
     // For shared posts, use originalAuthor; otherwise use author
     const authorData = postDoc.isShared && postDoc.originalAuthor ? postDoc.originalAuthor : postDoc.author;
+    console.log('📊 [formatPost] DEBUG - Using authorData:', JSON.stringify(authorData, null, 2));
     
     // Use authorName directly if it exists and is not empty
     let authorName = postDoc.authorName;
@@ -237,7 +245,7 @@ function formatPost(postDoc, requesterId = 'anonymous') {
     
     const postId = postDoc._id ? (typeof postDoc._id === 'string' ? postDoc._id : postDoc._id.toString()) : 'unknown';
     
-    return {
+    const formattedResult = {
       id: postId,
       content: postDoc.content || 'منشور من قاعدة البيانات',
       media: postDoc.media || [],
@@ -266,6 +274,15 @@ function formatPost(postDoc, requesterId = 'anonymous') {
       createdAt: postDoc.createdAt,
       updatedAt: postDoc.updatedAt
     };
+    
+    console.log('📊 [formatPost] DEBUG - Final formatted result:', {
+      isShared: formattedResult.isShared,
+      author: formattedResult.author,
+      originalAuthor: formattedResult.originalAuthor,
+      sharedBy: formattedResult.sharedBy
+    });
+    
+    return formattedResult;
   } catch (error) {
     console.error('❌ Error formatting post:', error.message);
     console.error('Post data:', postDoc);
@@ -692,8 +709,10 @@ async function handleCreatePost(req, res) {
     console.log('📝 [Post Create] Received data:', {
       isShared,
       originalPostId,
+      originalAuthor: originalAuthor ? { name: originalAuthor.name, uid: originalAuthor.uid } : null,
       sharedBy: sharedBy ? { name: sharedBy.name, uid: sharedBy.uid } : null
     });
+    console.log('📝 [Post Create] DEBUG - Full originalAuthor:', JSON.stringify(originalAuthor, null, 2));
 
     // Handle file uploads to Cloudinary
     let mediaData = [];
@@ -792,9 +811,19 @@ async function handleCreatePost(req, res) {
       sharedBy: enrichedSharedBy
     });
 
+    console.log('📝 [Post Create] DEBUG - Post object before save:', {
+      isShared: post.isShared,
+      author: post.author,
+      originalAuthor: post.originalAuthor,
+      sharedBy: post.sharedBy
+    });
+
     await post.save();
     console.log('✅ [Post Create] Post saved:', post._id);
     console.log('✅ [Post Create] Saved authorName:', post.authorName);
+    console.log('✅ [Post Create] Saved isShared:', post.isShared);
+    console.log('✅ [Post Create] Saved originalAuthor:', JSON.stringify(post.originalAuthor, null, 2));
+    console.log('✅ [Post Create] Saved sharedBy:', JSON.stringify(post.sharedBy, null, 2));
     console.log('✅ [Post Create] Media count:', post.media.length);
 
     return res.status(201).json({
