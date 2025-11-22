@@ -999,6 +999,9 @@ module.exports = async (req, res) => {
     if (path.startsWith('/api/posts/') && req.method === 'PUT' && !req.url.includes('?')) {
       const postId = path.split('/').pop();
       console.log('✏️ [Post Edit] Received edit request for post:', postId);
+      console.log('📨 [Post Edit] Body keys:', Object.keys(req.body || {}));
+      console.log('📨 [Post Edit] Body content:', req.body?.content);
+      console.log('📨 [Post Edit] Files keys:', Object.keys(req.files || {}));
       
       if (!postId) {
         return res.status(400).json({ success: false, error: 'Post ID required' });
@@ -1030,6 +1033,9 @@ module.exports = async (req, res) => {
           return res.status(404).json({ success: false, error: 'Post not found' });
         }
         
+        console.log('📋 [Post Edit] Current post content:', post.content);
+        console.log('📋 [Post Edit] Current media count:', post.media?.length || 0);
+        
         // Check if user is the post owner
         const postAuthorId = typeof post.author === 'string' ? post.author : post.author?.uid;
         if (postAuthorId !== decodedToken.uid) {
@@ -1039,8 +1045,10 @@ module.exports = async (req, res) => {
         
         // Update post content
         if (req.body.content) {
-          console.log('📝 [Post Edit] Updating content');
+          console.log('📝 [Post Edit] Updating content from:', post.content, 'to:', req.body.content);
           post.content = req.body.content;
+        } else {
+          console.log('⚠️ [Post Edit] No content in request body');
         }
         
         // Handle media updates - append new files to existing media
