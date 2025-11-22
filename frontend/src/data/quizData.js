@@ -6,56 +6,56 @@ import { videoMapping } from './videoMapping';
 const videoQuestions = [
   {
     "id": 1,
-    "videoFileName": "i_want_glass_of_water.webm",
+    "videoPath": "/videos/new/webm/أريد كأساً من الماء.webm",
     "correctAnswer": "أريد كأساً من الماء",
     "difficulty": "easy",
     "coins_reward": 10
   },
   {
     "id": 2,
-    "videoFileName": "sorry_i_am_busy_with_work.webm",
+    "videoPath": "/videos/new/webm/أعتذر لارتباطي بعمل.webm",
     "correctAnswer": "أعتذر لارتباطي بعمل",
     "difficulty": "medium",
     "coins_reward": 15
   },
   {
     "id": 3,
-    "videoFileName": "peace_be_upon_you.webm",
+    "videoPath": "/videos/new/webm/السلام عليكم.webm",
     "correctAnswer": "السلام عليكم",
     "difficulty": "easy",
     "coins_reward": 10
   },
   {
     "id": 4,
-    "videoFileName": "good_morning.webm",
+    "videoPath": "/videos/new/webm/صباح الخير.webm",
     "correctAnswer": "صباح الخير",
     "difficulty": "easy",
     "coins_reward": 10
   },
   {
     "id": 5,
-    "videoFileName": "happy_new_year.webm",
+    "videoPath": "/videos/new/webm/كل عام و انت بخير.webm",
     "correctAnswer": "كل عام وانت بخير",
     "difficulty": "medium",
     "coins_reward": 15
   },
   {
     "id": 6,
-    "videoFileName": "congratulations_on_baby.webm",
+    "videoPath": "/videos/new/webm/مبروك المولود.webm",
     "correctAnswer": "مبروك المولود",
     "difficulty": "medium",
     "coins_reward": 15
   },
   {
     "id": 7,
-    "videoFileName": "congratulations_on_success.webm",
+    "videoPath": "/videos/new/webm/نجاح مبارك.webm",
     "correctAnswer": "نجاح مبارك",
     "difficulty": "medium",
     "coins_reward": 15
   },
   {
     "id": 8,
-    "videoFileName": "are_you_okay.webm",
+    "videoPath": "/videos/new/webm/هل أنت بخير ؟.webm",
     "correctAnswer": "هل أنت بخير؟",
     "difficulty": "easy",
     "coins_reward": 10
