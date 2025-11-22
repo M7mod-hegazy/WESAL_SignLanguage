@@ -1412,7 +1412,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                     fontWeight: theme.typography.weights.bold,
                     color: theme.colors.primary.blue,
                     fontFamily: theme.typography.fonts.primary
-                  }}>{post.originalAuthor?.name || post.author?.name || 'مستخدم'}</div>
+                  }}>{post.originalAuthor?.name || post.author?.displayName || post.author?.name || 'مستخدم'}</div>
                   <div style={{
                     fontSize: '11px',
                     color: '#999',
@@ -1421,7 +1421,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                 </div>
 
                 {/* 3-Dot Menu (only for post owner) */}
-                {user && post.author?.name === (user.displayName || user.email?.split('@')[0]) && (
+                {user && (post.author?.displayName === (user.displayName || user.email?.split('@')[0]) || post.author?.uid === user.uid) && (
                   <div style={{ position: 'relative' }}>
                     <button
                       onClick={() => setShowPostMenu({...showPostMenu, [post.id]: !showPostMenu[post.id]})}
