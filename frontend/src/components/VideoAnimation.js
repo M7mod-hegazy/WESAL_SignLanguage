@@ -138,7 +138,7 @@ const VideoAnimation = ({
     >
       {/* Check if videoSrc already has extension (full path) */}
       {videoSrc && videoSrc.endsWith('.webm') ? (
-        // Full path with extension - use as is
+        // Full path with extension - use as is (no fallbacks needed)
         <source 
           src={videoSrc} 
           type="video/webm"

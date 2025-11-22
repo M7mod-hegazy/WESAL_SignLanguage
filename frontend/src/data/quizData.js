@@ -1,7 +1,8 @@
-// Real quiz data based on actual video files
-// Each video name is the correct answer
+// Quiz data for REGULAR QUIZ
+// Videos: /videos/new/webm/ (Arabic-named WebM files)
+// Each video filename is the correct answer
 
-const videoQuestions = [
+const regularQuizQuestions = [
   {
     "id": 1,
     "videoPath": "/videos/new/webm/أريد كأساً من ا.webm",
@@ -99,9 +100,43 @@ const shuffleArray = (array) => {
   return shuffled;
 };
 
+// Simulation quiz data for COFFEE SCENARIO
+// Videos: /videos/coffee/ with ordered filenames
+const simulationQuizQuestions = [
+  {
+    "id": 1,
+    "videoPath": "/videos/coffee/1_greeting.webm",
+    "correctAnswer": "السلام عليكم",
+    "difficulty": "easy",
+    "coins_reward": 10
+  },
+  {
+    "id": 2,
+    "videoPath": "/videos/coffee/2_order_coffee.webm",
+    "correctAnswer": "أريد قهوة من فضلك",
+    "difficulty": "medium",
+    "coins_reward": 15
+  },
+  {
+    "id": 3,
+    "videoPath": "/videos/coffee/3_okay.webm",
+    "correctAnswer": "حسناً",
+    "difficulty": "easy",
+    "coins_reward": 10
+  },
+  {
+    "id": 4,
+    "videoPath": "/videos/coffee/4_please_sit.webm",
+    "correctAnswer": "من فضلك اجلس",
+    "difficulty": "medium",
+    "coins_reward": 15
+  }
+];
+
 // Function to get a quiz question with shuffled answers
-export const getQuizQuestion = (questionId) => {
-  const question = videoQuestions.find(q => q.id === questionId);
+export const getQuizQuestion = (questionId, isSimulation = false) => {
+  const questionsArray = isSimulation ? simulationQuizQuestions : regularQuizQuestions;
+  const question = questionsArray.find(q => q.id === questionId);
   if (!question) return null;
 
   const wrongAnswers = generateWrongAnswers(question.correctAnswer);
@@ -126,18 +161,18 @@ export const getQuizQuestion = (questionId) => {
   };
 };
 
-// Function to get all questions in random order
+// Function to get all questions in random order (REGULAR QUIZ)
 export const getAllQuestionsRandomized = () => {
   console.log('📊 getAllQuestionsRandomized called');
-  console.log('📊 videoQuestions count:', videoQuestions.length);
-  console.log('📊 videoQuestions:', videoQuestions);
+  console.log('📊 regularQuizQuestions count:', regularQuizQuestions.length);
+  console.log('📊 regularQuizQuestions:', regularQuizQuestions);
   
-  const shuffledQuestions = shuffleArray(videoQuestions);
+  const shuffledQuestions = shuffleArray(regularQuizQuestions);
   console.log('📊 shuffledQuestions:', shuffledQuestions);
   
   const mappedQuestions = shuffledQuestions.map(q => {
     console.log('📊 Mapping question:', q.id, q.correctAnswer);
-    const mapped = getQuizQuestion(q.id);
+    const mapped = getQuizQuestion(q.id, false);
     console.log('📊 Mapped result:', mapped);
     return mapped;
   });
@@ -148,21 +183,38 @@ export const getAllQuestionsRandomized = () => {
   return mappedQuestions;
 };
 
+// Function to get all simulation questions in order (SIMULATION QUIZ)
+export const getSimulationQuestions = () => {
+  console.log('📊 getSimulationQuestions called');
+  console.log('📊 simulationQuizQuestions count:', simulationQuizQuestions.length);
+  
+  const mappedQuestions = simulationQuizQuestions.map(q => {
+    console.log('📊 Mapping simulation question:', q.id, q.correctAnswer);
+    const mapped = getQuizQuestion(q.id, true);
+    console.log('📊 Mapped result:', mapped);
+    return mapped;
+  });
+  
+  console.log('📊 Final simulation questions count:', mappedQuestions.length);
+  return mappedQuestions;
+};
+
 // Function to get a random question
 export const getRandomQuestion = () => {
-  const randomIndex = Math.floor(Math.random() * videoQuestions.length);
-  return getQuizQuestion(videoQuestions[randomIndex].id);
+  const randomIndex = Math.floor(Math.random() * regularQuizQuestions.length);
+  return getQuizQuestion(regularQuizQuestions[randomIndex].id, false);
 };
 
 // Function to get total number of questions
 export const getTotalQuestions = () => {
-  return videoQuestions.length;
+  return regularQuizQuestions.length;
 };
 
 // Export all functions as named exports and default
 const quizDataExport = {
   getQuizQuestion,
   getAllQuestionsRandomized,
+  getSimulationQuestions,
   getRandomQuestion,
   getTotalQuestions
 };

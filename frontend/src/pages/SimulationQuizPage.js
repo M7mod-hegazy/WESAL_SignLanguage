@@ -22,10 +22,9 @@ const SimulationQuizPage = () => {
       console.log('🎯 SimulationQuizPage: Loading quiz...');
       console.log('🎯 category:', category);
       console.log('🎯 quizDataModule:', quizDataModule);
-      console.log('🎯 quizDataModule.getAllQuestionsRandomized:', quizDataModule.getAllQuestionsRandomized);
       
-      // Get all randomized questions using the quizData functions
-      const allQuestions = quizDataModule.getAllQuestionsRandomized();
+      // Get simulation questions in order (not randomized)
+      const allQuestions = quizDataModule.getSimulationQuestions();
       
       console.log('🎯 allQuestions returned:', allQuestions);
       console.log('🎯 allQuestions length:', allQuestions?.length);
@@ -33,7 +32,7 @@ const SimulationQuizPage = () => {
       if (allQuestions && allQuestions.length > 0) {
         setAllQuestions(allQuestions);
         setCurrentQuiz(allQuestions[0]);
-        console.log('✅ Loaded', allQuestions.length, 'quiz questions for simulation');
+        console.log('✅ Loaded', allQuestions.length, 'simulation quiz questions');
         console.log('✅ First question:', allQuestions[0]);
       } else {
         console.error('❌ No questions found in quiz data');
