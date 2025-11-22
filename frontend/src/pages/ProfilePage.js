@@ -28,7 +28,7 @@ const ProfilePage = ({ onBack }) => {
 
   // Level system based on activity (easier at start, harder later)
   const calculateLevel = () => {
-    const totalActivity = stats.savedCount + stats.postsCount + stats.challengesCount;
+    const totalActivity = stats.likedCount + stats.sharedCount + stats.savedCount + stats.postsCount + stats.challengesCount;
     // Level 1: 0-4 activities (easy - 5 activities)
     // Level 2: 5-14 activities (medium - 10 activities)
     // Level 3: 15-29 activities (harder - 15 activities)
@@ -43,7 +43,7 @@ const ProfilePage = ({ onBack }) => {
   };
 
   const levelInfo = calculateLevel();
-  const totalActivity = stats.savedCount + stats.postsCount + stats.challengesCount;
+  const totalActivity = stats.likedCount + stats.sharedCount + stats.savedCount + stats.postsCount + stats.challengesCount;
   
   // Calculate progress to next level
   const progressToNextLevel = totalActivity - levelInfo.currentThreshold;
