@@ -332,6 +332,24 @@ async function handleAuthVerify(req, res) {
   }
 }
 
+// Helper function to format post response
+function formatPost(post) {
+  return {
+    id: post._id?.toString() || post.id,
+    content: post.content,
+    media: post.media || [],
+    author: {
+      displayName: post.authorName || 'مستخدم',
+      photoURL: post.authorPhoto || '/pages/TeamPage/profile.png'
+    },
+    createdAt: post.createdAt,
+    likes: post.likes || [],
+    saves: post.saves || [],
+    shares: post.shares || 0,
+    comments: post.comments || []
+  };
+}
+
 // GET /api/posts - Get posts list
 async function handleGetPosts(req, res) {
   try {
@@ -540,9 +558,14 @@ async function handleCreateStory(req, res) {
       success: true,
       story: {
         id: story._id.toString(),
-        media: story.media,
-        author: { displayName: story.authorName, photoURL: story.authorPhoto },
-        createdAt: story.createdAt
+        media: story.media || [],
+        author: { 
+          displayName: story.authorName || 'مستخدم', 
+          photoURL: story.authorPhoto || '/pages/TeamPage/profile.png' 
+        },
+        createdAt: story.createdAt,
+        views: 0,
+        likes: []
       }
     });
   } catch (error) {
@@ -668,6 +691,25 @@ module.exports = async (req, res) => {
     }
     if (path === '/api/stories' && req.method === 'POST') {
       return await handleCreateStory(req, res);
+    }
+
+    // Posts interaction routes (like, save, share)
+    if (path.startsWith('/api/posts') && req.method === 'PUT') {
+      // Handle like/save/share updates
+      const url = new URL(`http://localhost${req.url}`);
+      const postId = url.searchParams.get('id');
+      const action = url.searchParams.get('action');
+      
+      if (!postId) {
+        return res.status(400).json({ success: false, error: 'Post ID required' });
+      }
+      
+      // For now, just return success - interactions are stored in localStorage
+      return res.status(200).json({ 
+        success: true, 
+        message: `Post ${action || 'updated'} successfully`,
+        postId 
+      });
     }
 
     // 404
