@@ -710,13 +710,23 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       if (response.data.success) {
         console.log('✅ Shared post saved to MongoDB');
         
-        // Try to update the share count on original post (if it exists in MongoDB)
+        // Update the share count on original post (if it exists in MongoDB)
         try {
-          await axios.put(
-            `${API_BASE_URL}/posts?id=${postId}`,
-            { action: 'share' },
+          const shareResponse = await axios.post(
+            `${API_BASE_URL}/posts/${postId}/share`,
+            {},
             { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
           );
+          
+          if (shareResponse.data.success) {
+            console.log('✅ Share count updated on original post');
+            // Update the original post in state with new share count
+            setPosts(posts.map(post => 
+              post.id === postId 
+                ? { ...post, shareCount: shareResponse.data.post?.shareCount || (post.shareCount || 0) + 1 }
+                : post
+            ));
+          }
         } catch (shareError) {
           // Original post might not exist in MongoDB (local-only), that's okay
           console.log('⚠️ Could not update original post share count (might be local-only)');
