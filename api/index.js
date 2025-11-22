@@ -1155,7 +1155,7 @@ module.exports = async (req, res) => {
         post.shares = (post.shares || 0) + 1;
         await post.save();
         
-        const formattedPost = formatPost(post);
+        const formattedPost = formatPost(post, decodedToken.uid);
         console.log('🔄 [Share] Share count:', formattedPost.shareCount);
         
         return res.status(200).json({
@@ -1214,7 +1214,7 @@ module.exports = async (req, res) => {
         post.comments.push(comment);
         await post.save();
         
-        const formattedPost = formatPost(post, userId);
+        const formattedPost = formatPost(post, decodedToken.uid);
         console.log('💬 [Comment] Added comment');
         console.log('📊 [Comment Debug] formattedPost:', formattedPost);
         console.log('📊 [Comment Debug] formattedPost.commentCount:', formattedPost.commentCount);
