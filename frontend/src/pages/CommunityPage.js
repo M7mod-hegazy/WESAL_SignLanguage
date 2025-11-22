@@ -199,7 +199,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     } finally {
       setLoadingMore(false);
     }
-  }, [loadingMore, hasMore, user, posts, page]);
+  }, [loadingMore, hasMore, user, page]);
 
   // Removed infinite scroll - using "Load More" button instead for better reliability
 
