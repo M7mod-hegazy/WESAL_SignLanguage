@@ -901,8 +901,10 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // Handle file uploads
-    if (!req.files && req.method === 'POST') {
+    // Handle file uploads for both POST and PUT requests with multipart/form-data
+    const contentType = req.headers['content-type'] || '';
+    if (!req.files && (req.method === 'POST' || req.method === 'PUT') && contentType.includes('multipart/form-data')) {
+      console.log('📦 [Parser] Parsing multipart/form-data for', req.method);
       // Use busboy to parse multipart/form-data
       const bb = busboy({ headers: req.headers });
       const files = {};
@@ -920,11 +922,13 @@ module.exports = async (req, res) => {
             name: info.filename,
             size: Buffer.concat(chunks).length
           };
+          console.log('📦 [Parser] File received:', info.filename, 'size:', Buffer.concat(chunks).length);
         });
       });
 
       bb.on('field', (fieldname, val) => {
         fields[fieldname] = val;
+        console.log('📦 [Parser] Field received:', fieldname, '=', val);
       });
 
       await new Promise((resolve, reject) => {
@@ -935,6 +939,7 @@ module.exports = async (req, res) => {
 
       req.files = files;
       req.body = fields;
+      console.log('📦 [Parser] Parsing complete. Files:', Object.keys(files).length, 'Fields:', Object.keys(fields).length);
     }
 
     // Parse request body if needed
