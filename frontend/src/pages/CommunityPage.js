@@ -1378,39 +1378,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                 marginBottom: '15px'
               }}
             >
-              {/* Shared By Indicator */}
-              {post.isShared && post.sharedBy && (
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '10px',
-                  padding: '8px',
-                  background: '#FFF3E0',
-                  borderRadius: '8px'
-                }}>
-                  <span style={{ fontSize: '16px' }}>🔄</span>
-                  <img 
-                    src={post.sharedBy.photo || '/pages/TeamPage/profile.png'}
-                    alt={post.sharedBy.name}
-                    style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '50%',
-                      objectFit: 'cover'
-                    }}
-                  />
-                  <span style={{
-                    fontSize: '13px',
-                    color: theme.colors.primary.blue,
-                    fontFamily: theme.typography.fonts.secondary
-                  }}>
-                    {post.sharedBy.name} شارك هذا المنشور
-                  </span>
-                </div>
-              )}
-
-              {/* Shared Post Indicator */}
+              {/* Shared Post Indicator - Only show once */}
               {post.isShared && post.sharedBy && (
                 <div style={{
                   display: 'flex',
@@ -1418,7 +1386,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                   gap: '8px',
                   marginBottom: '10px',
                   padding: '8px 10px',
-                  background: '#FFF9F0',
+                  background: '#FFF3E0',
                   borderRadius: '8px',
                   fontSize: '12px',
                   color: theme.colors.primary.blue,
@@ -1443,10 +1411,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                 marginBottom: '12px'
               }}>
                 <img 
-                  src={getDefaultProfileIcon(
-                    post.isShared && post.sharedBy?.photo ? post.sharedBy.photo : (post.author?.photo || post.author?.photoURL),
-                    post.isShared && post.sharedBy?.gender ? post.sharedBy.gender : (post.author?.gender || 'male')
-                  )}
+                  src={post.isShared && post.sharedBy?.photo ? post.sharedBy.photo : (post.author?.photo || post.author?.photoURL || getDefaultProfileIcon(null, post.author?.gender || 'male'))}
                   alt={post.isShared && post.sharedBy?.name ? post.sharedBy.name : (post.author?.name || 'مستخدم')}
                   crossOrigin="anonymous"
                   style={{
@@ -1463,8 +1428,9 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                     });
                     
                     // Fallback to default icon immediately
+                    const gender = post.isShared && post.sharedBy?.gender ? post.sharedBy.gender : (post.author?.gender || 'male');
                     console.log('⚠️ [Post Author] Using default icon.');
-                    e.target.src = getDefaultProfileIcon(null, post.author?.gender);
+                    e.target.src = getDefaultProfileIcon(null, gender);
                   }}
                   onLoad={() => {
                     console.log('✅ [Post Author] Image loaded successfully');
