@@ -1154,39 +1154,64 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
           }}
           >
             {/* User Avatar - Top Right INSIDE */}
-            <div style={{
-              position: 'absolute',
-              top: '12px',
-              right: '15px',
-              zIndex: 2,
-              pointerEvents: 'none'
-            }}>
-              <img 
-                src={getDefaultProfileIcon(user?.photoURL, user?.gender)}
-                alt="Profile"
-                crossOrigin="anonymous"
-                style={{
-                  width: '45px',
-                  height: '45px',
-                  borderRadius: '50%',
-                  border: `2px solid ${theme.colors.primary.orange}`,
-                  background: 'white',
-                  objectFit: 'cover'
-                }}
-                onError={(e) => {
-                  console.error('❌ [Create Post Profile] Google image load failed (429 rate limit):', {
-                    src: e.target.src,
-                    photoURL: user?.photoURL,
-                    timestamp: new Date().toISOString(),
-                    reason: 'Google servers are rate limiting this image URL'
-                  });
-                  
-                  // Google is rate limiting - don't retry, just use default icon immediately
-                  console.log('⚠️ [Create Post Profile] Google rate limit detected. Using default icon instead.');
-                  e.target.src = getDefaultProfileIcon(null, user?.gender);
-                }}
-              />
-            </div>
+            {user ? (
+              <div style={{
+                position: 'absolute',
+                top: '12px',
+                right: '15px',
+                zIndex: 2,
+                pointerEvents: 'none'
+              }}>
+                <img 
+                  src={getDefaultProfileIcon(user?.photoURL, user?.gender)}
+                  alt="Profile"
+                  crossOrigin="anonymous"
+                  style={{
+                    width: '45px',
+                    height: '45px',
+                    borderRadius: '50%',
+                    border: `2px solid ${theme.colors.primary.orange}`,
+                    background: 'white',
+                    objectFit: 'cover'
+                  }}
+                  onError={(e) => {
+                    console.error('❌ [Create Post Profile] Image load failed:', {
+                      src: e.target.src,
+                      photoURL: user?.photoURL,
+                      timestamp: new Date().toISOString()
+                    });
+                    
+                    // Fallback to default icon
+                    console.log('⚠️ [Create Post Profile] Using default icon.');
+                    e.target.src = getDefaultProfileIcon(null, user?.gender);
+                  }}
+                  onLoad={() => {
+                    console.log('✅ [Create Post Profile] Image loaded successfully');
+                  }}
+                />
+              </div>
+            ) : (
+              <div style={{
+                position: 'absolute',
+                top: '12px',
+                right: '15px',
+                zIndex: 2,
+                pointerEvents: 'none'
+              }}>
+                <img 
+                  src="/pages/TeamPage/profile.png"
+                  alt="Default Profile"
+                  style={{
+                    width: '45px',
+                    height: '45px',
+                    borderRadius: '50%',
+                    border: `2px solid ${theme.colors.primary.orange}`,
+                    background: 'white',
+                    objectFit: 'cover'
+                  }}
+                />
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div style={{
@@ -1364,18 +1389,18 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                     objectFit: 'cover'
                   }}
                   onError={(e) => {
-                    const photoUrl = post.author?.photo || post.author?.photoURL || post.originalAuthor?.photo;
-                    // Retry once for Google images that fail due to rate limiting
-                    if (photoUrl && !e.target.dataset.retried) {
-                      e.target.dataset.retried = 'true';
-                      setTimeout(() => {
-                        // Add cache-busting parameter to bypass rate limiting
-                        const separator = photoUrl.includes('?') ? '&' : '?';
-                        e.target.src = `${photoUrl}${separator}t=${Date.now()}`;
-                      }, 2000);
-                    } else {
-                      e.target.src = getDefaultProfileIcon(null, post.author?.gender);
-                    }
+                    console.error('❌ [Post Author] Image load failed:', {
+                      src: e.target.src,
+                      photoURL: post.author?.photoURL,
+                      timestamp: new Date().toISOString()
+                    });
+                    
+                    // Fallback to default icon immediately
+                    console.log('⚠️ [Post Author] Using default icon.');
+                    e.target.src = getDefaultProfileIcon(null, post.author?.gender);
+                  }}
+                  onLoad={() => {
+                    console.log('✅ [Post Author] Image loaded successfully');
                   }}
                 />
                 <div style={{

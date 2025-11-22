@@ -1,31 +1,80 @@
+console.log('🚀 [STARTUP] Starting backend server...');
+console.log('📍 [STARTUP] Current directory:', __dirname);
+
 require('dotenv').config();
+console.log('✅ [STARTUP] .env file loaded');
+console.log('📋 [STARTUP] Environment variables:');
+console.log('  - PORT:', process.env.PORT || '8000');
+console.log('  - NODE_ENV:', process.env.NODE_ENV || 'development');
+console.log('  - MONGODB_URI:', process.env.MONGODB_URI ? '✅ Set' : '❌ Missing');
+console.log('  - CORS_ORIGIN:', process.env.CORS_ORIGIN || 'http://localhost:3000');
+
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const connectDB = require('./config/database');
+
+console.log('✅ [STARTUP] Dependencies loaded');
+
+let connectDB;
+try {
+  connectDB = require('./config/database');
+  console.log('✅ [STARTUP] Database config loaded');
+} catch (error) {
+  console.error('❌ [STARTUP] Failed to load database config:', error.message);
+  process.exit(1);
+}
 
 // Initialize Firebase Admin
+console.log('🔥 [STARTUP] Initializing Firebase Admin...');
 const admin = require('firebase-admin');
-const serviceAccount = require('./firebase-admin-key.json');
+let serviceAccount;
+try {
+  serviceAccount = require('./firebase-admin-key.json');
+  console.log('✅ [STARTUP] Firebase key loaded');
+} catch (error) {
+  console.error('❌ [STARTUP] Failed to load firebase-admin-key.json:', error.message);
+  process.exit(1);
+}
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
-
-console.log('🔥 Firebase Admin initialized');
+try {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+  console.log('✅ [STARTUP] Firebase Admin initialized successfully');
+} catch (error) {
+  console.error('❌ [STARTUP] Firebase Admin initialization failed:', error.message);
+  process.exit(1);
+}
 
 // Import routes
-const signRoutes = require('./routes/signRoutes');
-const progressRoutes = require('./routes/progressRoutes');
-const authRoutes = require('./routes/authRoutes');
-const postRoutes = require('./routes/postRoutes');
-const storyRoutes = require('./routes/storyRoutes');
+console.log('📦 [STARTUP] Loading routes...');
+let signRoutes, progressRoutes, authRoutes, postRoutes, storyRoutes;
+try {
+  signRoutes = require('./routes/signRoutes');
+  progressRoutes = require('./routes/progressRoutes');
+  authRoutes = require('./routes/authRoutes');
+  postRoutes = require('./routes/postRoutes');
+  storyRoutes = require('./routes/storyRoutes');
+  console.log('✅ [STARTUP] All routes loaded successfully');
+} catch (error) {
+  console.error('❌ [STARTUP] Failed to load routes:', error.message);
+  console.error('Stack:', error.stack);
+  process.exit(1);
+}
 
 // Initialize Express app
+console.log('🔧 [STARTUP] Initializing Express app...');
 const app = express();
+console.log('✅ [STARTUP] Express app created');
 
 // Connect to MongoDB
-connectDB();
+console.log('🗄️  [STARTUP] Connecting to MongoDB...');
+connectDB().then(() => {
+  console.log('✅ [STARTUP] MongoDB connected');
+}).catch((error) => {
+  console.error('❌ [STARTUP] MongoDB connection failed:', error.message);
+  console.error('Stack:', error.stack);
+});
 
 // Middleware
 app.use(cors({
@@ -108,10 +157,39 @@ app.use((err, req, res, next) => {
 
 // Start server
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+console.log('🎯 [STARTUP] Attempting to start server on port:', PORT);
+
+const server = app.listen(PORT, () => {
+  console.log('');
+  console.log('═══════════════════════════════════════════════════════');
+  console.log('✅ 🚀 SERVER STARTED SUCCESSFULLY');
+  console.log('═══════════════════════════════════════════════════════');
   console.log(`📡 API available at http://localhost:${PORT}/api`);
+  console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🗄️  MongoDB: ${process.env.MONGODB_URI ? 'Configured' : 'NOT CONFIGURED'}`);
+  console.log('═══════════════════════════════════════════════════════');
+  console.log('');
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  console.error('❌ [SERVER ERROR] Server failed to start:', error.message);
+  if (error.code === 'EADDRINUSE') {
+    console.error(`⚠️  Port ${PORT} is already in use. Try a different port.`);
+  }
+  process.exit(1);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('❌ [UNCAUGHT EXCEPTION]', error);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ [UNHANDLED REJECTION]', reason);
 });
 
 module.exports = app;

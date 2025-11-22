@@ -1,3 +1,4 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const admin = require('firebase-admin');
 
@@ -48,6 +49,11 @@ async function connectToDatabase() {
 // Firebase Admin setup
 if (!admin.apps.length) {
   try {
+    console.log('🔥 Initializing Firebase Admin...');
+    console.log('📋 Firebase Project ID:', process.env.FIREBASE_PROJECT_ID ? '✅ Set' : '❌ Missing');
+    console.log('📋 Firebase Private Key:', process.env.FIREBASE_PRIVATE_KEY ? '✅ Set' : '❌ Missing');
+    console.log('📋 Firebase Client Email:', process.env.FIREBASE_CLIENT_EMAIL ? '✅ Set' : '❌ Missing');
+    
     const serviceAccount = {
       type: "service_account",
       project_id: process.env.FIREBASE_PROJECT_ID,
@@ -62,8 +68,10 @@ if (!admin.apps.length) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
+    console.log('✅ Firebase Admin initialized successfully');
   } catch (error) {
-    console.error('Firebase Admin initialization error:', error);
+    console.error('❌ Firebase Admin initialization error:', error.message);
+    console.error('Stack:', error.stack);
   }
 }
 
@@ -361,7 +369,12 @@ async function handleCreatePost(req, res) {
   try {
     const dbConnection = await connectToDatabase();
     if (!dbConnection) {
-      return res.status(503).json({ success: false, error: 'Database unavailable' });
+      console.error('❌ Database connection failed for POST /api/posts');
+      return res.status(503).json({ 
+        success: false, 
+        error: 'Database unavailable',
+        details: 'MongoDB connection failed. Check MONGODB_URI environment variable.'
+      });
     }
 
     const { content, media, authorName, authorPhoto, author } = req.body;
@@ -431,35 +444,104 @@ async function handleGetStories(req, res) {
 // POST /api/stories - Create story
 async function handleCreateStory(req, res) {
   try {
+    console.log('📝 [Story Create] Received request');
+    console.log('📋 [Story Create] Content-Type:', req.headers['content-type']);
+    console.log('📋 [Story Create] Body keys:', Object.keys(req.body || {}));
+    console.log('📋 [Story Create] Files keys:', Object.keys(req.files || {}));
+    console.log('📋 [Story Create] Full body:', JSON.stringify(req.body));
+    console.log('📋 [Story Create] Full files:', req.files ? Object.keys(req.files) : 'none');
+    
     const dbConnection = await connectToDatabase();
     if (!dbConnection) {
+      console.error('❌ [Story Create] Database connection failed');
       return res.status(503).json({ success: false, error: 'Database unavailable' });
     }
 
-    const { media, authorName, authorPhoto, author } = req.body;
+    // Get user info from token
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    let authorName = 'مستخدم';
+    let authorPhoto = '/pages/TeamPage/profile.png';
+    let author = null;
+
+    if (token) {
+      try {
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        authorName = decodedToken.name || decodedToken.email?.split('@')[0] || 'مستخدم';
+        authorPhoto = decodedToken.picture || '/pages/TeamPage/profile.png';
+        author = decodedToken.uid;
+        console.log('✅ [Story Create] User verified:', authorName);
+      } catch (error) {
+        console.warn('⚠️ [Story Create] Token verification failed:', error.message);
+      }
+    }
+
+    // Handle file upload or base64 media
+    let mediaData = [];
+    
+    // Check for files in req.files
+    if (req.files && Object.keys(req.files).length > 0) {
+      console.log('📁 [Story Create] Files found:', Object.keys(req.files));
+      
+      // Get the first file (could be 'media' or any other field name)
+      const fileKey = Object.keys(req.files)[0];
+      const file = req.files[fileKey];
+      
+      console.log('📁 [Story Create] Processing file:', fileKey, 'Name:', file.name, 'Size:', file.size);
+      
+      // Convert file to base64
+      const base64 = file.data.toString('base64');
+      const mediaType = file.mimetype.startsWith('image/') ? 'image' : 'video';
+      
+      mediaData = [{
+        type: mediaType,
+        url: `data:${file.mimetype};base64,${base64}`,
+        filename: file.name
+      }];
+      console.log('✅ [Story Create] Media converted to base64');
+    } else if (req.body.media) {
+      console.log('📋 [Story Create] Using body media');
+      // Direct media data (base64 or URL)
+      mediaData = Array.isArray(req.body.media) ? req.body.media : [req.body.media];
+    } else {
+      console.error('❌ [Story Create] No media found in files or body');
+      console.error('   Files:', req.files);
+      console.error('   Body:', req.body);
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Media is required',
+        debug: { hasFiles: !!req.files, hasBody: !!req.body }
+      });
+    }
+
+    if (!mediaData || mediaData.length === 0) {
+      console.error('❌ [Story Create] No media data after processing');
+      return res.status(400).json({ success: false, error: 'Media processing failed' });
+    }
 
     const story = new Story({
-      media: media || [],
-      authorName,
-      authorPhoto,
-      author,
+      media: mediaData,
+      authorName: req.body.authorName || authorName,
+      authorPhoto: req.body.authorPhoto || authorPhoto,
+      author: req.body.author || author,
       likes: [],
       views: 0
     });
 
     await story.save();
+    console.log('✅ [Story Create] Story saved:', story._id);
 
     return res.status(201).json({
       success: true,
       story: {
         id: story._id.toString(),
         media: story.media,
-        author: { displayName: authorName, photoURL: authorPhoto },
+        author: { displayName: story.authorName, photoURL: story.authorPhoto },
         createdAt: story.createdAt
       }
     });
   } catch (error) {
-    console.error('Error creating story:', error);
+    console.error('❌ [Story Create] Error:', error.message);
+    console.error('Stack:', error.stack);
     return res.status(500).json({ success: false, error: error.message });
   }
 }
@@ -476,11 +558,54 @@ module.exports = async (req, res) => {
   }
 
   try {
+    // Handle file uploads
+    if (!req.files && req.method === 'POST') {
+      // Use express-fileupload to parse multipart/form-data
+      const busboy = require('busboy');
+      const bb = busboy({ headers: req.headers });
+      const files = {};
+      const fields = {};
+
+      bb.on('file', (fieldname, file, info) => {
+        const chunks = [];
+        file.on('data', (data) => {
+          chunks.push(data);
+        });
+        file.on('end', () => {
+          files[fieldname] = {
+            data: Buffer.concat(chunks),
+            mimetype: info.mimeType,
+            name: info.filename,
+            size: Buffer.concat(chunks).length
+          };
+        });
+      });
+
+      bb.on('field', (fieldname, val) => {
+        fields[fieldname] = val;
+      });
+
+      await new Promise((resolve, reject) => {
+        bb.on('finish', resolve);
+        bb.on('error', reject);
+        req.pipe(bb);
+      });
+
+      req.files = files;
+      req.body = fields;
+    }
+
     // Parse request body if needed
     let body = {};
     if (req.method !== 'GET' && req.method !== 'HEAD') {
-      if (req.body) {
-        body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      if (req.body && typeof req.body === 'string') {
+        try {
+          body = JSON.parse(req.body);
+        } catch (e) {
+          body = req.body;
+        }
+      } else {
+        body = req.body || {};
       }
       req.body = body;
     }
@@ -532,3 +657,36 @@ module.exports = async (req, res) => {
     return res.status(500).json({ success: false, error: error.message, stack: error.stack });
   }
 };
+
+// ============================================
+// LOCAL DEVELOPMENT SERVER
+// ============================================
+
+// For local development, start an HTTP server
+if (require.main === module) {
+  const http = require('http');
+  const handler = module.exports;
+  
+  const server = http.createServer(handler);
+  const PORT = process.env.PORT || 8000;
+  
+  server.listen(PORT, () => {
+    console.log('');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('✅ 🚀 MONOLITHIC API STARTED SUCCESSFULLY');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log(`📡 API available at http://localhost:${PORT}/api`);
+    console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('');
+  });
+  
+  server.on('error', (error) => {
+    console.error('❌ Server error:', error.message);
+    if (error.code === 'EADDRINUSE') {
+      console.error(`⚠️  Port ${PORT} is already in use`);
+    }
+    process.exit(1);
+  });
+}
