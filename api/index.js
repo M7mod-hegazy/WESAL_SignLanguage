@@ -511,41 +511,42 @@ async function handleCreatePost(req, res) {
     let authorPhoto = req.body.authorPhoto || '/pages/TeamPage/profile.png';
     let author = req.body.author || null;
 
-    console.log('🔐 [Post Create] AUTH DEBUG START');
-    console.log('   Token present:', !!token);
-    console.log('   Token length:', token ? token.length : 0);
-    console.log('   Body keys:', Object.keys(req.body || {}));
-    console.log('   Body authorName:', req.body.authorName, '(type:', typeof req.body.authorName + ')');
-    console.log('   Body authorPhoto:', req.body.authorPhoto, '(type:', typeof req.body.authorPhoto + ')');
-    console.log('   Body author:', req.body.author, '(type:', typeof req.body.author + ')');
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('🔐 [Post Create] AUTHENTICATION DEBUG');
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('📨 RECEIVED FROM FRONTEND:');
+    console.log('   authorName:', req.body.authorName);
+    console.log('   authorPhoto:', req.body.authorPhoto ? 'YES' : 'NO');
+    console.log('   author (UID):', req.body.author);
+    console.log('   token:', token ? `YES (${token.length} chars)` : 'NO');
 
     // Try to verify token and override with token data if available
     if (token) {
       try {
-        console.log('🔐 [Post Create] Verifying Firebase token...');
         const decodedToken = await admin.auth().verifyIdToken(token);
-        console.log('✅ [Post Create] Token verified successfully');
-        console.log('   Decoded token keys:', Object.keys(decodedToken));
-        console.log('   Token name:', decodedToken.name);
-        console.log('   Token email:', decodedToken.email);
-        console.log('   Token picture:', decodedToken.picture);
-        console.log('   Token uid:', decodedToken.uid);
+        console.log('✅ TOKEN VERIFIED');
+        console.log('   name:', decodedToken.name);
+        console.log('   email:', decodedToken.email);
+        console.log('   picture:', decodedToken.picture ? 'YES' : 'NO');
+        console.log('   uid:', decodedToken.uid);
         
         // Prefer token data over body data
         authorName = decodedToken.name || decodedToken.email?.split('@')[0] || req.body.authorName || 'مستخدم';
         authorPhoto = decodedToken.picture || req.body.authorPhoto || '/pages/TeamPage/profile.png';
         author = decodedToken.uid;
-        console.log('✅ [Post Create] Final user data from token:', { authorName, authorPhoto, author });
       } catch (error) {
-        console.error('❌ [Post Create] Token verification FAILED:', error.message);
-        console.error('   Error code:', error.code);
-        console.error('   Keeping body data:', { authorName, authorPhoto, author });
+        console.error('❌ TOKEN VERIFICATION FAILED:', error.message);
+        console.log('   Using body data instead');
       }
     } else {
-      console.warn('⚠️ [Post Create] No token provided, using body data:', { authorName, authorPhoto, author });
+      console.log('⚠️ NO TOKEN - Using body data');
     }
     
-    console.log('🔐 [Post Create] AUTH DEBUG END - Final values:', { authorName, authorPhoto, author });
+    console.log('📝 FINAL VALUES TO SAVE:');
+    console.log('   authorName:', authorName);
+    console.log('   authorPhoto:', authorPhoto ? 'YES' : 'NO');
+    console.log('   author:', author);
+    console.log('═══════════════════════════════════════════════════════════');
 
     const { content } = req.body;
 
@@ -715,41 +716,42 @@ async function handleCreateStory(req, res) {
     let authorPhoto = req.body.authorPhoto || '/pages/TeamPage/profile.png';
     let author = req.body.author || null;
 
-    console.log('🔐 [Story Create] AUTH DEBUG START');
-    console.log('   Token present:', !!token);
-    console.log('   Token length:', token ? token.length : 0);
-    console.log('   Body keys:', Object.keys(req.body || {}));
-    console.log('   Body authorName:', req.body.authorName, '(type:', typeof req.body.authorName + ')');
-    console.log('   Body authorPhoto:', req.body.authorPhoto, '(type:', typeof req.body.authorPhoto + ')');
-    console.log('   Body author:', req.body.author, '(type:', typeof req.body.author + ')');
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('🔐 [Story Create] AUTHENTICATION DEBUG');
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('📨 RECEIVED FROM FRONTEND:');
+    console.log('   authorName:', req.body.authorName);
+    console.log('   authorPhoto:', req.body.authorPhoto ? 'YES' : 'NO');
+    console.log('   author (UID):', req.body.author);
+    console.log('   token:', token ? `YES (${token.length} chars)` : 'NO');
 
     // Try to verify token and override with token data if available
     if (token) {
       try {
-        console.log('🔐 [Story Create] Verifying Firebase token...');
         const decodedToken = await admin.auth().verifyIdToken(token);
-        console.log('✅ [Story Create] Token verified successfully');
-        console.log('   Decoded token keys:', Object.keys(decodedToken));
-        console.log('   Token name:', decodedToken.name);
-        console.log('   Token email:', decodedToken.email);
-        console.log('   Token picture:', decodedToken.picture);
-        console.log('   Token uid:', decodedToken.uid);
+        console.log('✅ TOKEN VERIFIED');
+        console.log('   name:', decodedToken.name);
+        console.log('   email:', decodedToken.email);
+        console.log('   picture:', decodedToken.picture ? 'YES' : 'NO');
+        console.log('   uid:', decodedToken.uid);
         
         // Prefer token data over body data
         authorName = decodedToken.name || decodedToken.email?.split('@')[0] || req.body.authorName || 'مستخدم';
         authorPhoto = decodedToken.picture || req.body.authorPhoto || '/pages/TeamPage/profile.png';
         author = decodedToken.uid;
-        console.log('✅ [Story Create] Final user data from token:', { authorName, authorPhoto, author });
       } catch (error) {
-        console.error('❌ [Story Create] Token verification FAILED:', error.message);
-        console.error('   Error code:', error.code);
-        console.error('   Keeping body data:', { authorName, authorPhoto, author });
+        console.error('❌ TOKEN VERIFICATION FAILED:', error.message);
+        console.log('   Using body data instead');
       }
     } else {
-      console.warn('⚠️ [Story Create] No token provided, using body data:', { authorName, authorPhoto, author });
+      console.log('⚠️ NO TOKEN - Using body data');
     }
     
-    console.log('🔐 [Story Create] AUTH DEBUG END - Final values:', { authorName, authorPhoto, author });
+    console.log('📝 FINAL VALUES TO SAVE:');
+    console.log('   authorName:', authorName);
+    console.log('   authorPhoto:', authorPhoto ? 'YES' : 'NO');
+    console.log('   author:', author);
+    console.log('═══════════════════════════════════════════════════════════');
 
     // Handle file upload to Cloudinary or base64 media
     let mediaData = [];
