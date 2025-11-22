@@ -2009,36 +2009,41 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
             );
           })}
 
-          {/* Load More Button */}
-          {hasMore && !loadingMore && (
-            <button
-              onClick={loadMorePosts}
-              style={{
-                width: '90%',
-                margin: '20px auto',
-                padding: '12px 20px',
-                background: theme.colors.primary.orange,
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                fontFamily: theme.typography.fonts.primary,
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 4px 12px rgba(241, 138, 33, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#E67E1A';
-                e.currentTarget.style.transform = 'scale(1.02)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = theme.colors.primary.orange;
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-            >
-              تحميل المزيد
-            </button>
+          {/* Load More Button - Only show if there are more posts */}
+          {hasMore && !loadingMore && posts.length > 0 && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              padding: '15px 0',
+              marginTop: '10px'
+            }}>
+              <button
+                onClick={loadMorePosts}
+                style={{
+                  padding: '8px 24px',
+                  background: theme.colors.primary.orange,
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '20px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  fontFamily: theme.typography.fonts.primary,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 2px 8px rgba(241, 138, 33, 0.2)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#E67E1A';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = theme.colors.primary.orange;
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                تحميل المزيد
+              </button>
+            </div>
           )}
 
           {/* Loading More Indicator */}
