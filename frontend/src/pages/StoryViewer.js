@@ -242,7 +242,7 @@ const StoryViewer = ({ storyGroup, allStoryGroups, initialGroupIndex, onClose, o
                 fontSize: '14px',
                 fontWeight: 'bold',
                 fontFamily: theme.typography.fonts.primary
-              }}>{currentStory.author?.name || 'مستخدم'}</div>
+              }}>{currentStory.authorName || currentStory.author?.displayName || currentStory.author?.name || 'مستخدم'}</div>
               <div style={{
                 color: 'rgba(255, 255, 255, 0.7)',
                 fontSize: '12px',
@@ -267,7 +267,7 @@ const StoryViewer = ({ storyGroup, allStoryGroups, initialGroupIndex, onClose, o
 
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             {/* Delete Button (only for story owner) */}
-            {user && currentStory.author?.name === (user.displayName || user.email?.split('@')[0]) && (
+            {user && (currentStory.author?.uid === user.uid || currentStory.authorName === (user.displayName || user.email?.split('@')[0])) && (
               <button
                 onClick={handleDeleteStory}
                 style={{

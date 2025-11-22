@@ -160,6 +160,9 @@ const storySchema = new mongoose.Schema({
   views: { type: Number, default: 0 }
 }, { timestamps: true });
 
+// Add TTL index: Auto-delete stories after 12 hours (43200 seconds)
+storySchema.index({ createdAt: 1 }, { expireAfterSeconds: 43200 });
+
 const userSchema = new mongoose.Schema({
   firebaseUid: String,
   email: String,
@@ -981,6 +984,100 @@ module.exports = async (req, res) => {
       return await handleCreateStory(req, res);
     }
 
+    // PUT /api/posts/:id - Edit a post
+    if (path.startsWith('/api/posts/') && req.method === 'PUT' && !req.url.includes('?')) {
+      const postId = path.split('/').pop();
+      
+      if (!postId) {
+        return res.status(400).json({ success: false, error: 'Post ID required' });
+      }
+      
+      try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+          return res.status(401).json({ success: false, error: 'Authentication required' });
+        }
+        
+        // Verify token
+        let decodedToken;
+        try {
+          decodedToken = await admin.auth().verifyIdToken(token);
+        } catch (error) {
+          return res.status(401).json({ success: false, error: 'Invalid token' });
+        }
+        
+        const dbConnection = await connectToDatabase();
+        if (!dbConnection) {
+          return res.status(503).json({ success: false, error: 'Database unavailable' });
+        }
+        
+        // Find the post
+        const post = await Post.findById(postId);
+        if (!post) {
+          return res.status(404).json({ success: false, error: 'Post not found' });
+        }
+        
+        // Check if user is the post owner
+        const postAuthorId = typeof post.author === 'string' ? post.author : post.author?.uid;
+        if (postAuthorId !== decodedToken.uid) {
+          return res.status(403).json({ success: false, error: 'Not authorized to edit this post' });
+        }
+        
+        // Update post content
+        if (req.body.content) {
+          post.content = req.body.content;
+        }
+        
+        // Handle media updates
+        let mediaData = [];
+        if (req.files && Object.keys(req.files).length > 0) {
+          // Process new media files
+          for (const fileKey of Object.keys(req.files)) {
+            const file = req.files[fileKey];
+            const fileArray = Array.isArray(file) ? file : [file];
+            
+            for (const f of fileArray) {
+              try {
+                const cloudinaryUrl = await uploadToCloudinary(f.data, f.name, f.mimetype);
+                const mediaType = f.mimetype.startsWith('image/') ? 'image' : 'video';
+                mediaData.push({
+                  type: mediaType,
+                  url: cloudinaryUrl,
+                  filename: f.name,
+                  mimetype: f.mimetype
+                });
+              } catch (uploadError) {
+                console.error('❌ Cloudinary upload failed:', uploadError.message);
+                // Fallback to base64
+                const base64 = f.data.toString('base64');
+                const mediaType = f.mimetype.startsWith('image/') ? 'image' : 'video';
+                mediaData.push({
+                  type: mediaType,
+                  url: `data:${f.mimetype};base64,${base64}`,
+                  filename: f.name,
+                  mimetype: f.mimetype
+                });
+              }
+            }
+          }
+          post.media = mediaData;
+        }
+        
+        // Save updated post
+        await post.save();
+        console.log('✅ [Post Edit] Post updated:', postId);
+        
+        return res.status(200).json({ 
+          success: true, 
+          message: 'Post updated successfully',
+          post: formatPost(post)
+        });
+      } catch (error) {
+        console.error('❌ [Post Edit] Error:', error.message);
+        return res.status(500).json({ success: false, error: error.message });
+      }
+    }
+
     // Posts interaction routes (like, save, share)
     if (path.startsWith('/api/posts') && req.method === 'PUT') {
       // Handle like/save/share updates
@@ -998,6 +1095,60 @@ module.exports = async (req, res) => {
         message: `Post ${action || 'updated'} successfully`,
         postId 
       });
+    }
+
+    // DELETE /api/stories/:id - Delete a story
+    if (path.startsWith('/api/stories/') && req.method === 'DELETE') {
+      const storyId = path.split('/').pop();
+      
+      if (!storyId) {
+        return res.status(400).json({ success: false, error: 'Story ID required' });
+      }
+      
+      try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+          return res.status(401).json({ success: false, error: 'Authentication required' });
+        }
+        
+        // Verify token
+        let decodedToken;
+        try {
+          decodedToken = await admin.auth().verifyIdToken(token);
+        } catch (error) {
+          return res.status(401).json({ success: false, error: 'Invalid token' });
+        }
+        
+        const dbConnection = await connectToDatabase();
+        if (!dbConnection) {
+          return res.status(503).json({ success: false, error: 'Database unavailable' });
+        }
+        
+        // Find the story
+        const story = await Story.findById(storyId);
+        if (!story) {
+          return res.status(404).json({ success: false, error: 'Story not found' });
+        }
+        
+        // Check if user is the story owner
+        const storyAuthorId = typeof story.author === 'string' ? story.author : story.author?.uid;
+        if (storyAuthorId !== decodedToken.uid) {
+          return res.status(403).json({ success: false, error: 'Not authorized to delete this story' });
+        }
+        
+        // Delete the story
+        await Story.findByIdAndDelete(storyId);
+        console.log('✅ [Story Delete] Story deleted:', storyId);
+        
+        return res.status(200).json({ 
+          success: true, 
+          message: 'Story deleted successfully',
+          storyId 
+        });
+      } catch (error) {
+        console.error('❌ [Story Delete] Error:', error.message);
+        return res.status(500).json({ success: false, error: error.message });
+      }
     }
 
     // DELETE /api/posts/:id - Delete a post
