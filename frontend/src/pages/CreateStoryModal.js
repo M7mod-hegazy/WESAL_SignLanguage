@@ -49,6 +49,17 @@ const CreateStoryModal = ({ onClose, onStoryCreated }) => {
       const formData = new FormData();
       formData.append('media', mediaFile.file);
       formData.append('caption', caption);
+      formData.append('authorName', user.displayName || user.email?.split('@')[0] || 'مستخدم');
+      formData.append('authorPhoto', user.photoURL || '/pages/TeamPage/profile.png');
+      formData.append('author', user.uid);
+
+      console.log('📝 Sending story with:', {
+        caption,
+        authorName: user.displayName,
+        authorPhoto: user.photoURL,
+        author: user.uid,
+        mediaFile: mediaFile.file.name
+      });
 
       const response = await axios.post(`${API_BASE_URL}/stories`, formData, {
         headers: { 

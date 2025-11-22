@@ -54,10 +54,21 @@ const CreatePostModal = ({ onClose, onPostCreated }) => {
       // Use FormData to send files instead of base64
       const formData = new FormData();
       formData.append('content', postContent);
+      formData.append('authorName', user.displayName || user.email?.split('@')[0] || 'مستخدم');
+      formData.append('authorPhoto', user.photoURL || '/pages/TeamPage/profile.png');
+      formData.append('author', user.uid);
       
       // Append all media files
       mediaFiles.forEach((media, index) => {
         formData.append(`media`, media.file);
+      });
+
+      console.log('📝 Sending post with:', {
+        content: postContent,
+        authorName: user.displayName,
+        authorPhoto: user.photoURL,
+        author: user.uid,
+        mediaCount: mediaFiles.length
       });
 
       const response = await axios.post(`${API_BASE_URL}/posts`, formData, {
