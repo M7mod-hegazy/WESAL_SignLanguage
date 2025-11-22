@@ -725,12 +725,9 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
           
           if (shareResponse.data.success) {
             console.log('✅ Share count updated on original post');
-            // Update the original post in state with new share count
-            setPosts(posts.map(post => 
-              post.id === postId 
-                ? { ...post, shareCount: shareResponse.data.post?.shareCount || (post.shareCount || 0) + 1 }
-                : post
-            ));
+            // Refresh posts to ensure shared post is in the feed
+            console.log('🔄 [Share] Refreshing posts feed...');
+            await fetchPosts();
           }
         } catch (shareError) {
           // Original post might not exist in MongoDB (local-only), that's okay
