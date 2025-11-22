@@ -136,7 +136,7 @@ const VideoAnimation = ({
       onCanPlay={handleCanPlay}
       className={className}
       style={{
-        width: '100%',
+        width: '170%',
         height: '100%',
         objectFit: 'contain',
         background: 'transparent',

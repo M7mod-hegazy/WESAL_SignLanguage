@@ -428,6 +428,87 @@ async function handleAuthVerify(req, res) {
   }
 }
 
+// POST /api/auth/increment-challenges - Increment user's challenges count
+async function handleIncrementChallenges(req, res) {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    let decodedToken;
+    try {
+      decodedToken = await admin.auth().verifyIdToken(token);
+    } catch (error) {
+      return res.status(401).json({ success: false, error: 'Invalid token' });
+    }
+
+    const dbConnection = await connectToDatabase();
+    if (!dbConnection) {
+      return res.status(500).json({ success: false, error: 'Database connection failed' });
+    }
+
+    const user = await User.findOne({ firebaseUid: decodedToken.uid });
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    user.challengesCompleted = (user.challengesCompleted || 0) + 1;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      challengesCompleted: user.challengesCompleted
+    });
+  } catch (error) {
+    console.error('Increment challenges error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+// POST /api/auth/update-coins - Update user's coins
+async function handleUpdateCoins(req, res) {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    let decodedToken;
+    try {
+      decodedToken = await admin.auth().verifyIdToken(token);
+    } catch (error) {
+      return res.status(401).json({ success: false, error: 'Invalid token' });
+    }
+
+    const { coins } = req.body;
+    if (typeof coins !== 'number') {
+      return res.status(400).json({ success: false, error: 'Invalid coins value' });
+    }
+
+    const dbConnection = await connectToDatabase();
+    if (!dbConnection) {
+      return res.status(500).json({ success: false, error: 'Database connection failed' });
+    }
+
+    const user = await User.findOne({ firebaseUid: decodedToken.uid });
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    user.coins = coins;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      coins: user.coins
+    });
+  } catch (error) {
+    console.error('Update coins error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
 // Helper function to format post response
 // REMOVED: Duplicate formatPost function - using the complete one above (line 215)
 
@@ -981,6 +1062,12 @@ module.exports = async (req, res) => {
     }
     if (path === '/api/auth/verify') {
       return await handleAuthVerify(req, res);
+    }
+    if (path === '/api/auth/increment-challenges' && req.method === 'POST') {
+      return await handleIncrementChallenges(req, res);
+    }
+    if (path === '/api/auth/update-coins' && req.method === 'POST') {
+      return await handleUpdateCoins(req, res);
     }
 
     // Posts routes

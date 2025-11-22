@@ -3,6 +3,8 @@ import { auth } from '../config/firebase';
 
 // Utility functions for tracking challenge progress (MongoDB-backed)
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '/api';
+
 /**
  * Increment the challenges counter for the current user
  * This is called when a user answers a quiz question correctly in solo mode
@@ -17,7 +19,7 @@ export const incrementChallengesCount = async (userId) => {
     
     const token = await user.getIdToken();
     const response = await axios.post(
-      'http://localhost:8000/api/auth/increment-challenges',
+      `${API_BASE_URL}/auth/increment-challenges`,
       {},
       { headers: { Authorization: `Bearer ${token}` } }
     );
