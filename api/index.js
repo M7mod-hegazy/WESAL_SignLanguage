@@ -40,9 +40,7 @@ async function connectToDatabase() {
       useUnifiedTopology: true,
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
-      bufferCommands: false,
-      bufferMaxEntries: 0
+      socketTimeoutMS: 45000
     });
     
     isConnected = true;
