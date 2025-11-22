@@ -490,6 +490,15 @@ module.exports = async (req, res) => {
 
     console.log(`📍 API Request: ${req.method} ${path}`);
 
+    // Health check
+    if (path === '/api/health') {
+      return res.status(200).json({ 
+        success: true, 
+        message: 'API is running',
+        timestamp: new Date().toISOString()
+      });
+    }
+
     // Auth routes
     if (path === '/api/auth/me') {
       return await handleAuthMe(req, res);
