@@ -20,6 +20,9 @@ const VideoAnimation = ({
   // Check if videoSrc is a full path (has extension) or needs extension
   const isFullPath = videoSrc && (videoSrc.endsWith('.webm') || videoSrc.endsWith('.mp4'));
   const videoPath = isFullPath ? videoSrc : (videoSrc ? `${videoSrc}_alpha.webm` : null);
+  
+  // Debug logging
+  console.log('🎬 VideoAnimation props:', { videoSrc, isFullPath, videoPath, isPlaying });
 
   useEffect(() => {
     const video = videoRef.current;
@@ -68,17 +71,22 @@ const VideoAnimation = ({
   }, [videoSrc, isPlaying]);
 
   const handleError = (e) => {
+    console.error('🎬 Video error:', e, 'currentSource:', currentSource);
     // Try fallback if alpha version fails
     if (currentSource === 'alpha') {
+      console.log('🎬 Trying fallback source...');
       setCurrentSource('fallback');
     } else if (currentSource === 'fallback') {
+      console.log('🎬 Trying mp4 source...');
       setCurrentSource('mp4');
     } else {
+      console.error('🎬 All sources failed, showing error');
       setVideoError(true);
     }
   };
 
   const handleCanPlay = () => {
+    console.log('🎬 Video can play successfully');
     setVideoError(false);
   };
 
