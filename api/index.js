@@ -1,6 +1,14 @@
-require('dotenv').config();
 const mongoose = require('mongoose');
 const admin = require('firebase-admin');
+
+// Load .env only in local development
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    require('dotenv').config();
+  } catch (e) {
+    // dotenv not available on Vercel, which is fine
+  }
+}
 
 // ============================================
 // CONFIGURATION & INITIALIZATION
@@ -670,7 +678,24 @@ module.exports = async (req, res) => {
 
   } catch (error) {
     console.error('❌ API Error:', error);
-    return res.status(500).json({ success: false, error: error.message, stack: error.stack });
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
+    // Ensure we always return a valid response
+    try {
+      return res.status(500).json({ 
+        success: false, 
+        error: error.message || 'Internal Server Error',
+        type: error.name,
+        ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+      });
+    } catch (responseError) {
+      console.error('Failed to send error response:', responseError);
+      res.statusCode = 500;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ success: false, error: 'Internal Server Error' }));
+    }
   }
 };
 
