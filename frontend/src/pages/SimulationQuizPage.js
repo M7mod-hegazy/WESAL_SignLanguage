@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import QuizInterface from '../components/QuizInterface';
 import { incrementChallengesCount } from '../utils/challengeCounter';
+import quizDataModule from '../data/quizData';
 
 const SimulationQuizPage = () => {
   const location = useLocation();
@@ -15,44 +16,52 @@ const SimulationQuizPage = () => {
   const [allQuestions, setAllQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  // Fetch sequential quiz from API
+  // Load quiz data from local file (no API call needed)
   useEffect(() => {
-    const fetchSimulationQuiz = async () => {
-      try {
-        const response = await fetch(`http://localhost:8000/api/signs/sequential_quiz/${encodeURIComponent(category)}`);
-        const data = await response.json();
-        
-        if (data.success && data.questions) {
-          // Map API data to quiz format
-          const mappedQuestions = data.questions.map(q => ({
-            id: q.id,
-            videoPath: q.animation_url, // Map animation_url to videoPath
-            animationData: q.animationData,
-            duration: q.duration || 5,
-            answers: q.answers,
-            coins_reward: q.coinsReward || 10,
-            difficulty: q.difficulty,
-            category: q.category,
-            order: q.order
-          }));
+    try {
+      // Get all quiz questions from the imported module
+      const quizQuestions = quizDataModule.default || quizDataModule;
+      
+      if (quizQuestions && quizQuestions.length > 0) {
+        // Map quiz data to the format expected by QuizInterface
+        const mappedQuestions = quizQuestions.map((q, index) => {
+          // Generate multiple choice answers from the quiz data
+          const answers = quizDataModule.generateAnswersForQuestion ? 
+            quizDataModule.generateAnswersForQuestion(q) :
+            [
+              { text: q.correctAnswer, isCorrect: true },
+              { text: 'إجابة خاطئة 1', isCorrect: false },
+              { text: 'إجابة خاطئة 2', isCorrect: false },
+              { text: 'إجابة خاطئة 3', isCorrect: false }
+            ];
           
-          setAllQuestions(mappedQuestions);
-          setCurrentQuiz(mappedQuestions[0]);
-        } else {
-          console.error('❌ No questions in response');
-          alert('لا توجد أسئلة متاحة');
-          navigate(-1);
-        }
-      } catch (error) {
-        console.error('❌ Error fetching simulation quiz:', error);
-        alert('فشل تحميل التحدي، حاول مرة أخرى');
+          return {
+            id: q.id || index + 1,
+            videoPath: q.videoPath,
+            correctAnswer: q.correctAnswer,
+            answers: answers,
+            coins_reward: q.coins_reward || 10,
+            difficulty: q.difficulty || 'medium',
+            category: category,
+            order: index
+          };
+        });
+        
+        setAllQuestions(mappedQuestions);
+        setCurrentQuiz(mappedQuestions[0]);
+        console.log('✅ Loaded', mappedQuestions.length, 'quiz questions for simulation');
+      } else {
+        console.error('❌ No questions found in quiz data');
+        alert('لا توجد أسئلة متاحة');
         navigate(-1);
-      } finally {
-        setLoading(false);
       }
-    };
-
-    fetchSimulationQuiz();
+    } catch (error) {
+      console.error('❌ Error loading simulation quiz:', error);
+      alert('فشل تحميل التحدي، حاول مرة أخرى');
+      navigate(-1);
+    } finally {
+      setLoading(false);
+    }
   }, [category, navigate]);
 
   const handleAnswer = useCallback(async (isCorrect, answer, hintWasUsed) => {
