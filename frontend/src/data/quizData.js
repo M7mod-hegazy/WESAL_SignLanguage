@@ -128,8 +128,24 @@ export const getQuizQuestion = (questionId) => {
 
 // Function to get all questions in random order
 export const getAllQuestionsRandomized = () => {
+  console.log('📊 getAllQuestionsRandomized called');
+  console.log('📊 videoQuestions count:', videoQuestions.length);
+  console.log('📊 videoQuestions:', videoQuestions);
+  
   const shuffledQuestions = shuffleArray(videoQuestions);
-  return shuffledQuestions.map(q => getQuizQuestion(q.id));
+  console.log('📊 shuffledQuestions:', shuffledQuestions);
+  
+  const mappedQuestions = shuffledQuestions.map(q => {
+    console.log('📊 Mapping question:', q.id, q.correctAnswer);
+    const mapped = getQuizQuestion(q.id);
+    console.log('📊 Mapped result:', mapped);
+    return mapped;
+  });
+  
+  console.log('📊 Final mappedQuestions count:', mappedQuestions.length);
+  console.log('📊 Final mappedQuestions:', mappedQuestions);
+  
+  return mappedQuestions;
 };
 
 // Function to get a random question

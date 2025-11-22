@@ -42,26 +42,36 @@ const QuizPage = () => {
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
+        console.log('🎯 QuizPage: Fetching quiz...');
+        console.log('🎯 type:', type, 'category:', category);
+        
         // Check if this is a simulation (sequential) quiz
         if (type === 'simulation' && category) {
+          console.log('🎯 Loading simulation quiz...');
           setIsSequential(true);
           const response = await fetch(`http://localhost:8000/api/signs/sequential_quiz/${encodeURIComponent(category)}`);
           const data = await response.json();
           
           if (data.success && data.questions) {
+            console.log('🎯 Simulation quiz loaded:', data.questions.length, 'questions');
             setAllQuestions(data.questions);
             setCurrentQuiz(data.questions[0]);
           }
         } else {
           // Random quiz (existing behavior)
+          console.log('🎯 Loading random quiz...');
           const questions = getAllQuestionsRandomized();
+          console.log('🎯 Random quiz loaded:', questions.length, 'questions');
+          console.log('🎯 First question:', questions[0]);
           setAllQuestions(questions);
           setCurrentQuiz(questions[0]);
         }
       } catch (error) {
-        console.error('Error fetching quiz:', error);
+        console.error('❌ Error fetching quiz:', error);
         // Fallback to local data
+        console.log('🎯 Falling back to local data...');
         const questions = getAllQuestionsRandomized();
+        console.log('🎯 Fallback quiz loaded:', questions.length, 'questions');
         setAllQuestions(questions);
         setCurrentQuiz(questions[0]);
       } finally {
