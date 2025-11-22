@@ -145,19 +145,23 @@ const EditProfilePage = ({ onBack, onSave }) => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#FFF9F0',
-      fontFamily: theme.typography.fonts.secondary,
-      direction: 'rtl',
+      background: '#F5F5F0',
       display: 'flex',
       justifyContent: 'center',
-      alignItems: 'flex-start'
+      alignItems: 'center'
     }}>
       <div style={{
         width: '100%',
-        maxWidth: '480px',
-        minHeight: '100vh',
+        height: '100vh',
         background: '#FFF9F0',
+        display: 'flex',
+        flexDirection: 'column',
+        direction: 'rtl',
+        fontFamily: theme.typography.fonts.secondary,
         position: 'relative',
+        overflow: 'auto',
+        boxShadow: 'rgba(0, 0, 0, 0.1) 0px 0px 20px',
+        maxWidth: '480px',
         padding: '20px'
       }}>
         {/* Back Button */}
