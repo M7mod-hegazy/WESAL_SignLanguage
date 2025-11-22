@@ -553,6 +553,19 @@ async function handleGetPosts(req, res) {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
+    // Get user ID from token for isLiked/isSaved flags
+    let requesterId = 'anonymous';
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (token) {
+      try {
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        requesterId = decodedToken.uid;
+        console.log('✅ [Posts GET] Authenticated user:', requesterId);
+      } catch (authError) {
+        console.log('⚠️ [Posts GET] Token verification failed, using anonymous');
+      }
+    }
+
     const dbConnection = await connectToDatabase();
     if (!dbConnection) {
       console.log('⚠️ [Posts GET] No DB connection, returning empty');
@@ -576,7 +589,7 @@ async function handleGetPosts(req, res) {
 
     const formattedPosts = posts.map(post => {
       try {
-        return formatPost(post);
+        return formatPost(post, requesterId);
       } catch (formatError) {
         console.error('❌ [Posts GET] Error formatting post:', formatError.message);
         return null;

@@ -101,7 +101,13 @@ const ProfilePage = ({ onBack }) => {
         console.log('🔍 Post isSaved:', allPosts[0]?.isSaved);
         
         // Get liked posts (from BOTH backend and shared posts)
-        const liked = allPosts.filter(post => post.isLiked === true);
+        const liked = allPosts.filter(post => {
+          const isLiked = post.isLiked === true;
+          if (isLiked) {
+            console.log('❤️ Found liked post:', post.id, 'Content:', post.content?.substring(0, 50));
+          }
+          return isLiked;
+        });
         
         // Get liked stories from MongoDB user profile
         const userLikedStories = Array.isArray(userProfile.likedStories) ? userProfile.likedStories : [];
@@ -109,6 +115,7 @@ const ProfilePage = ({ onBack }) => {
         // Combine posts and stories for display
         setLikedPosts([...liked, ...userLikedStories.map(id => ({ id, type: 'story' }))]);
         console.log('❤️ Liked content:', liked.length, 'posts +', userLikedStories.length, 'stories (from MongoDB)');
+        console.log('❤️ All posts sample - isLiked flags:', allPosts.slice(0, 3).map(p => ({ id: p.id, isLiked: p.isLiked })));
 
         // Get saved posts - Use savedPosts array from user profile
         const userSavedPostIds = Array.isArray(userProfile.savedPosts) ? userProfile.savedPosts : [];
