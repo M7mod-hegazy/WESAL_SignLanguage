@@ -1,8 +1,6 @@
 // Real quiz data based on actual video files
 // Each video name is the correct answer
 
-import { videoMapping } from './videoMapping';
-
 const videoQuestions = [
   {
     "id": 1,
@@ -115,22 +113,13 @@ export const getQuizQuestion = (questionId) => {
     { text: wrongAnswers[2], is_correct: false }
   ];
 
-  // Get the English filename from mapping
-  const originalName = question.correctAnswer;
-  const englishFileName = videoMapping[originalName];
-  
-  if (!englishFileName) {
-    console.error(`No mapping found for: ${originalName}`);
-    return null;
-  }
-  
-  // Create video path (base path without extension for VideoAnimation component)
-  const videoPath = `/videos/optimized/${englishFileName}`;
+  // Use the videoPath directly from the question (already has full path with extension)
+  const videoPath = question.videoPath;
 
   return {
     id: question.id,
     videoPath: videoPath,
-    videoFileName: question.videoFileName,
+    correctAnswer: question.correctAnswer,
     difficulty: question.difficulty,
     coins_reward: question.coins_reward,
     answers: shuffleArray(answers) // Shuffle answer order
@@ -154,9 +143,12 @@ export const getTotalQuestions = () => {
   return videoQuestions.length;
 };
 
-export default {
+// Export all functions as named exports and default
+const quizDataExport = {
   getQuizQuestion,
   getAllQuestionsRandomized,
   getRandomQuestion,
   getTotalQuestions
 };
+
+export default quizDataExport;

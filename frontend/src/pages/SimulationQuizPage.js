@@ -19,37 +19,13 @@ const SimulationQuizPage = () => {
   // Load quiz data from local file (no API call needed)
   useEffect(() => {
     try {
-      // Get all quiz questions from the imported module
-      const quizQuestions = quizDataModule.default || quizDataModule;
+      // Get all randomized questions using the quizData functions
+      const allQuestions = quizDataModule.getAllQuestionsRandomized();
       
-      if (quizQuestions && quizQuestions.length > 0) {
-        // Map quiz data to the format expected by QuizInterface
-        const mappedQuestions = quizQuestions.map((q, index) => {
-          // Generate multiple choice answers from the quiz data
-          const answers = quizDataModule.generateAnswersForQuestion ? 
-            quizDataModule.generateAnswersForQuestion(q) :
-            [
-              { text: q.correctAnswer, isCorrect: true },
-              { text: 'إجابة خاطئة 1', isCorrect: false },
-              { text: 'إجابة خاطئة 2', isCorrect: false },
-              { text: 'إجابة خاطئة 3', isCorrect: false }
-            ];
-          
-          return {
-            id: q.id || index + 1,
-            videoPath: q.videoPath,
-            correctAnswer: q.correctAnswer,
-            answers: answers,
-            coins_reward: q.coins_reward || 10,
-            difficulty: q.difficulty || 'medium',
-            category: category,
-            order: index
-          };
-        });
-        
-        setAllQuestions(mappedQuestions);
-        setCurrentQuiz(mappedQuestions[0]);
-        console.log('✅ Loaded', mappedQuestions.length, 'quiz questions for simulation');
+      if (allQuestions && allQuestions.length > 0) {
+        setAllQuestions(allQuestions);
+        setCurrentQuiz(allQuestions[0]);
+        console.log('✅ Loaded', allQuestions.length, 'quiz questions for simulation');
       } else {
         console.error('❌ No questions found in quiz data');
         alert('لا توجد أسئلة متاحة');
