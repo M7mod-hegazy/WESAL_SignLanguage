@@ -213,11 +213,17 @@ function formatPost(postDoc, requesterId = 'anonymous') {
   if (!postDoc) return null;
   
   try {
+    // Use authorName directly if it exists and is not empty
+    let authorName = postDoc.authorName;
+    if (!authorName || authorName === 'مستخدم') {
+      // Only fall back if authorName is missing or is the default
+      authorName = postDoc.author?.displayName || postDoc.author?.name || 'مستخدم';
+    }
+    
     const authorPhoto = postDoc.authorPhoto || postDoc.author?.photoURL || '/pages/TeamPage/profile.png';
     const authorUid = typeof postDoc.author === 'string'
       ? postDoc.author
       : postDoc.author?.uid || postDoc.author?._id?.toString() || 'anonymous';
-    const authorName = postDoc.authorName || postDoc.author?.displayName || postDoc.author?.name || 'مستخدم';
     
     const postId = postDoc._id ? (typeof postDoc._id === 'string' ? postDoc._id : postDoc._id.toString()) : 'unknown';
     
@@ -612,6 +618,7 @@ async function handleCreatePost(req, res) {
     }
 
     console.log('📊 [Post Create] Final mediaData count:', mediaData.length);
+    console.log('💾 [Post Create] SAVING WITH authorName:', authorName);
 
     const post = new Post({
       content,
@@ -626,7 +633,9 @@ async function handleCreatePost(req, res) {
     });
 
     await post.save();
-    console.log('✅ [Post Create] Post saved:', post._id, 'with media count:', post.media.length);
+    console.log('✅ [Post Create] Post saved:', post._id);
+    console.log('✅ [Post Create] Saved authorName:', post.authorName);
+    console.log('✅ [Post Create] Media count:', post.media.length);
 
     return res.status(201).json({
       success: true,
