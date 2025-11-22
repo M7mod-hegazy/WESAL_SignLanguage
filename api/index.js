@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const admin = require('firebase-admin');
+const busboy = require('busboy');
 
 // Load .env only in local development
 if (process.env.NODE_ENV !== 'production') {
@@ -136,37 +137,46 @@ function enableCORS(res) {
 
 function formatPost(postDoc, requesterId = 'anonymous') {
   if (!postDoc) return null;
-  const authorPhoto = postDoc.authorPhoto || postDoc.author?.photoURL || '/pages/TeamPage/profile.png';
-  const authorUid = typeof postDoc.author === 'string'
-    ? postDoc.author
-    : postDoc.author?.uid || postDoc.author?._id?.toString() || 'anonymous';
-  const authorName = postDoc.authorName || postDoc.author?.displayName || postDoc.author?.name || 'مستخدم';
   
-  return {
-    id: postDoc._id.toString(),
-    content: postDoc.content || 'منشور من قاعدة البيانات',
-    media: postDoc.media || [],
-    author: {
-      displayName: authorName,
-      name: authorName,
-      photoURL: authorPhoto,
-      photo: authorPhoto,
-      uid: authorUid,
-      gender: postDoc.author?.gender || 'male'
-    },
-    likes: postDoc.likes || [],
-    likeCount: (postDoc.likes || []).length,
-    comments: postDoc.comments || [],
-    saves: postDoc.saves || [],
-    shares: postDoc.shares || 0,
-    isLiked: (postDoc.likes || []).includes(requesterId),
-    isSaved: (postDoc.saves || []).includes(requesterId),
-    isShared: postDoc.isShared || false,
-    originalPostId: postDoc.originalPostId,
-    sharedBy: postDoc.sharedBy,
-    createdAt: postDoc.createdAt,
-    updatedAt: postDoc.updatedAt
-  };
+  try {
+    const authorPhoto = postDoc.authorPhoto || postDoc.author?.photoURL || '/pages/TeamPage/profile.png';
+    const authorUid = typeof postDoc.author === 'string'
+      ? postDoc.author
+      : postDoc.author?.uid || postDoc.author?._id?.toString() || 'anonymous';
+    const authorName = postDoc.authorName || postDoc.author?.displayName || postDoc.author?.name || 'مستخدم';
+    
+    const postId = postDoc._id ? (typeof postDoc._id === 'string' ? postDoc._id : postDoc._id.toString()) : 'unknown';
+    
+    return {
+      id: postId,
+      content: postDoc.content || 'منشور من قاعدة البيانات',
+      media: postDoc.media || [],
+      author: {
+        displayName: authorName,
+        name: authorName,
+        photoURL: authorPhoto,
+        photo: authorPhoto,
+        uid: authorUid,
+        gender: postDoc.author?.gender || 'male'
+      },
+      likes: postDoc.likes || [],
+      likeCount: (postDoc.likes || []).length,
+      comments: postDoc.comments || [],
+      saves: postDoc.saves || [],
+      shares: postDoc.shares || 0,
+      isLiked: (postDoc.likes || []).includes(requesterId),
+      isSaved: (postDoc.saves || []).includes(requesterId),
+      isShared: postDoc.isShared || false,
+      originalPostId: postDoc.originalPostId,
+      sharedBy: postDoc.sharedBy,
+      createdAt: postDoc.createdAt,
+      updatedAt: postDoc.updatedAt
+    };
+  } catch (error) {
+    console.error('❌ Error formatting post:', error.message);
+    console.error('Post data:', postDoc);
+    return null;
+  }
 }
 
 // ============================================
@@ -667,7 +677,6 @@ module.exports = async (req, res) => {
     // Handle file uploads
     if (!req.files && req.method === 'POST') {
       // Use busboy to parse multipart/form-data
-      const busboy = require('busboy');
       const bb = busboy({ headers: req.headers });
       const files = {};
       const fields = {};
