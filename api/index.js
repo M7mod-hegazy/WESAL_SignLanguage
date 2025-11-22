@@ -708,6 +708,26 @@ async function handleCreatePost(req, res) {
     console.log('📊 [Post Create] Final mediaData count:', mediaData.length);
     console.log('💾 [Post Create] SAVING WITH authorName:', authorName);
 
+    // If this is a shared post, enrich sharedBy with full user data from database
+    let enrichedSharedBy = sharedBy || null;
+    if (isShared && author) {
+      try {
+        const sharingUser = await User.findOne({ firebaseUid: author });
+        if (sharingUser) {
+          enrichedSharedBy = {
+            id: sharingUser._id.toString(),
+            uid: sharingUser.firebaseUid,
+            name: sharingUser.displayName || sharedBy?.name || 'مستخدم',
+            photo: sharingUser.photoURL || sharedBy?.photo || '/pages/TeamPage/profile.png'
+          };
+          console.log('✅ [Post Create] Enriched sharedBy with user data:', enrichedSharedBy);
+        }
+      } catch (userError) {
+        console.error('⚠️ [Post Create] Could not enrich sharedBy:', userError.message);
+        // Continue with provided sharedBy data
+      }
+    }
+
     const post = new Post({
       content,
       media: mediaData,
@@ -720,7 +740,7 @@ async function handleCreatePost(req, res) {
       shares: 0,
       isShared: isShared || false,
       originalPostId: originalPostId || null,
-      sharedBy: sharedBy || null
+      sharedBy: enrichedSharedBy
     });
 
     await post.save();
