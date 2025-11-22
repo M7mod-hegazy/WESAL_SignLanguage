@@ -374,14 +374,22 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       
       if (response.data.success) {
         console.log('✅ Like synced to MongoDB');
+        console.log('📊 [Like Debug] Response data:', response.data);
+        console.log('📊 [Like Debug] Response.data.post:', response.data.post);
+        console.log('📊 [Like Debug] Response.data.likeCount:', response.data.likeCount);
         const updatedPost = response.data.post || {};
+        console.log('📊 [Like Debug] updatedPost:', updatedPost);
+        console.log('📊 [Like Debug] updatedPost.likeCount:', updatedPost.likeCount);
+        console.log('📊 [Like Debug] Updating post:', postId, 'with likeCount:', updatedPost.likeCount);
         setPosts(posts.map(p => {
           if (p.id === postId || p.id.endsWith('_' + actualPostId)) {
-            return {
+            const newPost = {
               ...p,
               likeCount: updatedPost.likeCount ?? p.likeCount,
               isLiked: updatedPost.isLiked ?? newLikedState
             };
+            console.log('📊 [Like Debug] New post state:', newPost);
+            return newPost;
           }
           return p;
         }));
@@ -479,14 +487,22 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       
       if (response.data.success) {
         console.log('✅ Comment synced to MongoDB');
+        console.log('📊 [Comment Debug] Response data:', response.data);
+        console.log('📊 [Comment Debug] Response.data.post:', response.data.post);
+        console.log('📊 [Comment Debug] Response.data.comment:', response.data.comment);
         const updatedPost = response.data.post || {};
+        console.log('📊 [Comment Debug] updatedPost:', updatedPost);
+        console.log('📊 [Comment Debug] updatedPost.commentCount:', updatedPost.commentCount);
+        console.log('📊 [Comment Debug] Updating post:', postId, 'with commentCount:', updatedPost.commentCount);
         setPosts(posts.map(p => {
           if (p.id === postId || p.id.endsWith('_' + actualPostId)) {
-            return {
+            const newPost = {
               ...p,
               comments: updatedPost.comments || p.comments,
               commentCount: updatedPost.commentCount ?? p.commentCount
             };
+            console.log('📊 [Comment Debug] New post state:', newPost);
+            return newPost;
           }
           return p;
         }));
@@ -560,14 +576,22 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       
       if (response.data.success) {
         console.log('✅ Save synced to MongoDB');
+        console.log('📊 [Save Debug] Response data:', response.data);
+        console.log('📊 [Save Debug] Response.data.post:', response.data.post);
+        console.log('📊 [Save Debug] Response.data.saveCount:', response.data.saveCount);
         const updatedPost = response.data.post || {};
+        console.log('📊 [Save Debug] updatedPost:', updatedPost);
+        console.log('📊 [Save Debug] updatedPost.saveCount:', updatedPost.saveCount);
+        console.log('📊 [Save Debug] Updating post:', postId, 'with saveCount:', updatedPost.saveCount);
         setPosts(posts.map(p => {
           if (p.id === postId || p.id.endsWith('_' + actualPostId)) {
-            return {
+            const newPost = {
               ...p,
               saveCount: updatedPost.saveCount ?? p.saveCount,
               isSaved: updatedPost.isSaved ?? newSavedState
             };
+            console.log('📊 [Save Debug] New post state:', newPost);
+            return newPost;
           }
           return p;
         }));

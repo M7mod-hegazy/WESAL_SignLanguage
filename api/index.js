@@ -1043,12 +1043,16 @@ module.exports = async (req, res) => {
         await post.save();
         
         const formattedPost = formatPost(post);
-        return res.status(200).json({
+        console.log('📊 [Like Debug] formattedPost:', formattedPost);
+        console.log('📊 [Like Debug] formattedPost.likeCount:', formattedPost.likeCount);
+        const response = {
           success: true,
           post: formattedPost,
           isLiked: likeIndex === -1,
           likeCount: formattedPost.likeCount
-        });
+        };
+        console.log('📊 [Like Debug] Sending response:', response);
+        return res.status(200).json(response);
       } catch (error) {
         console.error('❌ [Like] Error:', error.message);
         return res.status(500).json({ success: false, error: error.message });
@@ -1097,12 +1101,16 @@ module.exports = async (req, res) => {
         await post.save();
         
         const formattedPost = formatPost(post);
-        return res.status(200).json({
+        console.log('📊 [Save Debug] formattedPost:', formattedPost);
+        console.log('📊 [Save Debug] formattedPost.saveCount:', formattedPost.saveCount);
+        const response = {
           success: true,
           post: formattedPost,
           isSaved: saveIndex === -1,
           saveCount: formattedPost.saveCount
-        });
+        };
+        console.log('📊 [Save Debug] Sending response:', response);
+        return res.status(200).json(response);
       } catch (error) {
         console.error('❌ [Save] Error:', error.message);
         return res.status(500).json({ success: false, error: error.message });
@@ -1199,13 +1207,17 @@ module.exports = async (req, res) => {
         post.comments.push(comment);
         await post.save();
         
+        const formattedPost = formatPost(post);
         console.log('💬 [Comment] Added comment');
-        
-        return res.status(201).json({
+        console.log('📊 [Comment Debug] formattedPost:', formattedPost);
+        console.log('📊 [Comment Debug] formattedPost.commentCount:', formattedPost.commentCount);
+        const response = {
           success: true,
-          post: formatPost(post),
+          post: formattedPost,
           comment
-        });
+        };
+        console.log('📊 [Comment Debug] Sending response:', response);
+        return res.status(201).json(response);
       } catch (error) {
         console.error('❌ [Comment] Error:', error.message);
         return res.status(500).json({ success: false, error: error.message });
