@@ -310,20 +310,50 @@ async function handleAuthMe(req, res) {
             photoURL: decodedToken.picture,
             coins: 100,
             gender: 'male',
-            provider: 'google'
+            provider: 'google',
+            savedPosts: [],
+            likedStories: [],
+            challengesCompleted: 0
           });
           await user.save();
+          console.log('✅ [Auth Me] Created new user with initialized fields');
+        } else {
+          // Initialize missing fields for old users (backward compatibility)
+          let needsSave = false;
+          if (!Array.isArray(user.savedPosts)) {
+            user.savedPosts = [];
+            needsSave = true;
+            console.log('✅ [Auth Me] Initialized savedPosts for old user');
+          }
+          if (!Array.isArray(user.likedStories)) {
+            user.likedStories = [];
+            needsSave = true;
+            console.log('✅ [Auth Me] Initialized likedStories for old user');
+          }
+          if (typeof user.challengesCompleted !== 'number') {
+            user.challengesCompleted = 0;
+            needsSave = true;
+            console.log('✅ [Auth Me] Initialized challengesCompleted for old user');
+          }
+          if (needsSave) {
+            await user.save();
+            console.log('✅ [Auth Me] Saved initialized fields for old user');
+          }
         }
 
         return res.status(200).json({
           success: true,
           user: {
+            id: user._id.toString(),
             uid: user.firebaseUid,
             email: user.email,
             displayName: user.displayName,
             photoURL: user.photoURL,
             coins: user.coins || 100,
-            gender: user.gender || 'male'
+            gender: user.gender || 'male',
+            savedPosts: user.savedPosts || [],
+            likedStories: user.likedStories || [],
+            challengesCompleted: user.challengesCompleted || 0
           }
         });
       } catch (dbError) {

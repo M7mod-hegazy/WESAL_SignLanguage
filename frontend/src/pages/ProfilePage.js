@@ -116,6 +116,12 @@ const ProfilePage = ({ onBack }) => {
         
         // Also check if posts have saveCount or were saved in community page
         const saved = allPosts.filter(post => {
+          // Skip posts with no content (deleted or invalid posts)
+          if (!post.content || post.content.trim() === '') {
+            console.log('⚠️ Skipping post with no content:', post.id);
+            return false;
+          }
+          
           const postId = post.id || post._id;
           const postIdString = postId?.toString ? postId.toString() : String(postId);
           
@@ -124,7 +130,7 @@ const ProfilePage = ({ onBack }) => {
             const savedIdString = savedId?.toString ? savedId.toString() : String(savedId);
             return savedIdString === postIdString;
           })) {
-            console.log('✅ Found saved post via savedPosts array:', postIdString);
+            console.log('✅ Found saved post via savedPosts array:', postIdString, 'Content:', post.content);
             return true;
           }
           
@@ -152,6 +158,7 @@ const ProfilePage = ({ onBack }) => {
         setSavedPosts(saved);
         console.log('💾 Saved posts:', saved.length);
         console.log('💾 Sample saved post:', saved[0]);
+        console.log('💾 All saved posts:', saved);
 
         // Get user's shared posts
         const userSharedPosts = sharedPostsData.filter(post => 
