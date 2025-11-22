@@ -1011,6 +1011,58 @@ async function handleCreateStory(req, res) {
   }
 }
 
+// DELETE /api/cleanup - Remove all posts and stories (admin only)
+async function handleCleanup(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' });
+  }
+
+  try {
+    // Require admin token for security
+    const adminToken = req.headers['x-admin-token'];
+    const expectedToken = process.env.ADMIN_CLEANUP_TOKEN || 'cleanup-secret-token';
+    
+    if (!adminToken || adminToken !== expectedToken) {
+      console.log('❌ [Cleanup] Unauthorized cleanup attempt');
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const dbConnection = await connectToDatabase();
+    if (!dbConnection) {
+      return res.status(503).json({ success: false, error: 'Database unavailable' });
+    }
+
+    // Delete all posts
+    const postsResult = await Post.deleteMany({});
+    console.log(`🗑️ [Cleanup] Deleted ${postsResult.deletedCount} posts`);
+
+    // Delete all stories
+    const storiesResult = await Story.deleteMany({});
+    console.log(`🗑️ [Cleanup] Deleted ${storiesResult.deletedCount} stories`);
+
+    // Reset all user savedPosts arrays
+    const usersResult = await User.updateMany(
+      {},
+      { $set: { savedPosts: [] } }
+    );
+    console.log(`🗑️ [Cleanup] Reset savedPosts for ${usersResult.modifiedCount} users`);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Database cleaned successfully',
+      deleted: {
+        posts: postsResult.deletedCount,
+        stories: storiesResult.deletedCount,
+        usersReset: usersResult.modifiedCount
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ [Cleanup] Error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
 // ============================================
 // MAIN HANDLER - ROUTER
 // ============================================
@@ -1142,6 +1194,11 @@ module.exports = async (req, res) => {
     // Shared posts route (alias for posts)
     if (path === '/api/shared-posts' && req.method === 'GET') {
       return await handleGetPosts(req, res);
+    }
+
+    // Cleanup route - Remove all posts and stories
+    if (path === '/api/cleanup' && req.method === 'POST') {
+      return await handleCleanup(req, res);
     }
 
     // IMPORTANT: Check specific post interaction routes BEFORE generic edit route!
