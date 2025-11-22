@@ -391,6 +391,9 @@ async function handleGetPosts(req, res) {
 // POST /api/posts - Create post
 async function handleCreatePost(req, res) {
   try {
+    console.log('📝 [Post Create] Received request');
+    console.log('📋 [Post Create] Body:', req.body);
+    
     const dbConnection = await connectToDatabase();
     if (!dbConnection) {
       console.error('❌ Database connection failed for POST /api/posts');
@@ -401,14 +404,36 @@ async function handleCreatePost(req, res) {
       });
     }
 
-    const { content, media, authorName, authorPhoto, author } = req.body;
+    // Get user info from token
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    let authorName = 'مستخدم';
+    let authorPhoto = '/pages/TeamPage/profile.png';
+    let author = null;
+
+    if (token) {
+      try {
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        authorName = decodedToken.name || decodedToken.email?.split('@')[0] || 'مستخدم';
+        authorPhoto = decodedToken.picture || '/pages/TeamPage/profile.png';
+        author = decodedToken.uid;
+        console.log('✅ [Post Create] User verified:', authorName);
+      } catch (error) {
+        console.warn('⚠️ [Post Create] Token verification failed:', error.message);
+      }
+    }
+
+    const { content, media } = req.body;
+
+    if (!content) {
+      return res.status(400).json({ success: false, error: 'Content is required' });
+    }
 
     const post = new Post({
       content,
       media: media || [],
-      authorName,
-      authorPhoto,
-      author,
+      authorName: req.body.authorName || authorName,
+      authorPhoto: req.body.authorPhoto || authorPhoto,
+      author: req.body.author || author,
       likes: [],
       comments: [],
       saves: [],
@@ -416,13 +441,15 @@ async function handleCreatePost(req, res) {
     });
 
     await post.save();
+    console.log('✅ [Post Create] Post saved:', post._id);
 
     return res.status(201).json({
       success: true,
       post: formatPost(post)
     });
   } catch (error) {
-    console.error('Error creating post:', error);
+    console.error('❌ [Post Create] Error:', error.message);
+    console.error('Stack:', error.stack);
     return res.status(500).json({ success: false, error: error.message });
   }
 }
@@ -445,14 +472,21 @@ async function handleGetStories(req, res) {
 
     const storyGroups = stories.map(story => ({
       id: story._id.toString(),
-      media: story.media || [],
       author: {
         displayName: story.authorName || 'مستخدم',
-        photoURL: story.authorPhoto || '/pages/TeamPage/profile.png'
+        photoURL: story.authorPhoto || '/pages/TeamPage/profile.png',
+        photo: story.authorPhoto || '/pages/TeamPage/profile.png',
+        name: story.authorName || 'مستخدم'
       },
-      createdAt: story.createdAt,
-      views: story.views || 0,
-      likes: story.likes || []
+      stories: [
+        {
+          id: story._id.toString(),
+          media: story.media && story.media.length > 0 ? story.media[0] : null,
+          createdAt: story.createdAt,
+          views: story.views || 0,
+          likes: story.likes || []
+        }
+      ]
     }));
 
     return res.status(200).json({
