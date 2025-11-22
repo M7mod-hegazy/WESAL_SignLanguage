@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const admin = require('firebase-admin');
 const busboy = require('busboy');
+const cloudinary = require('cloudinary').v2;
 
 // Load .env only in local development
 if (process.env.NODE_ENV !== 'production') {
@@ -10,6 +11,19 @@ if (process.env.NODE_ENV !== 'production') {
     // dotenv not available on Vercel, which is fine
   }
 }
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+console.log('☁️ Cloudinary configured:', {
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? '✓' : '✗',
+  api_key: process.env.CLOUDINARY_API_KEY ? '✓' : '✗',
+  api_secret: process.env.CLOUDINARY_API_SECRET ? '✓' : '✗'
+});
 
 // ============================================
 // CONFIGURATION & INITIALIZATION
@@ -168,6 +182,30 @@ function enableCORS(res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
+}
+
+// Upload file to Cloudinary and return URL
+async function uploadToCloudinary(fileBuffer, filename, mimetype) {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: 'auto',
+        public_id: `wesal/${Date.now()}_${filename.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
+        folder: 'wesal'
+      },
+      (error, result) => {
+        if (error) {
+          console.error('❌ Cloudinary upload error:', error.message);
+          reject(error);
+        } else {
+          console.log('✅ Cloudinary upload success:', result.secure_url);
+          resolve(result.secure_url);
+        }
+      }
+    );
+    
+    uploadStream.end(fileBuffer);
+  });
 }
 
 function formatPost(postDoc, requesterId = 'anonymous') {
@@ -465,8 +503,10 @@ async function handleCreatePost(req, res) {
       });
     }
 
-    // Get user info from token
+    // Get user info from token AND body
     const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    // Start with body data (frontend sends this)
     let authorName = req.body.authorName || 'مستخدم';
     let authorPhoto = req.body.authorPhoto || '/pages/TeamPage/profile.png';
     let author = req.body.author || null;
@@ -474,20 +514,23 @@ async function handleCreatePost(req, res) {
     console.log('📋 [Post Create] Token:', token ? 'Present' : 'Missing');
     console.log('📋 [Post Create] Body authorName:', req.body.authorName);
     console.log('📋 [Post Create] Body authorPhoto:', req.body.authorPhoto);
+    console.log('📋 [Post Create] Body author:', req.body.author);
 
+    // Try to verify token and override with token data if available
     if (token) {
       try {
         const decodedToken = await admin.auth().verifyIdToken(token);
+        // Prefer token data over body data
         authorName = decodedToken.name || decodedToken.email?.split('@')[0] || req.body.authorName || 'مستخدم';
         authorPhoto = decodedToken.picture || req.body.authorPhoto || '/pages/TeamPage/profile.png';
         author = decodedToken.uid;
-        console.log('✅ [Post Create] User verified:', authorName);
+        console.log('✅ [Post Create] User verified from token:', authorName);
       } catch (error) {
         console.warn('⚠️ [Post Create] Token verification failed:', error.message);
-        console.warn('   Using body data instead:', { authorName, authorPhoto });
+        console.warn('   Keeping body data:', { authorName, authorPhoto, author });
       }
     } else {
-      console.warn('⚠️ [Post Create] No token provided, using body data');
+      console.warn('⚠️ [Post Create] No token provided, using body data:', { authorName, authorPhoto, author });
     }
 
     const { content } = req.body;
@@ -496,69 +539,65 @@ async function handleCreatePost(req, res) {
       return res.status(400).json({ success: false, error: 'Content is required' });
     }
 
-    // Handle file uploads or base64 media
+    // Handle file uploads to Cloudinary
     let mediaData = [];
     
     console.log('🔍 [Post Create] DEBUG - Checking media sources:');
     console.log('   req.files exists:', !!req.files);
     console.log('   req.files keys:', req.files ? Object.keys(req.files) : 'N/A');
-    console.log('   req.body.media exists:', !!req.body.media);
     
     // Check for files in req.files (multipart upload)
     if (req.files && Object.keys(req.files).length > 0) {
       console.log('✅ [Post Create] Files found in req.files:', Object.keys(req.files));
       
-      // Process all media files
-      Object.keys(req.files).forEach(fileKey => {
+      // Process all media files and upload to Cloudinary
+      for (const fileKey of Object.keys(req.files)) {
         const file = req.files[fileKey];
         const fileArray = Array.isArray(file) ? file : [file];
         
-        fileArray.forEach(f => {
-          console.log('📁 [Post Create] Processing file:', fileKey, 'Name:', f.name, 'Size:', f.size);
-          
-          // Convert file to base64
-          const base64 = f.data.toString('base64');
-          const mediaType = f.mimetype.startsWith('image/') ? 'image' : 'video';
-          
-          mediaData.push({
-            type: mediaType,
-            url: `data:${f.mimetype};base64,${base64}`,
-            filename: f.name
-          });
-        });
-      });
-      console.log('✅ [Post Create] Media converted to base64, count:', mediaData.length);
-    } else if (req.body.media) {
-      console.log('✅ [Post Create] Using body media');
-      // Direct media data (base64 or URL)
-      if (typeof req.body.media === 'string') {
-        mediaData = [{ url: req.body.media }];
-      } else if (Array.isArray(req.body.media)) {
-        mediaData = req.body.media;
-      } else if (typeof req.body.media === 'object') {
-        mediaData = [req.body.media];
+        for (const f of fileArray) {
+          try {
+            console.log('📁 [Post Create] Processing file:', fileKey, 'Name:', f.name, 'Size:', f.size, 'Type:', f.mimetype);
+            
+            // Upload to Cloudinary
+            const cloudinaryUrl = await uploadToCloudinary(f.data, f.name, f.mimetype);
+            const mediaType = f.mimetype.startsWith('image/') ? 'image' : 'video';
+            
+            mediaData.push({
+              type: mediaType,
+              url: cloudinaryUrl,
+              filename: f.name,
+              mimetype: f.mimetype
+            });
+            console.log('☁️ [Post Create] File uploaded to Cloudinary:', cloudinaryUrl);
+          } catch (uploadError) {
+            console.error('❌ [Post Create] Cloudinary upload failed for', f.name, ':', uploadError.message);
+            // Fallback to base64 if Cloudinary fails
+            const base64 = f.data.toString('base64');
+            const mediaType = f.mimetype.startsWith('image/') ? 'image' : 'video';
+            mediaData.push({
+              type: mediaType,
+              url: `data:${f.mimetype};base64,${base64}`,
+              filename: f.name,
+              mimetype: f.mimetype
+            });
+            console.log('⚠️ [Post Create] Fallback to base64 for', f.name);
+          }
+        }
       }
-      console.log('✅ [Post Create] Media from body processed:', mediaData.length, 'items');
+      console.log('✅ [Post Create] Media processed, count:', mediaData.length);
     } else {
-      console.warn('⚠️ [Post Create] No media found in files or body');
+      console.warn('⚠️ [Post Create] No media files found in req.files');
     }
 
-    console.log('📊 [Post Create] Final mediaData:', {
-      count: mediaData.length,
-      items: mediaData.map((m, i) => ({
-        index: i,
-        hasUrl: !!m.url,
-        urlLength: m.url ? m.url.length : 0,
-        type: m.type || 'unknown'
-      }))
-    });
+    console.log('📊 [Post Create] Final mediaData count:', mediaData.length);
 
     const post = new Post({
       content,
       media: mediaData,
-      authorName: req.body.authorName || authorName,
-      authorPhoto: req.body.authorPhoto || authorPhoto,
-      author: req.body.author || author,
+      authorName: authorName,
+      authorPhoto: authorPhoto,
+      author: author,
       likes: [],
       comments: [],
       saves: [],
@@ -654,8 +693,10 @@ async function handleCreateStory(req, res) {
       return res.status(503).json({ success: false, error: 'Database unavailable' });
     }
 
-    // Get user info from token
+    // Get user info from token AND body
     const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    // Start with body data (frontend sends this)
     let authorName = req.body.authorName || 'مستخدم';
     let authorPhoto = req.body.authorPhoto || '/pages/TeamPage/profile.png';
     let author = req.body.author || null;
@@ -663,31 +704,31 @@ async function handleCreateStory(req, res) {
     console.log('📋 [Story Create] Token:', token ? 'Present' : 'Missing');
     console.log('📋 [Story Create] Body authorName:', req.body.authorName);
     console.log('📋 [Story Create] Body authorPhoto:', req.body.authorPhoto);
+    console.log('📋 [Story Create] Body author:', req.body.author);
 
+    // Try to verify token and override with token data if available
     if (token) {
       try {
         const decodedToken = await admin.auth().verifyIdToken(token);
+        // Prefer token data over body data
         authorName = decodedToken.name || decodedToken.email?.split('@')[0] || req.body.authorName || 'مستخدم';
         authorPhoto = decodedToken.picture || req.body.authorPhoto || '/pages/TeamPage/profile.png';
         author = decodedToken.uid;
-        console.log('✅ [Story Create] User verified:', authorName);
+        console.log('✅ [Story Create] User verified from token:', authorName);
       } catch (error) {
         console.warn('⚠️ [Story Create] Token verification failed:', error.message);
-        console.warn('   Using body data instead:', { authorName, authorPhoto });
+        console.warn('   Keeping body data:', { authorName, authorPhoto, author });
       }
     } else {
-      console.warn('⚠️ [Story Create] No token provided, using body data');
+      console.warn('⚠️ [Story Create] No token provided, using body data:', { authorName, authorPhoto, author });
     }
 
-    // Handle file upload or base64 media
+    // Handle file upload to Cloudinary or base64 media
     let mediaData = [];
     
     console.log('🔍 [Story Create] DEBUG - Checking media sources:');
     console.log('   req.files exists:', !!req.files);
     console.log('   req.files keys:', req.files ? Object.keys(req.files) : 'N/A');
-    console.log('   req.body.media exists:', !!req.body.media);
-    console.log('   req.body.media type:', typeof req.body.media);
-    console.log('   req.body.media value:', req.body.media);
     
     // Check for files in req.files (multipart upload)
     if (req.files && Object.keys(req.files).length > 0) {
@@ -697,38 +738,35 @@ async function handleCreateStory(req, res) {
       const fileKey = Object.keys(req.files)[0];
       const file = req.files[fileKey];
       
-      console.log('📁 [Story Create] Processing file:', fileKey, 'Name:', file.name, 'Size:', file.size);
-      
-      // Convert file to base64
-      const base64 = file.data.toString('base64');
-      const mediaType = file.mimetype.startsWith('image/') ? 'image' : 'video';
-      
-      mediaData = [{
-        type: mediaType,
-        url: `data:${file.mimetype};base64,${base64}`,
-        filename: file.name
-      }];
-      console.log('✅ [Story Create] Media converted to base64, length:', base64.length);
-    } else if (req.body.media) {
-      console.log('✅ [Story Create] Using body media');
-      // Direct media data (base64 or URL)
-      if (typeof req.body.media === 'string') {
-        // Single media item as string
-        console.log('   Media is string, length:', req.body.media.length);
-        mediaData = [{ url: req.body.media }];
-      } else if (Array.isArray(req.body.media)) {
-        // Array of media items
-        console.log('   Media is array, length:', req.body.media.length);
-        mediaData = req.body.media;
-      } else if (typeof req.body.media === 'object') {
-        // Single media object
-        console.log('   Media is object');
-        mediaData = [req.body.media];
+      try {
+        console.log('📁 [Story Create] Processing file:', fileKey, 'Name:', file.name, 'Size:', file.size);
+        
+        // Upload to Cloudinary
+        const cloudinaryUrl = await uploadToCloudinary(file.data, file.name, file.mimetype);
+        const mediaType = file.mimetype.startsWith('image/') ? 'image' : 'video';
+        
+        mediaData = [{
+          type: mediaType,
+          url: cloudinaryUrl,
+          filename: file.name,
+          mimetype: file.mimetype
+        }];
+        console.log('☁️ [Story Create] File uploaded to Cloudinary:', cloudinaryUrl);
+      } catch (uploadError) {
+        console.error('❌ [Story Create] Cloudinary upload failed:', uploadError.message);
+        // Fallback to base64 if Cloudinary fails
+        const base64 = file.data.toString('base64');
+        const mediaType = file.mimetype.startsWith('image/') ? 'image' : 'video';
+        mediaData = [{
+          type: mediaType,
+          url: `data:${file.mimetype};base64,${base64}`,
+          filename: file.name,
+          mimetype: file.mimetype
+        }];
+        console.log('⚠️ [Story Create] Fallback to base64');
       }
-      console.log('✅ [Story Create] Media from body processed:', mediaData.length, 'items');
     } else {
-      console.warn('⚠️ [Story Create] No media found in files or body');
-      console.warn('   This story will be created WITHOUT media');
+      console.warn('⚠️ [Story Create] No media files found in req.files');
       // Allow story creation without media (will be empty array)
       mediaData = [];
     }
@@ -745,9 +783,9 @@ async function handleCreateStory(req, res) {
 
     const story = new Story({
       media: mediaData,
-      authorName: req.body.authorName || authorName,
-      authorPhoto: req.body.authorPhoto || authorPhoto,
-      author: req.body.author || author,
+      authorName: authorName,
+      authorPhoto: authorPhoto,
+      author: author,
       likes: [],
       views: 0
     });
