@@ -170,7 +170,10 @@ const userSchema = new mongoose.Schema({
   photoURL: String,
   coins: { type: Number, default: 100 },
   gender: { type: String, default: 'male' },
-  provider: String
+  provider: String,
+  savedPosts: [String],           // Array of saved post IDs
+  likedStories: [String],         // Array of liked story IDs
+  challengesCompleted: { type: Number, default: 0 }  // Count of completed challenges
 }, { timestamps: true });
 
 const Post = mongoose.models.Post || mongoose.model('Post', postSchema);
@@ -1182,15 +1185,31 @@ module.exports = async (req, res) => {
         const userId = decodedToken.uid;
         const saveIndex = post.saves.findIndex(id => id === userId);
         
+        // Also update User model's savedPosts array
+        const user = await User.findOne({ firebaseUid: userId });
+        if (!user) {
+          return res.status(404).json({ success: false, error: 'User not found' });
+        }
+        
         if (saveIndex > -1) {
           post.saves.splice(saveIndex, 1);
+          // Remove from user's savedPosts
+          const userSaveIndex = user.savedPosts.indexOf(postId);
+          if (userSaveIndex > -1) {
+            user.savedPosts.splice(userSaveIndex, 1);
+          }
           console.log('📌 [Save] Removed save');
         } else {
           post.saves.push(userId);
+          // Add to user's savedPosts
+          if (!user.savedPosts.includes(postId)) {
+            user.savedPosts.push(postId);
+          }
           console.log('📌 [Save] Added save');
         }
         
         await post.save();
+        await user.save();
         
         const formattedPost = formatPost(post, userId);
         console.log('📊 [Save Debug] formattedPost:', formattedPost);
