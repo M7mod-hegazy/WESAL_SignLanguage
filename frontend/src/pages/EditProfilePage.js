@@ -152,17 +152,21 @@ const EditProfilePage = ({ onBack, onSave }) => {
     }}>
       <div style={{
         width: '100%',
-        height: '100vh',
+        minHeight: '100vh',
         background: '#FFF9F0',
         display: 'flex',
         flexDirection: 'column',
         direction: 'rtl',
         fontFamily: theme.typography.fonts.secondary,
         position: 'relative',
-        overflow: 'auto',
         boxShadow: 'rgba(0, 0, 0, 0.1) 0px 0px 20px',
         maxWidth: '480px',
-        padding: '20px'
+        paddingTop: '20px',
+        paddingBottom: '20px',
+        paddingLeft: '20px',
+        paddingRight: '20px',
+        overflowY: 'auto',
+        overflowX: 'hidden'
       }}>
         {/* Back Button */}
         <button
@@ -229,8 +233,9 @@ const EditProfilePage = ({ onBack, onSave }) => {
         <div style={{
           display: 'flex',
           justifyContent: 'center',
-          marginTop: '60px',
-          marginBottom: '40px'
+          marginTop: '50px',
+          marginBottom: '30px',
+          flexShrink: 0
         }}>
           <div style={{
             position: 'relative'
@@ -305,7 +310,10 @@ const EditProfilePage = ({ onBack, onSave }) => {
         <div style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '15px'
+          gap: '15px',
+          flex: 1,
+          overflowY: 'auto',
+          paddingBottom: '20px'
         }}>
           {/* Name Field */}
           <div style={{
