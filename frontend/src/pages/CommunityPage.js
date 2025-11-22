@@ -1443,7 +1443,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                 marginBottom: '12px'
               }}>
                 <img 
-                  src={getDefaultProfileIcon(post.author?.photo || post.author?.photoURL || post.originalAuthor?.photo, post.author?.gender)}
+                  src={getDefaultProfileIcon(post.originalAuthor?.photo || post.originalAuthor?.photoURL || post.author?.photo || post.author?.photoURL, post.originalAuthor?.gender || post.author?.gender)}
                   alt={post.originalAuthor?.name || post.author?.name}
                   crossOrigin="anonymous"
                   style={{

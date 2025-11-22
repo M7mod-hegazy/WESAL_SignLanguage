@@ -18,6 +18,7 @@ const ProfilePage = ({ onBack }) => {
   const [userPosts, setUserPosts] = useState([]); // User's own posts (نشر)
   const [sharedPosts, setSharedPosts] = useState([]); // Keep for compatibility
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [loading, setLoading] = useState(true); // Loading state for skeleton
   const [stats, setStats] = useState({
     likedCount: 0,      // المحتويات (Likes)
     sharedCount: 0,     // شير (Shares)
@@ -210,6 +211,8 @@ const ProfilePage = ({ onBack }) => {
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -377,7 +380,91 @@ const ProfilePage = ({ onBack }) => {
           />
         </button>
 
+      {/* Loading Skeleton */}
+      {loading && (
+        <div style={{
+          padding: '20px'
+        }}>
+          {/* Avatar Skeleton */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            marginBottom: '30px',
+            marginTop: '20px'
+          }}>
+            <div style={{
+              width: '120px',
+              height: '120px',
+              borderRadius: '50%',
+              background: '#E8E8E8',
+              marginBottom: '15px',
+              animation: 'pulse 1.5s infinite'
+            }} />
+            
+            {/* Name Skeleton */}
+            <div style={{
+              width: '150px',
+              height: '24px',
+              background: '#E8E8E8',
+              borderRadius: '8px',
+              marginBottom: '15px',
+              animation: 'pulse 1.5s infinite'
+            }} />
+            
+            {/* Level Skeleton */}
+            <div style={{
+              width: '200px',
+              height: '20px',
+              background: '#E8E8E8',
+              borderRadius: '8px',
+              marginBottom: '15px',
+              animation: 'pulse 1.5s infinite'
+            }} />
+            
+            {/* Progress Bar Skeleton */}
+            <div style={{
+              width: '200px',
+              height: '8px',
+              background: '#E8E8E8',
+              borderRadius: '10px',
+              marginBottom: '30px',
+              animation: 'pulse 1.5s infinite'
+            }} />
+          </div>
+          
+          {/* Stats Cards Skeleton */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-around',
+            marginBottom: '25px',
+            gap: '10px'
+          }}>
+            {[1, 2, 3].map(i => (
+              <div key={i} style={{
+                flex: 1,
+                background: '#E8E8E8',
+                borderRadius: '20px',
+                padding: '20px 15px',
+                height: '100px',
+                animation: 'pulse 1.5s infinite'
+              }} />
+            ))}
+          </div>
+          
+          <style>
+            {`
+              @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+              }
+            `}
+          </style>
+        </div>
+      )}
+
       {/* Content Container */}
+      {!loading && (
       <div style={{
         padding: '20px'
       }}>
@@ -778,6 +865,7 @@ const ProfilePage = ({ onBack }) => {
         )}
       </div>
       </div>
+      )}
       </div>
     </div>
   );
