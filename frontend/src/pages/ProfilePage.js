@@ -79,10 +79,12 @@ const ProfilePage = ({ onBack }) => {
       });
 
       if (postsResponse.data.success) {
-        const backendPosts = postsResponse.data.posts;
+        const backendPosts = Array.isArray(postsResponse.data.posts) ? postsResponse.data.posts : [];
         
         // Get shared posts from MongoDB (not localStorage anymore)
-        const sharedPostsData = sharedPostsResponse.data.success ? sharedPostsResponse.data.sharedPosts : [];
+        const sharedPostsData = sharedPostsResponse.data.success && Array.isArray(sharedPostsResponse.data.sharedPosts) 
+          ? sharedPostsResponse.data.sharedPosts 
+          : [];
         
         // Combine backend posts with shared posts for complete data
         const allPosts = [...backendPosts, ...sharedPostsData];
@@ -99,14 +101,14 @@ const ProfilePage = ({ onBack }) => {
         const liked = allPosts.filter(post => post.isLiked === true);
         
         // Get liked stories from MongoDB user profile
-        const userLikedStories = userProfile.likedStories || [];
+        const userLikedStories = Array.isArray(userProfile.likedStories) ? userProfile.likedStories : [];
         
         // Combine posts and stories for display
         setLikedPosts([...liked, ...userLikedStories.map(id => ({ id, type: 'story' }))]);
         console.log('❤️ Liked content:', liked.length, 'posts +', userLikedStories.length, 'stories (from MongoDB)');
 
         // Get saved posts - Use savedPosts array from user profile
-        const userSavedPostIds = userProfile.savedPosts || [];
+        const userSavedPostIds = Array.isArray(userProfile.savedPosts) ? userProfile.savedPosts : [];
         console.log('💾 User saved post IDs from profile:', userSavedPostIds);
         
         // Also check if posts have saveCount or were saved in community page
