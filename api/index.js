@@ -24,6 +24,7 @@ console.log('☁️ Cloudinary configured:', {
   api_key: process.env.CLOUDINARY_API_KEY ? '✓' : '✗',
   api_secret: process.env.CLOUDINARY_API_SECRET ? '✓' : '✗'
 });
+console.log('⏰ API Started at:', new Date().toISOString());
 
 // ============================================
 // CONFIGURATION & INITIALIZATION
@@ -511,9 +512,10 @@ async function handleCreatePost(req, res) {
     let authorPhoto = req.body.authorPhoto || '/pages/TeamPage/profile.png';
     let author = req.body.author || null;
 
-    console.log('═══════════════════════════════════════════════════════════');
-    console.log('🔐 [Post Create] AUTHENTICATION DEBUG');
-    console.log('═══════════════════════════════════════════════════════════');
+    console.log('\n\n');
+    console.log('╔═══════════════════════════════════════════════════════════╗');
+    console.log('║ 🔐 [Post Create] AUTHENTICATION DEBUG                     ║');
+    console.log('╚═══════════════════════════════════════════════════════════╝');
     console.log('📨 RECEIVED FROM FRONTEND:');
     console.log('   authorName:', req.body.authorName);
     console.log('   authorPhoto:', req.body.authorPhoto ? 'YES' : 'NO');
@@ -546,7 +548,10 @@ async function handleCreatePost(req, res) {
     console.log('   authorName:', authorName);
     console.log('   authorPhoto:', authorPhoto ? 'YES' : 'NO');
     console.log('   author:', author);
-    console.log('═══════════════════════════════════════════════════════════');
+    console.log('╔═══════════════════════════════════════════════════════════╗');
+    console.log('║ END AUTH DEBUG                                            ║');
+    console.log('╚═══════════════════════════════════════════════════════════╝');
+    console.log('\n\n');
 
     const { content } = req.body;
 
@@ -751,7 +756,10 @@ async function handleCreateStory(req, res) {
     console.log('   authorName:', authorName);
     console.log('   authorPhoto:', authorPhoto ? 'YES' : 'NO');
     console.log('   author:', author);
-    console.log('═══════════════════════════════════════════════════════════');
+    console.log('╔═══════════════════════════════════════════════════════════╗');
+    console.log('║ END AUTH DEBUG                                            ║');
+    console.log('╚═══════════════════════════════════════════════════════════╝');
+    console.log('\n\n');
 
     // Handle file upload to Cloudinary or base64 media
     let mediaData = [];
