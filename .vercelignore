@@ -1,0 +1,19 @@
+# Ignore old API files - using monolithic api/index.js instead
+api/auth/me.js
+api/auth/verify.js
+api/auth.js
+api/posts.js
+api/posts/[id].js
+api/stories.js
+api/debug.js
+api/test.js
+api/test-mongo.js
+api/signs.js
+
+# Ignore backend folder - not used in Vercel deployment
+backend/
+
+# Ignore node_modules
+node_modules/
+.git/
+.gitignore

@@ -475,10 +475,21 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  const url = req.url || '';
-  const path = url.split('?')[0]; // Remove query string
-
   try {
+    // Parse request body if needed
+    let body = {};
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      if (req.body) {
+        body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      }
+      req.body = body;
+    }
+
+    const url = req.url || '';
+    const path = url.split('?')[0]; // Remove query string
+
+    console.log(`📍 API Request: ${req.method} ${path}`);
+
     // Auth routes
     if (path === '/api/auth/me') {
       return await handleAuthMe(req, res);
@@ -504,10 +515,11 @@ module.exports = async (req, res) => {
     }
 
     // 404
-    return res.status(404).json({ success: false, error: 'Endpoint not found' });
+    console.warn(`⚠️ Endpoint not found: ${req.method} ${path}`);
+    return res.status(404).json({ success: false, error: 'Endpoint not found', path });
 
   } catch (error) {
-    console.error('API Error:', error);
-    return res.status(500).json({ success: false, error: error.message });
+    console.error('❌ API Error:', error);
+    return res.status(500).json({ success: false, error: error.message, stack: error.stack });
   }
 };
