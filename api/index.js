@@ -419,7 +419,10 @@ async function handleGetPosts(req, res) {
 async function handleCreatePost(req, res) {
   try {
     console.log('📝 [Post Create] Received request');
-    console.log('📋 [Post Create] Body:', req.body);
+    console.log('📋 [Post Create] Content-Type:', req.headers['content-type']);
+    console.log('📋 [Post Create] Body keys:', Object.keys(req.body || {}));
+    console.log('📋 [Post Create] Files keys:', Object.keys(req.files || {}));
+    console.log('📋 [Post Create] Full body:', JSON.stringify(req.body));
     
     const dbConnection = await connectToDatabase();
     if (!dbConnection) {
@@ -455,6 +458,8 @@ async function handleCreatePost(req, res) {
       return res.status(400).json({ success: false, error: 'Content is required' });
     }
 
+    console.log('📊 [Post Create] Media received:', media);
+
     const post = new Post({
       content,
       media: media || [],
@@ -468,7 +473,7 @@ async function handleCreatePost(req, res) {
     });
 
     await post.save();
-    console.log('✅ [Post Create] Post saved:', post._id);
+    console.log('✅ [Post Create] Post saved:', post._id, 'with media:', post.media);
 
     return res.status(201).json({
       success: true,
@@ -577,7 +582,7 @@ async function handleCreateStory(req, res) {
     // Handle file upload or base64 media
     let mediaData = [];
     
-    // Check for files in req.files
+    // Check for files in req.files (multipart upload)
     if (req.files && Object.keys(req.files).length > 0) {
       console.log('📁 [Story Create] Files found:', Object.keys(req.files));
       
@@ -600,22 +605,24 @@ async function handleCreateStory(req, res) {
     } else if (req.body.media) {
       console.log('📋 [Story Create] Using body media');
       // Direct media data (base64 or URL)
-      mediaData = Array.isArray(req.body.media) ? req.body.media : [req.body.media];
+      if (typeof req.body.media === 'string') {
+        // Single media item as string
+        mediaData = [{ url: req.body.media }];
+      } else if (Array.isArray(req.body.media)) {
+        // Array of media items
+        mediaData = req.body.media;
+      } else if (typeof req.body.media === 'object') {
+        // Single media object
+        mediaData = [req.body.media];
+      }
+      console.log('✅ [Story Create] Media from body:', mediaData);
     } else {
-      console.error('❌ [Story Create] No media found in files or body');
-      console.error('   Files:', req.files);
-      console.error('   Body:', req.body);
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Media is required',
-        debug: { hasFiles: !!req.files, hasBody: !!req.body }
-      });
+      console.warn('⚠️ [Story Create] No media found, creating story without media');
+      // Allow story creation without media (will be empty array)
+      mediaData = [];
     }
 
-    if (!mediaData || mediaData.length === 0) {
-      console.error('❌ [Story Create] No media data after processing');
-      return res.status(400).json({ success: false, error: 'Media processing failed' });
-    }
+    console.log('📊 [Story Create] Final mediaData:', mediaData);
 
     const story = new Story({
       media: mediaData,
