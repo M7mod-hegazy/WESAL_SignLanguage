@@ -655,9 +655,6 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
         : post
     );
     
-    // Add shared post to the top
-    setPosts([sharedPost, ...updatedPosts]);
-    
     // Track user-specific share (only save the ID, not the full post)
     const userShares = JSON.parse(localStorage.getItem(`userShares_${userId}`) || '[]');
     if (!userShares.includes(postId)) {
@@ -691,6 +688,12 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       if (response.data.success) {
         console.log('✅ Shared post saved to MongoDB');
         
+        // Use the MongoDB response data for the shared post
+        const mongoSharedPost = response.data.post || sharedPost;
+        
+        // Add shared post to the top with MongoDB data
+        setPosts([mongoSharedPost, ...updatedPosts]);
+        
         // Update the share count on original post (if it exists in MongoDB)
         try {
           const shareResponse = await axios.post(
@@ -714,11 +717,11 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
         }
         
         alert('تم مشاركة المنشور على صفحتك!');
-        // Don't call fetchPosts() - it would remove local-only posts!
-        // The shared post is already added to the UI above
       }
     } catch (error) {
       console.error('❌ Failed to share post:', error);
+      // Still add the shared post to UI even if MongoDB fails
+      setPosts([sharedPost, ...updatedPosts]);
       alert('فشل مشاركة المنشور، حاول مرة أخرى');
     }
   };
@@ -1440,16 +1443,33 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                   flex: 1,
                   textAlign: 'right'
                 }}>
+                  {/* Sharer Name (if shared) */}
+                  {post.isShared && post.sharedBy && (
+                    <div style={{
+                      fontSize: '14px',
+                      fontWeight: theme.typography.weights.bold,
+                      color: theme.colors.primary.blue,
+                      fontFamily: theme.typography.fonts.primary
+                    }}>{post.sharedBy.name}</div>
+                  )}
+                  
+                  {/* Original Author Name (always show) */}
                   <div style={{
-                    fontSize: '14px',
-                    fontWeight: theme.typography.weights.bold,
-                    color: theme.colors.primary.blue,
-                    fontFamily: theme.typography.fonts.primary
-                  }}>{post.isShared && post.sharedBy?.name ? post.sharedBy.name : (post.author?.displayName || post.author?.name || 'مستخدم')}</div>
+                    fontSize: post.isShared ? '12px' : '14px',
+                    fontWeight: post.isShared ? 'normal' : theme.typography.weights.bold,
+                    color: post.isShared ? '#666' : theme.colors.primary.blue,
+                    fontFamily: theme.typography.fonts.primary,
+                    marginTop: post.isShared ? '2px' : '0px'
+                  }}>
+                    {post.isShared && 'من قبل '}{post.author?.displayName || post.author?.name || 'مستخدم'}
+                  </div>
+                  
+                  {/* Time */}
                   <div style={{
                     fontSize: '11px',
                     color: '#999',
-                    fontFamily: theme.typography.fonts.secondary
+                    fontFamily: theme.typography.fonts.secondary,
+                    marginTop: '2px'
                   }}>{formatTime(post.createdAt)}</div>
                 </div>
 
