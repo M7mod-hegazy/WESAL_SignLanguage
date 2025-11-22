@@ -467,33 +467,95 @@ async function handleCreatePost(req, res) {
 
     // Get user info from token
     const token = req.headers.authorization?.replace('Bearer ', '');
-    let authorName = 'مستخدم';
-    let authorPhoto = '/pages/TeamPage/profile.png';
-    let author = null;
+    let authorName = req.body.authorName || 'مستخدم';
+    let authorPhoto = req.body.authorPhoto || '/pages/TeamPage/profile.png';
+    let author = req.body.author || null;
+
+    console.log('📋 [Post Create] Token:', token ? 'Present' : 'Missing');
+    console.log('📋 [Post Create] Body authorName:', req.body.authorName);
+    console.log('📋 [Post Create] Body authorPhoto:', req.body.authorPhoto);
 
     if (token) {
       try {
         const decodedToken = await admin.auth().verifyIdToken(token);
-        authorName = decodedToken.name || decodedToken.email?.split('@')[0] || 'مستخدم';
-        authorPhoto = decodedToken.picture || '/pages/TeamPage/profile.png';
+        authorName = decodedToken.name || decodedToken.email?.split('@')[0] || req.body.authorName || 'مستخدم';
+        authorPhoto = decodedToken.picture || req.body.authorPhoto || '/pages/TeamPage/profile.png';
         author = decodedToken.uid;
         console.log('✅ [Post Create] User verified:', authorName);
       } catch (error) {
         console.warn('⚠️ [Post Create] Token verification failed:', error.message);
+        console.warn('   Using body data instead:', { authorName, authorPhoto });
       }
+    } else {
+      console.warn('⚠️ [Post Create] No token provided, using body data');
     }
 
-    const { content, media } = req.body;
+    const { content } = req.body;
 
     if (!content) {
       return res.status(400).json({ success: false, error: 'Content is required' });
     }
 
-    console.log('📊 [Post Create] Media received:', media);
+    // Handle file uploads or base64 media
+    let mediaData = [];
+    
+    console.log('🔍 [Post Create] DEBUG - Checking media sources:');
+    console.log('   req.files exists:', !!req.files);
+    console.log('   req.files keys:', req.files ? Object.keys(req.files) : 'N/A');
+    console.log('   req.body.media exists:', !!req.body.media);
+    
+    // Check for files in req.files (multipart upload)
+    if (req.files && Object.keys(req.files).length > 0) {
+      console.log('✅ [Post Create] Files found in req.files:', Object.keys(req.files));
+      
+      // Process all media files
+      Object.keys(req.files).forEach(fileKey => {
+        const file = req.files[fileKey];
+        const fileArray = Array.isArray(file) ? file : [file];
+        
+        fileArray.forEach(f => {
+          console.log('📁 [Post Create] Processing file:', fileKey, 'Name:', f.name, 'Size:', f.size);
+          
+          // Convert file to base64
+          const base64 = f.data.toString('base64');
+          const mediaType = f.mimetype.startsWith('image/') ? 'image' : 'video';
+          
+          mediaData.push({
+            type: mediaType,
+            url: `data:${f.mimetype};base64,${base64}`,
+            filename: f.name
+          });
+        });
+      });
+      console.log('✅ [Post Create] Media converted to base64, count:', mediaData.length);
+    } else if (req.body.media) {
+      console.log('✅ [Post Create] Using body media');
+      // Direct media data (base64 or URL)
+      if (typeof req.body.media === 'string') {
+        mediaData = [{ url: req.body.media }];
+      } else if (Array.isArray(req.body.media)) {
+        mediaData = req.body.media;
+      } else if (typeof req.body.media === 'object') {
+        mediaData = [req.body.media];
+      }
+      console.log('✅ [Post Create] Media from body processed:', mediaData.length, 'items');
+    } else {
+      console.warn('⚠️ [Post Create] No media found in files or body');
+    }
+
+    console.log('📊 [Post Create] Final mediaData:', {
+      count: mediaData.length,
+      items: mediaData.map((m, i) => ({
+        index: i,
+        hasUrl: !!m.url,
+        urlLength: m.url ? m.url.length : 0,
+        type: m.type || 'unknown'
+      }))
+    });
 
     const post = new Post({
       content,
-      media: media || [],
+      media: mediaData,
       authorName: req.body.authorName || authorName,
       authorPhoto: req.body.authorPhoto || authorPhoto,
       author: req.body.author || author,
@@ -504,7 +566,7 @@ async function handleCreatePost(req, res) {
     });
 
     await post.save();
-    console.log('✅ [Post Create] Post saved:', post._id, 'with media:', post.media);
+    console.log('✅ [Post Create] Post saved:', post._id, 'with media count:', post.media.length);
 
     return res.status(201).json({
       success: true,
@@ -594,20 +656,27 @@ async function handleCreateStory(req, res) {
 
     // Get user info from token
     const token = req.headers.authorization?.replace('Bearer ', '');
-    let authorName = 'مستخدم';
-    let authorPhoto = '/pages/TeamPage/profile.png';
-    let author = null;
+    let authorName = req.body.authorName || 'مستخدم';
+    let authorPhoto = req.body.authorPhoto || '/pages/TeamPage/profile.png';
+    let author = req.body.author || null;
+
+    console.log('📋 [Story Create] Token:', token ? 'Present' : 'Missing');
+    console.log('📋 [Story Create] Body authorName:', req.body.authorName);
+    console.log('📋 [Story Create] Body authorPhoto:', req.body.authorPhoto);
 
     if (token) {
       try {
         const decodedToken = await admin.auth().verifyIdToken(token);
-        authorName = decodedToken.name || decodedToken.email?.split('@')[0] || 'مستخدم';
-        authorPhoto = decodedToken.picture || '/pages/TeamPage/profile.png';
+        authorName = decodedToken.name || decodedToken.email?.split('@')[0] || req.body.authorName || 'مستخدم';
+        authorPhoto = decodedToken.picture || req.body.authorPhoto || '/pages/TeamPage/profile.png';
         author = decodedToken.uid;
         console.log('✅ [Story Create] User verified:', authorName);
       } catch (error) {
         console.warn('⚠️ [Story Create] Token verification failed:', error.message);
+        console.warn('   Using body data instead:', { authorName, authorPhoto });
       }
+    } else {
+      console.warn('⚠️ [Story Create] No token provided, using body data');
     }
 
     // Handle file upload or base64 media
