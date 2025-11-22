@@ -12,9 +12,16 @@ const HomePage = () => {
   const { user, coins } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   // Get username from user object
   const username = user?.displayName || user?.email?.split('@')[0] || 'مستخدم';
+  
+  // Simulate loading for initial page load
+  React.useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleClose = () => {
     setIsClosing(true);
@@ -190,6 +197,72 @@ const HomePage = () => {
           />
         </div>
       </div>
+
+      {/* Loading Skeleton */}
+      {loading && (
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '20px',
+          gap: '20px'
+        }}>
+          <style>
+            {`
+              @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+              }
+            `}
+          </style>
+          
+          {/* Hero Skeleton */}
+          <div style={{
+            width: '100%',
+            height: '200px',
+            background: '#E8E8E8',
+            borderRadius: '16px',
+            animation: 'pulse 1.5s infinite',
+            marginTop: '20px'
+          }} />
+          
+          {/* Mode Cards Skeleton */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '20px',
+            marginTop: '40px'
+          }}>
+            {[1, 2].map(i => (
+              <div key={i} style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '10px'
+              }}>
+                <div style={{
+                  width: '100%',
+                  height: '120px',
+                  background: '#E8E8E8',
+                  borderRadius: '16px',
+                  animation: 'pulse 1.5s infinite'
+                }} />
+                <div style={{
+                  width: '60px',
+                  height: '16px',
+                  background: '#E8E8E8',
+                  borderRadius: '8px',
+                  animation: 'pulse 1.5s infinite'
+                }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      {!loading && (
+      <>
 
       {/* Hero Section - Complete Image */}
       <div style={{
@@ -640,6 +713,8 @@ const HomePage = () => {
             </div>
           </div>
         </>
+      )}
+      </>
       )}
       </div>
     </div>

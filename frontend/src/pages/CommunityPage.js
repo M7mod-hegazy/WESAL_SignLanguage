@@ -1443,8 +1443,11 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                 marginBottom: '12px'
               }}>
                 <img 
-                  src={getDefaultProfileIcon(post.originalAuthor?.photo || post.originalAuthor?.photoURL || post.author?.photo || post.author?.photoURL, post.originalAuthor?.gender || post.author?.gender)}
-                  alt={post.originalAuthor?.name || post.author?.name}
+                  src={getDefaultProfileIcon(
+                    post.isShared && post.sharedBy?.photo ? post.sharedBy.photo : (post.author?.photo || post.author?.photoURL),
+                    post.isShared && post.sharedBy?.gender ? post.sharedBy.gender : (post.author?.gender || 'male')
+                  )}
+                  alt={post.isShared && post.sharedBy?.name ? post.sharedBy.name : (post.author?.name || 'مستخدم')}
                   crossOrigin="anonymous"
                   style={{
                     width: '40px',
@@ -1476,7 +1479,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                     fontWeight: theme.typography.weights.bold,
                     color: theme.colors.primary.blue,
                     fontFamily: theme.typography.fonts.primary
-                  }}>{post.originalAuthor?.name || post.author?.displayName || post.author?.name || 'مستخدم'}</div>
+                  }}>{post.isShared && post.sharedBy?.name ? post.sharedBy.name : (post.author?.displayName || post.author?.name || 'مستخدم')}</div>
                   <div style={{
                     fontSize: '11px',
                     color: '#999',
