@@ -1088,11 +1088,15 @@ module.exports = async (req, res) => {
         const savedPost = await post.save();
         console.log('✅ [Post Edit] Post saved successfully:', postId);
         console.log('✅ [Post Edit] Saved content:', savedPost.content);
+        console.log('✅ [Post Edit] Saved media count:', savedPost.media?.length || 0);
+        
+        // Refresh from DB to ensure we have the latest data
+        const refreshedPost = await Post.findById(postId);
         
         return res.status(200).json({ 
           success: true, 
           message: 'Post updated successfully',
-          post: formatPost(savedPost)
+          post: formatPost(refreshedPost)
         });
       } catch (error) {
         console.error('❌ [Post Edit] Error:', error.message);

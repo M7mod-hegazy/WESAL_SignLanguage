@@ -770,12 +770,24 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
 
       if (response.data.success) {
         console.log('✅ Post updated successfully');
-        // Update local state
-        setPosts(posts.map(post => 
-          post.id === postId 
-            ? { ...post, content: editContent, media: response.data.post?.media || editMedia }
-            : post
-        ));
+        console.log('📝 Updated post from backend:', response.data.post);
+        
+        // Update local state with the response from backend
+        if (response.data.post) {
+          setPosts(posts.map(post => 
+            post.id === postId 
+              ? response.data.post  // Use the full updated post from backend
+              : post
+          ));
+        } else {
+          // Fallback: update with local data
+          setPosts(posts.map(post => 
+            post.id === postId 
+              ? { ...post, content: editContent, media: editMedia }
+              : post
+          ));
+        }
+        
         setEditingPost(null);
         setEditContent('');
         setEditMedia([]);
