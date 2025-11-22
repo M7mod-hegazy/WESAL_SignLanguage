@@ -426,22 +426,7 @@ async function handleAuthVerify(req, res) {
 }
 
 // Helper function to format post response
-function formatPost(post) {
-  return {
-    id: post._id?.toString() || post.id,
-    content: post.content,
-    media: post.media || [],
-    author: {
-      displayName: post.authorName || 'مستخدم',
-      photoURL: post.authorPhoto || '/pages/TeamPage/profile.png'
-    },
-    createdAt: post.createdAt,
-    likes: post.likes || [],
-    saves: post.saves || [],
-    shares: post.shares || 0,
-    comments: post.comments || []
-  };
-}
+// REMOVED: Duplicate formatPost function - using the complete one above (line 215)
 
 // GET /api/posts - Get posts list
 async function handleGetPosts(req, res) {
