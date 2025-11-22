@@ -990,9 +990,15 @@ module.exports = async (req, res) => {
       return await handleCreateStory(req, res);
     }
 
+    // Shared posts route (alias for posts)
+    if (path === '/api/shared-posts' && req.method === 'GET') {
+      return await handleGetPosts(req, res);
+    }
+
     // PUT /api/posts/:id - Edit a post
     if (path.startsWith('/api/posts/') && req.method === 'PUT' && !req.url.includes('?')) {
       const postId = path.split('/').pop();
+      console.log('✏️ [Post Edit] Received edit request for post:', postId);
       
       if (!postId) {
         return res.status(400).json({ success: false, error: 'Post ID required' });
@@ -1020,17 +1026,20 @@ module.exports = async (req, res) => {
         // Find the post
         const post = await Post.findById(postId);
         if (!post) {
+          console.error('❌ [Post Edit] Post not found:', postId);
           return res.status(404).json({ success: false, error: 'Post not found' });
         }
         
         // Check if user is the post owner
         const postAuthorId = typeof post.author === 'string' ? post.author : post.author?.uid;
         if (postAuthorId !== decodedToken.uid) {
+          console.error('❌ [Post Edit] Not authorized. Post author:', postAuthorId, 'User:', decodedToken.uid);
           return res.status(403).json({ success: false, error: 'Not authorized to edit this post' });
         }
         
         // Update post content
         if (req.body.content) {
+          console.log('📝 [Post Edit] Updating content');
           post.content = req.body.content;
         }
         
@@ -1076,16 +1085,18 @@ module.exports = async (req, res) => {
         }
         
         // Save updated post
-        await post.save();
-        console.log('✅ [Post Edit] Post updated:', postId);
+        const savedPost = await post.save();
+        console.log('✅ [Post Edit] Post saved successfully:', postId);
+        console.log('✅ [Post Edit] Saved content:', savedPost.content);
         
         return res.status(200).json({ 
           success: true, 
           message: 'Post updated successfully',
-          post: formatPost(post)
+          post: formatPost(savedPost)
         });
       } catch (error) {
         console.error('❌ [Post Edit] Error:', error.message);
+        console.error('❌ [Post Edit] Stack:', error.stack);
         return res.status(500).json({ success: false, error: error.message });
       }
     }
