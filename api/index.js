@@ -1121,23 +1121,212 @@ module.exports = async (req, res) => {
       }
     }
 
-    // Posts interaction routes (like, save, share)
-    if (path.startsWith('/api/posts') && req.method === 'PUT') {
-      // Handle like/save/share updates
-      const url = new URL(`http://localhost${req.url}`);
-      const postId = url.searchParams.get('id');
-      const action = url.searchParams.get('action');
+    // POST /api/posts/:id/like - Like/Unlike a post
+    if (path.match(/^\/api\/posts\/[^/]+\/like$/) && req.method === 'POST') {
+      const postId = path.split('/')[3];
+      console.log('❤️ [Like] Post:', postId);
       
-      if (!postId) {
-        return res.status(400).json({ success: false, error: 'Post ID required' });
+      try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+          return res.status(401).json({ success: false, error: 'Authentication required' });
+        }
+        
+        let decodedToken;
+        try {
+          decodedToken = await admin.auth().verifyIdToken(token);
+        } catch (error) {
+          return res.status(401).json({ success: false, error: 'Invalid token' });
+        }
+        
+        const dbConnection = await connectToDatabase();
+        if (!dbConnection) {
+          return res.status(503).json({ success: false, error: 'Database unavailable' });
+        }
+        
+        const post = await Post.findById(postId);
+        if (!post) {
+          return res.status(404).json({ success: false, error: 'Post not found' });
+        }
+        
+        const userId = decodedToken.uid;
+        const likeIndex = post.likes.findIndex(id => id === userId);
+        
+        if (likeIndex > -1) {
+          post.likes.splice(likeIndex, 1);
+          console.log('💔 [Like] Removed like');
+        } else {
+          post.likes.push(userId);
+          console.log('❤️ [Like] Added like');
+        }
+        
+        await post.save();
+        
+        return res.status(200).json({
+          success: true,
+          post: formatPost(post),
+          isLiked: likeIndex === -1,
+          likeCount: post.likes.length
+        });
+      } catch (error) {
+        console.error('❌ [Like] Error:', error.message);
+        return res.status(500).json({ success: false, error: error.message });
       }
+    }
+    
+    // POST /api/posts/:id/save - Save/Unsave a post
+    if (path.match(/^\/api\/posts\/[^/]+\/save$/) && req.method === 'POST') {
+      const postId = path.split('/')[3];
+      console.log('📌 [Save] Post:', postId);
       
-      // For now, just return success - interactions are stored in localStorage
-      return res.status(200).json({ 
-        success: true, 
-        message: `Post ${action || 'updated'} successfully`,
-        postId 
-      });
+      try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+          return res.status(401).json({ success: false, error: 'Authentication required' });
+        }
+        
+        let decodedToken;
+        try {
+          decodedToken = await admin.auth().verifyIdToken(token);
+        } catch (error) {
+          return res.status(401).json({ success: false, error: 'Invalid token' });
+        }
+        
+        const dbConnection = await connectToDatabase();
+        if (!dbConnection) {
+          return res.status(503).json({ success: false, error: 'Database unavailable' });
+        }
+        
+        const post = await Post.findById(postId);
+        if (!post) {
+          return res.status(404).json({ success: false, error: 'Post not found' });
+        }
+        
+        const userId = decodedToken.uid;
+        const saveIndex = post.saves.findIndex(id => id === userId);
+        
+        if (saveIndex > -1) {
+          post.saves.splice(saveIndex, 1);
+          console.log('📌 [Save] Removed save');
+        } else {
+          post.saves.push(userId);
+          console.log('📌 [Save] Added save');
+        }
+        
+        await post.save();
+        
+        return res.status(200).json({
+          success: true,
+          post: formatPost(post),
+          isSaved: saveIndex === -1,
+          saveCount: post.saves.length
+        });
+      } catch (error) {
+        console.error('❌ [Save] Error:', error.message);
+        return res.status(500).json({ success: false, error: error.message });
+      }
+    }
+    
+    // POST /api/posts/:id/share - Share a post
+    if (path.match(/^\/api\/posts\/[^/]+\/share$/) && req.method === 'POST') {
+      const postId = path.split('/')[3];
+      console.log('🔄 [Share] Post:', postId);
+      
+      try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+          return res.status(401).json({ success: false, error: 'Authentication required' });
+        }
+        
+        let decodedToken;
+        try {
+          decodedToken = await admin.auth().verifyIdToken(token);
+        } catch (error) {
+          return res.status(401).json({ success: false, error: 'Invalid token' });
+        }
+        
+        const dbConnection = await connectToDatabase();
+        if (!dbConnection) {
+          return res.status(503).json({ success: false, error: 'Database unavailable' });
+        }
+        
+        const post = await Post.findById(postId);
+        if (!post) {
+          return res.status(404).json({ success: false, error: 'Post not found' });
+        }
+        
+        // Increment share count
+        post.shares = (post.shares || 0) + 1;
+        await post.save();
+        
+        console.log('🔄 [Share] Share count:', post.shares);
+        
+        return res.status(200).json({
+          success: true,
+          post: formatPost(post),
+          shareCount: post.shares
+        });
+      } catch (error) {
+        console.error('❌ [Share] Error:', error.message);
+        return res.status(500).json({ success: false, error: error.message });
+      }
+    }
+    
+    // POST /api/posts/:id/comment - Add comment
+    if (path.match(/^\/api\/posts\/[^/]+\/comment$/) && req.method === 'POST') {
+      const postId = path.split('/')[3];
+      console.log('💬 [Comment] Post:', postId);
+      
+      try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+          return res.status(401).json({ success: false, error: 'Authentication required' });
+        }
+        
+        let decodedToken;
+        try {
+          decodedToken = await admin.auth().verifyIdToken(token);
+        } catch (error) {
+          return res.status(401).json({ success: false, error: 'Invalid token' });
+        }
+        
+        const dbConnection = await connectToDatabase();
+        if (!dbConnection) {
+          return res.status(503).json({ success: false, error: 'Database unavailable' });
+        }
+        
+        const post = await Post.findById(postId);
+        if (!post) {
+          return res.status(404).json({ success: false, error: 'Post not found' });
+        }
+        
+        const { text } = req.body;
+        if (!text || !text.trim()) {
+          return res.status(400).json({ success: false, error: 'Comment text required' });
+        }
+        
+        const comment = {
+          author: decodedToken.uid,
+          authorName: decodedToken.name || decodedToken.email?.split('@')[0] || 'مستخدم',
+          text: text.trim(),
+          createdAt: new Date().toISOString()
+        };
+        
+        post.comments = post.comments || [];
+        post.comments.push(comment);
+        await post.save();
+        
+        console.log('💬 [Comment] Added comment');
+        
+        return res.status(201).json({
+          success: true,
+          post: formatPost(post),
+          comment
+        });
+      } catch (error) {
+        console.error('❌ [Comment] Error:', error.message);
+        return res.status(500).json({ success: false, error: error.message });
+      }
     }
 
     // DELETE /api/stories/:id - Delete a story
