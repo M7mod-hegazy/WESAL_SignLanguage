@@ -58,23 +58,38 @@ async function connectToDatabase() {
 }
 
 // Firebase Admin setup
+console.log('🔥 Checking Firebase Admin initialization...');
+console.log('📋 Firebase Project ID:', process.env.FIREBASE_PROJECT_ID ? '✅ Set' : '❌ Missing');
+console.log('📋 Firebase Private Key:', process.env.FIREBASE_PRIVATE_KEY ? '✅ Set (length: ' + process.env.FIREBASE_PRIVATE_KEY.length + ')' : '❌ Missing');
+console.log('📋 Firebase Client Email:', process.env.FIREBASE_CLIENT_EMAIL ? '✅ Set' : '❌ Missing');
+console.log('📋 Firebase Client ID:', process.env.FIREBASE_CLIENT_ID ? '✅ Set' : '❌ Missing');
+console.log('📋 Firebase Private Key ID:', process.env.FIREBASE_PRIVATE_KEY_ID ? '✅ Set' : '❌ Missing');
+console.log('📋 Admin apps already initialized:', admin.apps.length);
+
 if (!admin.apps.length) {
   try {
     console.log('🔥 Initializing Firebase Admin...');
-    console.log('📋 Firebase Project ID:', process.env.FIREBASE_PROJECT_ID ? '✅ Set' : '❌ Missing');
-    console.log('📋 Firebase Private Key:', process.env.FIREBASE_PRIVATE_KEY ? '✅ Set' : '❌ Missing');
-    console.log('📋 Firebase Client Email:', process.env.FIREBASE_CLIENT_EMAIL ? '✅ Set' : '❌ Missing');
+    
+    if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_PRIVATE_KEY || !process.env.FIREBASE_CLIENT_EMAIL) {
+      throw new Error('Missing required Firebase environment variables');
+    }
     
     const serviceAccount = {
       type: "service_account",
       project_id: process.env.FIREBASE_PROJECT_ID,
-      private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-      private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID || "key-id",
+      private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
       client_email: process.env.FIREBASE_CLIENT_EMAIL,
-      client_id: process.env.FIREBASE_CLIENT_ID,
+      client_id: process.env.FIREBASE_CLIENT_ID || "client-id",
       auth_uri: "https://accounts.google.com/o/oauth2/auth",
       token_uri: "https://oauth2.googleapis.com/token",
     };
+
+    console.log('📋 Service Account:', {
+      project_id: serviceAccount.project_id,
+      client_email: serviceAccount.client_email,
+      private_key_length: serviceAccount.private_key.length
+    });
 
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
@@ -83,7 +98,13 @@ if (!admin.apps.length) {
   } catch (error) {
     console.error('❌ Firebase Admin initialization error:', error.message);
     console.error('Stack:', error.stack);
+    console.error('Environment variables check:');
+    console.error('  FIREBASE_PROJECT_ID:', !!process.env.FIREBASE_PROJECT_ID);
+    console.error('  FIREBASE_PRIVATE_KEY:', !!process.env.FIREBASE_PRIVATE_KEY);
+    console.error('  FIREBASE_CLIENT_EMAIL:', !!process.env.FIREBASE_CLIENT_EMAIL);
   }
+} else {
+  console.log('✅ Firebase Admin already initialized');
 }
 
 // ============================================
@@ -582,9 +603,16 @@ async function handleCreateStory(req, res) {
     // Handle file upload or base64 media
     let mediaData = [];
     
+    console.log('🔍 [Story Create] DEBUG - Checking media sources:');
+    console.log('   req.files exists:', !!req.files);
+    console.log('   req.files keys:', req.files ? Object.keys(req.files) : 'N/A');
+    console.log('   req.body.media exists:', !!req.body.media);
+    console.log('   req.body.media type:', typeof req.body.media);
+    console.log('   req.body.media value:', req.body.media);
+    
     // Check for files in req.files (multipart upload)
     if (req.files && Object.keys(req.files).length > 0) {
-      console.log('📁 [Story Create] Files found:', Object.keys(req.files));
+      console.log('✅ [Story Create] Files found in req.files:', Object.keys(req.files));
       
       // Get the first file (could be 'media' or any other field name)
       const fileKey = Object.keys(req.files)[0];
@@ -601,28 +629,40 @@ async function handleCreateStory(req, res) {
         url: `data:${file.mimetype};base64,${base64}`,
         filename: file.name
       }];
-      console.log('✅ [Story Create] Media converted to base64');
+      console.log('✅ [Story Create] Media converted to base64, length:', base64.length);
     } else if (req.body.media) {
-      console.log('📋 [Story Create] Using body media');
+      console.log('✅ [Story Create] Using body media');
       // Direct media data (base64 or URL)
       if (typeof req.body.media === 'string') {
         // Single media item as string
+        console.log('   Media is string, length:', req.body.media.length);
         mediaData = [{ url: req.body.media }];
       } else if (Array.isArray(req.body.media)) {
         // Array of media items
+        console.log('   Media is array, length:', req.body.media.length);
         mediaData = req.body.media;
       } else if (typeof req.body.media === 'object') {
         // Single media object
+        console.log('   Media is object');
         mediaData = [req.body.media];
       }
-      console.log('✅ [Story Create] Media from body:', mediaData);
+      console.log('✅ [Story Create] Media from body processed:', mediaData.length, 'items');
     } else {
-      console.warn('⚠️ [Story Create] No media found, creating story without media');
+      console.warn('⚠️ [Story Create] No media found in files or body');
+      console.warn('   This story will be created WITHOUT media');
       // Allow story creation without media (will be empty array)
       mediaData = [];
     }
 
-    console.log('📊 [Story Create] Final mediaData:', mediaData);
+    console.log('📊 [Story Create] Final mediaData:', {
+      count: mediaData.length,
+      items: mediaData.map((m, i) => ({
+        index: i,
+        hasUrl: !!m.url,
+        urlLength: m.url ? m.url.length : 0,
+        type: m.type || 'unknown'
+      }))
+    });
 
     const story = new Story({
       media: mediaData,
