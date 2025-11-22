@@ -1434,54 +1434,62 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                 gap: '10px',
                 marginBottom: '12px'
               }}>
-                <img 
-                  src={post.author?.photo || post.author?.photoURL || getDefaultProfileIcon(null, post.author?.gender || 'male')}
-                  alt={post.author?.name || 'مستخدم'}
-                  crossOrigin="anonymous"
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    objectFit: 'cover'
-                  }}
-                  onError={(e) => {
-                    console.error('❌ [Post Author] Image load failed:', {
-                      src: e.target.src,
-                      photoURL: post.author?.photoURL,
-                      timestamp: new Date().toISOString()
-                    });
-                    
-                    // Fallback to default icon immediately
-                    const gender = post.author?.gender || 'male';
-                    console.log('⚠️ [Post Author] Using default icon.');
-                    e.target.src = getDefaultProfileIcon(null, gender);
-                  }}
-                  onLoad={() => {
-                    console.log('✅ [Post Author] Image loaded successfully');
-                  }}
-                />
-                <div style={{
-                  flex: 1,
-                  textAlign: 'right'
-                }}>
-                  {/* Original Author Name - Always show */}
-                  <div style={{
-                    fontSize: '14px',
-                    fontWeight: theme.typography.weights.bold,
-                    color: theme.colors.primary.blue,
-                    fontFamily: theme.typography.fonts.primary
-                  }}>
-                    {post.author?.displayName || post.author?.name || 'مستخدم'}
-                  </div>
-                  
-                  {/* Time */}
-                  <div style={{
-                    fontSize: '11px',
-                    color: '#999',
-                    fontFamily: theme.typography.fonts.secondary,
-                    marginTop: '2px'
-                  }}>{formatTime(post.createdAt)}</div>
-                </div>
+                {/* For shared posts, use originalAuthor; otherwise use author */}
+                {(() => {
+                  const displayAuthor = post.isShared && post.originalAuthor ? post.originalAuthor : post.author;
+                  return (
+                    <>
+                      <img 
+                        src={displayAuthor?.photo || displayAuthor?.photoURL || getDefaultProfileIcon(null, displayAuthor?.gender || 'male')}
+                        alt={displayAuthor?.name || 'مستخدم'}
+                        crossOrigin="anonymous"
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          objectFit: 'cover'
+                        }}
+                        onError={(e) => {
+                          console.error('❌ [Post Author] Image load failed:', {
+                            src: e.target.src,
+                            photoURL: displayAuthor?.photoURL,
+                            timestamp: new Date().toISOString()
+                          });
+                          
+                          // Fallback to default icon immediately
+                          const gender = displayAuthor?.gender || 'male';
+                          console.log('⚠️ [Post Author] Using default icon.');
+                          e.target.src = getDefaultProfileIcon(null, gender);
+                        }}
+                        onLoad={() => {
+                          console.log('✅ [Post Author] Image loaded successfully');
+                        }}
+                      />
+                      <div style={{
+                        flex: 1,
+                        textAlign: 'right'
+                      }}>
+                        {/* Original Author Name - Always show */}
+                        <div style={{
+                          fontSize: '14px',
+                          fontWeight: theme.typography.weights.bold,
+                          color: theme.colors.primary.blue,
+                          fontFamily: theme.typography.fonts.primary
+                        }}>
+                          {displayAuthor?.displayName || displayAuthor?.name || 'مستخدم'}
+                        </div>
+                        
+                        {/* Time */}
+                        <div style={{
+                          fontSize: '11px',
+                          color: '#999',
+                          fontFamily: theme.typography.fonts.secondary,
+                          marginTop: '2px'
+                        }}>{formatTime(post.createdAt)}</div>
+                      </div>
+                    </>
+                  );
+                })()}
 
                 {/* 3-Dot Menu (only for post owner) */}
                 {user && (post.author?.displayName === (user.displayName || user.email?.split('@')[0]) || post.author?.uid === user.uid) && (
