@@ -674,6 +674,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
           media: originalPost.media || [],  // Ensure media array is sent
           isShared: true,
           originalPostId: postId,
+          originalAuthor: originalPost.author,  // Send original author info
           sharedBy: {
             name: user.displayName || user.email?.split('@')[0] || 'مستخدم',
             photo: user.photoURL || '/pages/TeamPage/profile.png',

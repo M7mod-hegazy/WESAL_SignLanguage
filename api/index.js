@@ -148,6 +148,7 @@ const postSchema = new mongoose.Schema({
   shares: { type: Number, default: 0 },
   isShared: { type: Boolean, default: false },
   originalPostId: String,
+  originalAuthor: mongoose.Schema.Types.Mixed,  // Store original author for shared posts
   sharedBy: Object
 }, { timestamps: true });
 
@@ -219,17 +220,20 @@ function formatPost(postDoc, requesterId = 'anonymous') {
   if (!postDoc) return null;
   
   try {
+    // For shared posts, use originalAuthor; otherwise use author
+    const authorData = postDoc.isShared && postDoc.originalAuthor ? postDoc.originalAuthor : postDoc.author;
+    
     // Use authorName directly if it exists and is not empty
     let authorName = postDoc.authorName;
     if (!authorName || authorName === 'مستخدم') {
       // Only fall back if authorName is missing or is the default
-      authorName = postDoc.author?.displayName || postDoc.author?.name || 'مستخدم';
+      authorName = authorData?.displayName || authorData?.name || 'مستخدم';
     }
     
-    const authorPhoto = postDoc.authorPhoto || postDoc.author?.photoURL || '/pages/TeamPage/profile.png';
-    const authorUid = typeof postDoc.author === 'string'
-      ? postDoc.author
-      : postDoc.author?.uid || postDoc.author?._id?.toString() || 'anonymous';
+    const authorPhoto = postDoc.authorPhoto || authorData?.photoURL || '/pages/TeamPage/profile.png';
+    const authorUid = typeof authorData === 'string'
+      ? authorData
+      : authorData?.uid || authorData?._id?.toString() || 'anonymous';
     
     const postId = postDoc._id ? (typeof postDoc._id === 'string' ? postDoc._id : postDoc._id.toString()) : 'unknown';
     
@@ -243,7 +247,7 @@ function formatPost(postDoc, requesterId = 'anonymous') {
         photoURL: authorPhoto,
         photo: authorPhoto,
         uid: authorUid,
-        gender: postDoc.author?.gender || 'male'
+        gender: authorData?.gender || 'male'
       },
       likes: postDoc.likes || [],
       likeCount: (postDoc.likes || []).length,
@@ -257,6 +261,7 @@ function formatPost(postDoc, requesterId = 'anonymous') {
       isSaved: (postDoc.saves || []).includes(requesterId),
       isShared: postDoc.isShared || false,
       originalPostId: postDoc.originalPostId,
+      originalAuthor: postDoc.originalAuthor,
       sharedBy: postDoc.sharedBy,
       createdAt: postDoc.createdAt,
       updatedAt: postDoc.updatedAt
@@ -678,7 +683,7 @@ async function handleCreatePost(req, res) {
     process.stderr.write('╚═══════════════════════════════════════════════════════════╝\n');
     process.stderr.write('\n\n');
 
-    const { content, isShared, originalPostId, sharedBy } = req.body;
+    const { content, isShared, originalPostId, originalAuthor, sharedBy } = req.body;
 
     if (!content) {
       return res.status(400).json({ success: false, error: 'Content is required' });
@@ -783,6 +788,7 @@ async function handleCreatePost(req, res) {
       shares: 0,
       isShared: isShared || false,
       originalPostId: originalPostId || null,
+      originalAuthor: isShared ? originalAuthor : undefined,  // Store original author for shared posts
       sharedBy: enrichedSharedBy
     });
 
