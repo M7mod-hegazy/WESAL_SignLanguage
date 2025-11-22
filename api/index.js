@@ -353,12 +353,14 @@ function formatPost(post) {
 // GET /api/posts - Get posts list
 async function handleGetPosts(req, res) {
   try {
+    console.log('📡 [Posts GET] Received request');
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
     const dbConnection = await connectToDatabase();
     if (!dbConnection) {
+      console.log('⚠️ [Posts GET] No DB connection, returning empty');
       return res.status(200).json({
         success: true,
         posts: [],
@@ -366,24 +368,35 @@ async function handleGetPosts(req, res) {
       });
     }
 
+    console.log('🔍 [Posts GET] Querying posts...');
     const posts = await Post.find()
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
 
+    console.log('✅ [Posts GET] Found', posts.length, 'posts');
     const total = await Post.countDocuments();
     const pages = Math.ceil(total / limit);
 
-    const formattedPosts = posts.map(post => formatPost(post));
+    const formattedPosts = posts.map(post => {
+      try {
+        return formatPost(post);
+      } catch (formatError) {
+        console.error('❌ [Posts GET] Error formatting post:', formatError.message);
+        return null;
+      }
+    }).filter(p => p !== null);
 
+    console.log('✅ [Posts GET] Returning', formattedPosts.length, 'formatted posts');
     return res.status(200).json({
       success: true,
       posts: formattedPosts,
       pagination: { page, limit, pages, total }
     });
   } catch (error) {
-    console.error('Error fetching posts:', error);
+    console.error('❌ [Posts GET] Error:', error.message);
+    console.error('Stack:', error.stack);
     return res.status(500).json({ success: false, error: error.message });
   }
 }
@@ -457,44 +470,58 @@ async function handleCreatePost(req, res) {
 // GET /api/stories - Get stories
 async function handleGetStories(req, res) {
   try {
+    console.log('📡 [Stories GET] Received request');
     const dbConnection = await connectToDatabase();
     if (!dbConnection) {
+      console.log('⚠️ [Stories GET] No DB connection, returning empty');
       return res.status(200).json({
         success: true,
         storyGroups: []
       });
     }
 
+    console.log('🔍 [Stories GET] Querying stories...');
     const stories = await Story.find()
       .sort({ createdAt: -1 })
       .limit(20)
       .lean();
 
-    const storyGroups = stories.map(story => ({
-      id: story._id.toString(),
-      author: {
-        displayName: story.authorName || 'مستخدم',
-        photoURL: story.authorPhoto || '/pages/TeamPage/profile.png',
-        photo: story.authorPhoto || '/pages/TeamPage/profile.png',
-        name: story.authorName || 'مستخدم'
-      },
-      stories: [
-        {
-          id: story._id.toString(),
-          media: story.media && story.media.length > 0 ? story.media[0] : null,
-          createdAt: story.createdAt,
-          views: story.views || 0,
-          likes: story.likes || []
-        }
-      ]
-    }));
+    console.log('✅ [Stories GET] Found', stories.length, 'stories');
+    
+    const storyGroups = stories.map(story => {
+      try {
+        return {
+          id: story._id?.toString() || story.id,
+          author: {
+            displayName: story.authorName || 'مستخدم',
+            photoURL: story.authorPhoto || '/pages/TeamPage/profile.png',
+            photo: story.authorPhoto || '/pages/TeamPage/profile.png',
+            name: story.authorName || 'مستخدم'
+          },
+          stories: [
+            {
+              id: story._id?.toString() || story.id,
+              media: story.media && story.media.length > 0 ? story.media[0] : null,
+              createdAt: story.createdAt,
+              views: story.views || 0,
+              likes: story.likes || []
+            }
+          ]
+        };
+      } catch (mapError) {
+        console.error('❌ [Stories GET] Error mapping story:', mapError.message);
+        return null;
+      }
+    }).filter(s => s !== null);
 
+    console.log('✅ [Stories GET] Returning', storyGroups.length, 'story groups');
     return res.status(200).json({
       success: true,
       storyGroups
     });
   } catch (error) {
-    console.error('Error fetching stories:', error);
+    console.error('❌ [Stories GET] Error:', error.message);
+    console.error('Stack:', error.stack);
     return res.status(500).json({ success: false, error: error.message });
   }
 }
