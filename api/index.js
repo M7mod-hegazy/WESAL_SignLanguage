@@ -1000,6 +1000,60 @@ module.exports = async (req, res) => {
       });
     }
 
+    // DELETE /api/posts/:id - Delete a post
+    if (path.startsWith('/api/posts/') && req.method === 'DELETE') {
+      const postId = path.split('/').pop();
+      
+      if (!postId) {
+        return res.status(400).json({ success: false, error: 'Post ID required' });
+      }
+      
+      try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+          return res.status(401).json({ success: false, error: 'Authentication required' });
+        }
+        
+        // Verify token
+        let decodedToken;
+        try {
+          decodedToken = await admin.auth().verifyIdToken(token);
+        } catch (error) {
+          return res.status(401).json({ success: false, error: 'Invalid token' });
+        }
+        
+        const dbConnection = await connectToDatabase();
+        if (!dbConnection) {
+          return res.status(503).json({ success: false, error: 'Database unavailable' });
+        }
+        
+        // Find the post
+        const post = await Post.findById(postId);
+        if (!post) {
+          return res.status(404).json({ success: false, error: 'Post not found' });
+        }
+        
+        // Check if user is the post owner
+        const postAuthorId = typeof post.author === 'string' ? post.author : post.author?.uid;
+        if (postAuthorId !== decodedToken.uid) {
+          return res.status(403).json({ success: false, error: 'Not authorized to delete this post' });
+        }
+        
+        // Delete the post
+        await Post.findByIdAndDelete(postId);
+        console.log('✅ [Post Delete] Post deleted:', postId);
+        
+        return res.status(200).json({ 
+          success: true, 
+          message: 'Post deleted successfully',
+          postId 
+        });
+      } catch (error) {
+        console.error('❌ [Post Delete] Error:', error.message);
+        return res.status(500).json({ success: false, error: error.message });
+      }
+    }
+
     // 404
     console.warn(`⚠️ Endpoint not found: ${req.method} ${path}`);
     return res.status(404).json({ success: false, error: 'Endpoint not found', path });
