@@ -112,26 +112,41 @@ const ProfilePage = ({ onBack }) => {
         // Get saved posts - Use savedPosts array from user profile
         const userSavedPostIds = Array.isArray(userProfile.savedPosts) ? userProfile.savedPosts : [];
         console.log('💾 User saved post IDs from profile:', userSavedPostIds);
+        console.log('💾 User profile ID:', userProfile.id);
         
         // Also check if posts have saveCount or were saved in community page
         const saved = allPosts.filter(post => {
-          // Method 1: Check user profile's savedPosts array
-          if (userSavedPostIds.includes(post.id) || userSavedPostIds.includes(post._id)) {
+          const postId = post.id || post._id;
+          const postIdString = postId?.toString ? postId.toString() : String(postId);
+          
+          // Method 1: Check user profile's savedPosts array (with type conversion)
+          if (userSavedPostIds.some(savedId => {
+            const savedIdString = savedId?.toString ? savedId.toString() : String(savedId);
+            return savedIdString === postIdString;
+          })) {
+            console.log('✅ Found saved post via savedPosts array:', postIdString);
             return true;
           }
+          
           // Method 2: Check if post has saves array with user ID
           if (post.saves && Array.isArray(post.saves)) {
-            return post.saves.some(saveId => 
-              saveId === userProfile.id || 
-              saveId.toString() === userProfile.id
-            );
+            const userIdString = userProfile.id?.toString ? userProfile.id.toString() : String(userProfile.id);
+            const isSaved = post.saves.some(saveId => {
+              const saveIdString = saveId?.toString ? saveId.toString() : String(saveId);
+              return saveIdString === userIdString;
+            });
+            if (isSaved) {
+              console.log('✅ Found saved post via saves array:', postIdString);
+              return true;
+            }
           }
-          // Method 3: Check saveCount (if user saved it, it should be > 0)
-          // This is a fallback - we'll check localStorage for this user's saves
-          const localSaves = JSON.parse(localStorage.getItem('userSavedPosts') || '[]');
-          if (localSaves.includes(post.id)) {
+          
+          // Method 3: Check isSaved flag from API response
+          if (post.isSaved === true) {
+            console.log('✅ Found saved post via isSaved flag:', postIdString);
             return true;
           }
+          
           return false;
         });
         setSavedPosts(saved);
@@ -164,6 +179,10 @@ const ProfilePage = ({ onBack }) => {
         console.log('🔍 challengesCompleted from profile:', userProfile.challengesCompleted);
         const challengesCount = getChallengesCount(userProfile);
         console.log('🔍 Calculated challenges count:', challengesCount);
+        
+        // Ensure challengesCount is a number (default to 0 if undefined)
+        const finalChallengesCount = typeof challengesCount === 'number' ? challengesCount : 0;
+        console.log('🔍 Final challenges count:', finalChallengesCount);
 
         // Calculate stats - Count LIKES, SHARES, and SAVES
         setStats({
@@ -171,7 +190,7 @@ const ProfilePage = ({ onBack }) => {
           sharedCount: userSharedPosts.length, // شير (Shares) - count of shared posts
           savedCount: saved.length,            // قائمتي (Saved) - count of saved posts
           postsCount: userOwnPosts.length,     // User's own posts (نشر)
-          challengesCount: challengesCount     // From MongoDB
+          challengesCount: finalChallengesCount     // From MongoDB
         });
 
         console.log('📊 Stats:', {
