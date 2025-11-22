@@ -1043,12 +1043,15 @@ module.exports = async (req, res) => {
           post.content = req.body.content;
         }
         
-        // Handle media updates - only if new files are provided
+        // Handle media updates - append new files to existing media
         if (req.files && Object.keys(req.files).length > 0) {
           console.log('📁 [Post Edit] Processing new media files');
-          let mediaData = [];
+          console.log('📊 [Post Edit] Existing media count:', post.media?.length || 0);
           
-          // Process new media files
+          // Keep existing media
+          let mediaData = post.media || [];
+          
+          // Process new media files and append
           for (const fileKey of Object.keys(req.files)) {
             const file = req.files[fileKey];
             const fileArray = Array.isArray(file) ? file : [file];
@@ -1079,7 +1082,7 @@ module.exports = async (req, res) => {
             }
           }
           post.media = mediaData;
-          console.log('📊 [Post Edit] Media updated, count:', mediaData.length);
+          console.log('📊 [Post Edit] Media after update, count:', mediaData.length);
         } else {
           console.log('📋 [Post Edit] No new media files, keeping existing media');
         }
