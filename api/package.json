@@ -1,0 +1,19 @@
+{
+  "name": "wesal-signlanguage-api",
+  "version": "1.0.0",
+  "description": "Monolithic API for WESAL Sign Language Platform",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "mongoose": "^8.0.3",
+    "firebase-admin": "^13.5.0",
+    "busboy": "^1.6.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

@@ -11,7 +11,7 @@ ENV/
 dist/
 build/
 
-# Django (Legacy - kept for pose extraction scripts)
+# Django (Legacy)
 *.log
 db.sqlite3
 db.sqlite3-journal
@@ -44,6 +44,13 @@ frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
 
+# API folder - track package.json but ignore node_modules
+api/node_modules/
+api/.env
+api/npm-debug.log*
+api/yarn-debug.log*
+api/yarn-error.log*
+
 # IDEs
 .vscode/
 .idea/
@@ -65,37 +72,3 @@ backend/firebase-admin-key.json
 *.tmp
 *.bak
 node_modules
-package-lock.json
-yarn.lock
-package.json
-package-lock.json
-yarn.lock
-package.json
-package-lock.json
-yarn.lock
-package.json
-package-lock.json
-yarn.lock
-package.json
-package-lock.json
-yarn.lock
-package.json
-package-lock.json
-yarn.lock
-package.json
-package-lock.json
-yarn.lock
-package.json
-package-lock.json
-yarn.lock
-package.json
-package-lock.json
-yarn.lock
-package.json
-package-lock.json
-yarn.lock
-package.json
-package-lock.json
-yarn.lock
-package.json
-package-lock.json
