@@ -71,8 +71,16 @@ const VideoAnimation = ({
   }, [videoSrc, isPlaying]);
 
   const handleError = (e) => {
-    console.error('🎬 Video error:', e, 'currentSource:', currentSource);
-    // Try fallback if alpha version fails
+    console.error('🎬 Video error:', e, 'currentSource:', currentSource, 'isFullPath:', isFullPath);
+    
+    // If it's a full path (already has extension), don't try fallbacks - just show error
+    if (isFullPath) {
+      console.error('🎬 Full path video failed, showing error (no fallbacks for full paths)');
+      setVideoError(true);
+      return;
+    }
+    
+    // Try fallback if alpha version fails (only for base paths)
     if (currentSource === 'alpha') {
       console.log('🎬 Trying fallback source...');
       setCurrentSource('fallback');
