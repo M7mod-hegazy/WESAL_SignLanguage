@@ -1406,7 +1406,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                 </div>
               )}
 
-              {/* Post Header */}
+              {/* Post Header - Always show ORIGINAL post creator */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -1414,8 +1414,8 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                 marginBottom: '12px'
               }}>
                 <img 
-                  src={post.isShared && post.sharedBy?.photo ? post.sharedBy.photo : (post.author?.photo || post.author?.photoURL || getDefaultProfileIcon(null, post.author?.gender || 'male'))}
-                  alt={post.isShared && post.sharedBy?.name ? post.sharedBy.name : (post.author?.name || 'مستخدم')}
+                  src={post.author?.photo || post.author?.photoURL || getDefaultProfileIcon(null, post.author?.gender || 'male')}
+                  alt={post.author?.name || 'مستخدم'}
                   crossOrigin="anonymous"
                   style={{
                     width: '40px',
@@ -1431,7 +1431,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                     });
                     
                     // Fallback to default icon immediately
-                    const gender = post.isShared && post.sharedBy?.gender ? post.sharedBy.gender : (post.author?.gender || 'male');
+                    const gender = post.author?.gender || 'male';
                     console.log('⚠️ [Post Author] Using default icon.');
                     e.target.src = getDefaultProfileIcon(null, gender);
                   }}
@@ -1443,25 +1443,14 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                   flex: 1,
                   textAlign: 'right'
                 }}>
-                  {/* Sharer Name (if shared) */}
-                  {post.isShared && post.sharedBy && (
-                    <div style={{
-                      fontSize: '14px',
-                      fontWeight: theme.typography.weights.bold,
-                      color: theme.colors.primary.blue,
-                      fontFamily: theme.typography.fonts.primary
-                    }}>{post.sharedBy.name}</div>
-                  )}
-                  
-                  {/* Original Author Name (always show) */}
+                  {/* Original Author Name - Always show */}
                   <div style={{
-                    fontSize: post.isShared ? '12px' : '14px',
-                    fontWeight: post.isShared ? 'normal' : theme.typography.weights.bold,
-                    color: post.isShared ? '#666' : theme.colors.primary.blue,
-                    fontFamily: theme.typography.fonts.primary,
-                    marginTop: post.isShared ? '2px' : '0px'
+                    fontSize: '14px',
+                    fontWeight: theme.typography.weights.bold,
+                    color: theme.colors.primary.blue,
+                    fontFamily: theme.typography.fonts.primary
                   }}>
-                    {post.isShared && 'من قبل '}{post.author?.displayName || post.author?.name || 'مستخدم'}
+                    {post.author?.displayName || post.author?.name || 'مستخدم'}
                   </div>
                   
                   {/* Time */}
