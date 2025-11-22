@@ -1042,11 +1042,12 @@ module.exports = async (req, res) => {
         
         await post.save();
         
+        const formattedPost = formatPost(post);
         return res.status(200).json({
           success: true,
-          post: formatPost(post),
+          post: formattedPost,
           isLiked: likeIndex === -1,
-          likeCount: post.likes.length
+          likeCount: formattedPost.likeCount
         });
       } catch (error) {
         console.error('❌ [Like] Error:', error.message);
@@ -1095,11 +1096,12 @@ module.exports = async (req, res) => {
         
         await post.save();
         
+        const formattedPost = formatPost(post);
         return res.status(200).json({
           success: true,
-          post: formatPost(post),
+          post: formattedPost,
           isSaved: saveIndex === -1,
-          saveCount: post.saves.length
+          saveCount: formattedPost.saveCount
         });
       } catch (error) {
         console.error('❌ [Save] Error:', error.message);
@@ -1139,12 +1141,13 @@ module.exports = async (req, res) => {
         post.shares = (post.shares || 0) + 1;
         await post.save();
         
-        console.log('🔄 [Share] Share count:', post.shares);
+        const formattedPost = formatPost(post);
+        console.log('🔄 [Share] Share count:', formattedPost.shareCount);
         
         return res.status(200).json({
           success: true,
-          post: formatPost(post),
-          shareCount: post.shares
+          post: formattedPost,
+          shareCount: formattedPost.shareCount
         });
       } catch (error) {
         console.error('❌ [Share] Error:', error.message);
