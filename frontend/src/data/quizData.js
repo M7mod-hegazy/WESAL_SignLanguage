@@ -6,56 +6,56 @@ import { videoMapping } from './videoMapping';
 const videoQuestions = [
   {
     "id": 1,
-    "videoPath": "/videos/new/webm/أريد كأساً من الماء.webm",
+    "videoPath": "/videos/new/webm/أريد كأساً من ا.webm",
     "correctAnswer": "أريد كأساً من الماء",
     "difficulty": "easy",
     "coins_reward": 10
   },
   {
     "id": 2,
-    "videoPath": "/videos/new/webm/أعتذر لارتباطي بعمل.webm",
+    "videoPath": "/videos/new/webm/أعتذر لارتباطي .webm",
     "correctAnswer": "أعتذر لارتباطي بعمل",
     "difficulty": "medium",
     "coins_reward": 15
   },
   {
     "id": 3,
-    "videoPath": "/videos/new/webm/السلام عليكم.webm",
+    "videoPath": "/videos/new/webm/السلام ع.webm",
     "correctAnswer": "السلام عليكم",
     "difficulty": "easy",
     "coins_reward": 10
   },
   {
     "id": 4,
-    "videoPath": "/videos/new/webm/صباح الخير.webm",
+    "videoPath": "/videos/new/webm/صباح ا.webm",
     "correctAnswer": "صباح الخير",
     "difficulty": "easy",
     "coins_reward": 10
   },
   {
     "id": 5,
-    "videoPath": "/videos/new/webm/كل عام و انت بخير.webm",
+    "videoPath": "/videos/new/webm/كل عام و انت .webm",
     "correctAnswer": "كل عام وانت بخير",
     "difficulty": "medium",
     "coins_reward": 15
   },
   {
     "id": 6,
-    "videoPath": "/videos/new/webm/مبروك المولود.webm",
+    "videoPath": "/videos/new/webm/مبروك الم.webm",
     "correctAnswer": "مبروك المولود",
     "difficulty": "medium",
     "coins_reward": 15
   },
   {
     "id": 7,
-    "videoPath": "/videos/new/webm/نجاح مبارك.webm",
+    "videoPath": "/videos/new/webm/نجاح م.webm",
     "correctAnswer": "نجاح مبارك",
     "difficulty": "medium",
     "coins_reward": 15
   },
   {
     "id": 8,
-    "videoPath": "/videos/new/webm/هل أنت بخير ؟.webm",
+    "videoPath": "/videos/new/webm/هل أنت بخ.webm",
     "correctAnswer": "هل أنت بخير؟",
     "difficulty": "easy",
     "coins_reward": 10
