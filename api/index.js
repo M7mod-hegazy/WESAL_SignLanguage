@@ -1000,127 +1000,7 @@ module.exports = async (req, res) => {
       return await handleGetPosts(req, res);
     }
 
-    // PUT /api/posts/:id - Edit a post
-    if (path.startsWith('/api/posts/') && req.method === 'PUT' && !req.url.includes('?')) {
-      const postId = path.split('/').pop();
-      console.log('✏️ [Post Edit] Received edit request for post:', postId);
-      console.log('📨 [Post Edit] Body keys:', Object.keys(req.body || {}));
-      console.log('📨 [Post Edit] Body content:', req.body?.content);
-      console.log('📨 [Post Edit] Files keys:', Object.keys(req.files || {}));
-      
-      if (!postId) {
-        return res.status(400).json({ success: false, error: 'Post ID required' });
-      }
-      
-      try {
-        const token = req.headers.authorization?.replace('Bearer ', '');
-        if (!token) {
-          return res.status(401).json({ success: false, error: 'Authentication required' });
-        }
-        
-        // Verify token
-        let decodedToken;
-        try {
-          decodedToken = await admin.auth().verifyIdToken(token);
-        } catch (error) {
-          return res.status(401).json({ success: false, error: 'Invalid token' });
-        }
-        
-        const dbConnection = await connectToDatabase();
-        if (!dbConnection) {
-          return res.status(503).json({ success: false, error: 'Database unavailable' });
-        }
-        
-        // Find the post
-        const post = await Post.findById(postId);
-        if (!post) {
-          console.error('❌ [Post Edit] Post not found:', postId);
-          return res.status(404).json({ success: false, error: 'Post not found' });
-        }
-        
-        console.log('📋 [Post Edit] Current post content:', post.content);
-        console.log('📋 [Post Edit] Current media count:', post.media?.length || 0);
-        
-        // Check if user is the post owner
-        const postAuthorId = typeof post.author === 'string' ? post.author : post.author?.uid;
-        if (postAuthorId !== decodedToken.uid) {
-          console.error('❌ [Post Edit] Not authorized. Post author:', postAuthorId, 'User:', decodedToken.uid);
-          return res.status(403).json({ success: false, error: 'Not authorized to edit this post' });
-        }
-        
-        // Update post content
-        if (req.body.content) {
-          console.log('📝 [Post Edit] Updating content from:', post.content, 'to:', req.body.content);
-          post.content = req.body.content;
-        } else {
-          console.log('⚠️ [Post Edit] No content in request body');
-        }
-        
-        // Handle media updates - append new files to existing media
-        if (req.files && Object.keys(req.files).length > 0) {
-          console.log('📁 [Post Edit] Processing new media files');
-          console.log('📊 [Post Edit] Existing media count:', post.media?.length || 0);
-          
-          // Keep existing media
-          let mediaData = post.media || [];
-          
-          // Process new media files and append
-          for (const fileKey of Object.keys(req.files)) {
-            const file = req.files[fileKey];
-            const fileArray = Array.isArray(file) ? file : [file];
-            
-            for (const f of fileArray) {
-              try {
-                const cloudinaryUrl = await uploadToCloudinary(f.data, f.name, f.mimetype);
-                const mediaType = f.mimetype.startsWith('image/') ? 'image' : 'video';
-                mediaData.push({
-                  type: mediaType,
-                  url: cloudinaryUrl,
-                  filename: f.name,
-                  mimetype: f.mimetype
-                });
-                console.log('✅ [Post Edit] File uploaded:', f.name);
-              } catch (uploadError) {
-                console.error('❌ Cloudinary upload failed:', uploadError.message);
-                // Fallback to base64
-                const base64 = f.data.toString('base64');
-                const mediaType = f.mimetype.startsWith('image/') ? 'image' : 'video';
-                mediaData.push({
-                  type: mediaType,
-                  url: `data:${f.mimetype};base64,${base64}`,
-                  filename: f.name,
-                  mimetype: f.mimetype
-                });
-              }
-            }
-          }
-          post.media = mediaData;
-          console.log('📊 [Post Edit] Media after update, count:', mediaData.length);
-        } else {
-          console.log('📋 [Post Edit] No new media files, keeping existing media');
-        }
-        
-        // Save updated post
-        const savedPost = await post.save();
-        console.log('✅ [Post Edit] Post saved successfully:', postId);
-        console.log('✅ [Post Edit] Saved content:', savedPost.content);
-        console.log('✅ [Post Edit] Saved media count:', savedPost.media?.length || 0);
-        
-        // Refresh from DB to ensure we have the latest data
-        const refreshedPost = await Post.findById(postId);
-        
-        return res.status(200).json({ 
-          success: true, 
-          message: 'Post updated successfully',
-          post: formatPost(refreshedPost)
-        });
-      } catch (error) {
-        console.error('❌ [Post Edit] Error:', error.message);
-        console.error('❌ [Post Edit] Stack:', error.stack);
-        return res.status(500).json({ success: false, error: error.message });
-      }
-    }
-
+    // IMPORTANT: Check specific post interaction routes BEFORE generic edit route!
     // POST /api/posts/:id/like - Like/Unlike a post
     if (path.match(/^\/api\/posts\/[^/]+\/like$/) && req.method === 'POST') {
       const postId = path.split('/')[3];
@@ -1325,6 +1205,127 @@ module.exports = async (req, res) => {
         });
       } catch (error) {
         console.error('❌ [Comment] Error:', error.message);
+        return res.status(500).json({ success: false, error: error.message });
+      }
+    }
+
+    // PUT /api/posts/:id - Edit a post (MUST come AFTER specific interaction routes!)
+    if (path.startsWith('/api/posts/') && req.method === 'PUT' && !req.url.includes('?')) {
+      const postId = path.split('/').pop();
+      console.log('✏️ [Post Edit] Received edit request for post:', postId);
+      console.log('📨 [Post Edit] Body keys:', Object.keys(req.body || {}));
+      console.log('📨 [Post Edit] Body content:', req.body?.content);
+      console.log('📨 [Post Edit] Files keys:', Object.keys(req.files || {}));
+      
+      if (!postId) {
+        return res.status(400).json({ success: false, error: 'Post ID required' });
+      }
+      
+      try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+          return res.status(401).json({ success: false, error: 'Authentication required' });
+        }
+        
+        // Verify token
+        let decodedToken;
+        try {
+          decodedToken = await admin.auth().verifyIdToken(token);
+        } catch (error) {
+          return res.status(401).json({ success: false, error: 'Invalid token' });
+        }
+        
+        const dbConnection = await connectToDatabase();
+        if (!dbConnection) {
+          return res.status(503).json({ success: false, error: 'Database unavailable' });
+        }
+        
+        // Find the post
+        const post = await Post.findById(postId);
+        if (!post) {
+          console.error('❌ [Post Edit] Post not found:', postId);
+          return res.status(404).json({ success: false, error: 'Post not found' });
+        }
+        
+        console.log('📋 [Post Edit] Current post content:', post.content);
+        console.log('📋 [Post Edit] Current media count:', post.media?.length || 0);
+        
+        // Check if user is the post owner
+        const postAuthorId = typeof post.author === 'string' ? post.author : post.author?.uid;
+        if (postAuthorId !== decodedToken.uid) {
+          console.error('❌ [Post Edit] Not authorized. Post author:', postAuthorId, 'User:', decodedToken.uid);
+          return res.status(403).json({ success: false, error: 'Not authorized to edit this post' });
+        }
+        
+        // Update post content
+        if (req.body.content) {
+          console.log('📝 [Post Edit] Updating content from:', post.content, 'to:', req.body.content);
+          post.content = req.body.content;
+        } else {
+          console.log('⚠️ [Post Edit] No content in request body');
+        }
+        
+        // Handle media updates - append new files to existing media
+        if (req.files && Object.keys(req.files).length > 0) {
+          console.log('📁 [Post Edit] Processing new media files');
+          console.log('📊 [Post Edit] Existing media count:', post.media?.length || 0);
+          
+          // Keep existing media
+          let mediaData = post.media || [];
+          
+          // Process new media files and append
+          for (const fileKey of Object.keys(req.files)) {
+            const file = req.files[fileKey];
+            const fileArray = Array.isArray(file) ? file : [file];
+            
+            for (const f of fileArray) {
+              try {
+                const cloudinaryUrl = await uploadToCloudinary(f.data, f.name, f.mimetype);
+                const mediaType = f.mimetype.startsWith('image/') ? 'image' : 'video';
+                mediaData.push({
+                  type: mediaType,
+                  url: cloudinaryUrl,
+                  filename: f.name,
+                  mimetype: f.mimetype
+                });
+                console.log('✅ [Post Edit] File uploaded:', f.name);
+              } catch (uploadError) {
+                console.error('❌ Cloudinary upload failed:', uploadError.message);
+                // Fallback to base64
+                const base64 = f.data.toString('base64');
+                const mediaType = f.mimetype.startsWith('image/') ? 'image' : 'video';
+                mediaData.push({
+                  type: mediaType,
+                  url: `data:${f.mimetype};base64,${base64}`,
+                  filename: f.name,
+                  mimetype: f.mimetype
+                });
+              }
+            }
+          }
+          post.media = mediaData;
+          console.log('📊 [Post Edit] Media after update, count:', mediaData.length);
+        } else {
+          console.log('📋 [Post Edit] No new media files, keeping existing media');
+        }
+        
+        // Save updated post
+        const savedPost = await post.save();
+        console.log('✅ [Post Edit] Post saved successfully:', postId);
+        console.log('✅ [Post Edit] Saved content:', savedPost.content);
+        console.log('✅ [Post Edit] Saved media count:', savedPost.media?.length || 0);
+        
+        // Refresh from DB to ensure we have the latest data
+        const refreshedPost = await Post.findById(postId);
+        
+        return res.status(200).json({ 
+          success: true, 
+          message: 'Post updated successfully',
+          post: formatPost(refreshedPost)
+        });
+      } catch (error) {
+        console.error('❌ [Post Edit] Error:', error.message);
+        console.error('❌ [Post Edit] Stack:', error.stack);
         return res.status(500).json({ success: false, error: error.message });
       }
     }
