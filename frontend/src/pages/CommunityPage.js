@@ -1901,7 +1901,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                       alignItems: 'flex-start'
                     }}>
                       <img 
-                        src={comment.author?.photo || comment.user?.photo || '/pages/TeamPage/profile.png'}
+                        src={comment.authorPhoto || comment.author?.photo || comment.user?.photo || '/pages/TeamPage/profile.png'}
                         alt="Profile"
                         style={{
                           width: '35px',
@@ -1918,7 +1918,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                           color: theme.colors.primary.blue,
                           marginBottom: '3px',
                           fontFamily: theme.typography.fonts.primary
-                        }}>{comment.author?.name || comment.user?.name || 'مستخدم'}</div>
+                        }}>{comment.authorName || comment.author?.name || comment.user?.name || 'مستخدم'}</div>
                         <div style={{
                           fontSize: '14px',
                           color: '#333',

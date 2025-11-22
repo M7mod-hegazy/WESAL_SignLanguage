@@ -1191,6 +1191,7 @@ module.exports = async (req, res) => {
         const comment = {
           author: decodedToken.uid,
           authorName: decodedToken.name || decodedToken.email?.split('@')[0] || 'مستخدم',
+          authorPhoto: decodedToken.picture || '/pages/TeamPage/profile.png',
           text: text.trim(),
           createdAt: new Date().toISOString()
         };
