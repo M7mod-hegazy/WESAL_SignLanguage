@@ -560,6 +560,8 @@ async function handleCreatePost(req, res) {
     console.log('🔍 [Post Create] DEBUG - Checking media sources:');
     console.log('   req.files exists:', !!req.files);
     console.log('   req.files keys:', req.files ? Object.keys(req.files) : 'N/A');
+    console.log('   req.body.media exists:', !!req.body.media);
+    console.log('   req.body.media type:', Array.isArray(req.body.media) ? 'array' : typeof req.body.media);
     
     // Check for files in req.files (multipart upload)
     if (req.files && Object.keys(req.files).length > 0) {
@@ -601,8 +603,13 @@ async function handleCreatePost(req, res) {
         }
       }
       console.log('✅ [Post Create] Media processed, count:', mediaData.length);
+    } else if (req.body.media && Array.isArray(req.body.media) && req.body.media.length > 0) {
+      // Handle media sent as JSON (for shared posts)
+      console.log('✅ [Post Create] Media found in req.body.media:', req.body.media.length, 'items');
+      mediaData = req.body.media;
+      console.log('✅ [Post Create] Using JSON media, count:', mediaData.length);
     } else {
-      console.warn('⚠️ [Post Create] No media files found in req.files');
+      console.warn('⚠️ [Post Create] No media files found in req.files or req.body.media');
     }
 
     console.log('📊 [Post Create] Final mediaData count:', mediaData.length);

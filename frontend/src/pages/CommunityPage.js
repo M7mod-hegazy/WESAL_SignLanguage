@@ -687,11 +687,13 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     // Save shared post to MongoDB
     try {
       const token = await user.getIdToken();
+      console.log('🔄 [Share] Original post media:', originalPost.media);
+      
       const response = await axios.post(
         `${API_BASE_URL}/posts`,
         {
           content: originalPost.content,
-          media: originalPost.media,
+          media: originalPost.media || [],  // Ensure media array is sent
           isShared: true,
           originalPostId: postId,
           sharedBy: {
@@ -702,6 +704,8 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
         },
         { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
       );
+      
+      console.log('🔄 [Share] Response post media:', response.data.post?.media);
       
       if (response.data.success) {
         console.log('✅ Shared post saved to MongoDB');
@@ -1805,7 +1809,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                   onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="2" y="4" width="20" height="14" rx="3" 
-                          stroke="#E8D5C4" 
+                          stroke={post.commentCount > 0 ? theme.colors.primary.orange : '#E8D5C4'}
                           strokeWidth="2" 
                           fill="none"/>
                   </svg>
