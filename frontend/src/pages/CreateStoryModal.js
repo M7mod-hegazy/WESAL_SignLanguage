@@ -15,6 +15,13 @@ const CreateStoryModal = ({ onClose, onStoryCreated }) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Validate file size (max 50MB)
+    const maxSize = 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setError('حجم الملف كبير جداً (الحد الأقصى 50 ميجابايت)');
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       const mediaType = file.type.startsWith('image/') ? 'image' : 'video';
@@ -38,16 +45,20 @@ const CreateStoryModal = ({ onClose, onStoryCreated }) => {
     try {
       const token = await user.getIdToken();
 
-      const response = await axios.post(`${API_BASE_URL}/stories`, {
-        media: {
-          type: mediaFile.type,
-          url: mediaFile.url
+      // Use FormData to send file instead of base64
+      const formData = new FormData();
+      formData.append('media', mediaFile.file);
+      formData.append('caption', caption);
+
+      const response = await axios.post(`${API_BASE_URL}/stories`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
         },
-        caption
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 10000
+        timeout: 30000
       });
+
+      console.log('Story creation response:', response.data);
 
       if (response.data.success) {
         onStoryCreated && onStoryCreated(response.data.story);
@@ -55,11 +66,11 @@ const CreateStoryModal = ({ onClose, onStoryCreated }) => {
         setCaption('');
         onClose && onClose();
       } else {
-        setError('فشل نشر القصة، حاول مرة أخرى');
+        setError(response.data.message || 'فشل نشر القصة، حاول مرة أخرى');
       }
     } catch (err) {
       console.error('Story creation error:', err);
-      setError('فشل نشر القصة، حاول مرة أخرى');
+      setError(err.response?.data?.message || 'فشل نشر القصة، حاول مرة أخرى');
     } finally {
       setLoading(false);
     }

@@ -135,6 +135,7 @@ const HomePage = () => {
           <img 
             src={getDefaultProfileIcon(user?.photoURL, user?.gender)} 
             alt="Profile"
+            crossOrigin="anonymous"
             style={{
               width: '40px',
               height: '40px',
@@ -142,6 +143,21 @@ const HomePage = () => {
               objectFit: 'cover',
               border: `2px solid ${theme.colors.primary.orange}`,
               background: 'white'
+            }}
+            onError={(e) => {
+              console.error('❌ [Header Profile] Google image load failed (429 rate limit):', {
+                src: e.target.src,
+                photoURL: user?.photoURL,
+                timestamp: new Date().toISOString(),
+                reason: 'Google servers are rate limiting this image URL'
+              });
+              
+              // Google is rate limiting - don't retry, just use default icon immediately
+              console.log('⚠️ [Header Profile] Google rate limit detected. Using default icon instead.');
+              e.target.src = getDefaultProfileIcon(null, user?.gender);
+            }}
+            onLoad={() => {
+              console.log('✅ [Header Profile] Image loaded successfully');
             }}
           />
           <span style={{
@@ -433,12 +449,28 @@ const HomePage = () => {
               <img 
                 src={getDefaultProfileIcon(user?.photoURL, user?.gender)}
                 alt="Profile"
+                crossOrigin="anonymous"
                 style={{
                   width: '60px',
                   height: '60px',
                   borderRadius: '50%',
                   objectFit: 'cover',
                   border: `2px solid ${theme.colors.primary.orange}`
+                }}
+                onError={(e) => {
+                  console.error('❌ [Profile Section] Google image load failed (429 rate limit):', {
+                    src: e.target.src,
+                    photoURL: user?.photoURL,
+                    timestamp: new Date().toISOString(),
+                    reason: 'Google servers are rate limiting this image URL'
+                  });
+                  
+                  // Google is rate limiting - don't retry, just use default icon immediately
+                  console.log('⚠️ [Profile Section] Google rate limit detected. Using default icon instead.');
+                  e.target.src = getDefaultProfileIcon(null, user?.gender);
+                }}
+                onLoad={() => {
+                  console.log('✅ [Profile Section] Image loaded successfully');
                 }}
               />
               <h2 style={{

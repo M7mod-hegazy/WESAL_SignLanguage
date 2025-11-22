@@ -280,9 +280,7 @@ const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: quizData?.category === 'محاكاة المقهى' 
-              ? `url('/coffee-background.png') center/cover no-repeat`
-              : '#FFFFFF',
+            background: '#FFFFFF',
             overflow: 'hidden',
             borderRadius: '15px'
           }}>
@@ -291,9 +289,6 @@ const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 
               isPlaying={!showFeedback && !isPaused}
               loop={true}
               style={{
-                width: '180%',
-                height: '180%',
-                objectFit: 'contain',
                 background: 'transparent'
               }}
             />

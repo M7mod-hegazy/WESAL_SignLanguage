@@ -12,12 +12,13 @@ const {
 } = require('../controllers/postController');
 const { verifyToken, optionalAuth } = require('../middleware/authMiddleware');
 const { cacheMiddleware } = require('../middleware/cacheMiddleware');
+const { handleFileUpload } = require('../middleware/uploadMiddleware');
 
 // Public routes - with caching for better performance
 router.get('/', optionalAuth, cacheMiddleware, getAllPosts);
 
 // Protected routes
-router.post('/', verifyToken, createPost);
+router.post('/', verifyToken, handleFileUpload, createPost);
 router.put('/:id', verifyToken, updatePost);
 router.post('/:id/like', verifyToken, toggleLike);
 router.post('/:id/comment', verifyToken, addComment);

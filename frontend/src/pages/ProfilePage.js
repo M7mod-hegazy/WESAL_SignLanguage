@@ -7,6 +7,7 @@ import BottomNav from '../components/BottomNav';
 import EditProfilePage from './EditProfilePage';
 import { getDefaultProfileIcon } from '../utils/getProfileIcon';
 import { getChallengesCount } from '../utils/challengeCounter';
+import { API_BASE_URL } from '../config/api';
 
 const ProfilePage = ({ onBack }) => {
   const navigate = useNavigate();
@@ -61,19 +62,19 @@ const ProfilePage = ({ onBack }) => {
       const token = await user.getIdToken();
       
       // Fetch user profile to get challengesCompleted and likedStories
-      const userProfileResponse = await axios.get('http://localhost:8000/api/auth/me', {
+      const userProfileResponse = await axios.get(`${API_BASE_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       const userProfile = userProfileResponse.data.user || {};
       
       // Fetch ALL posts (no pagination limit for accurate counts)
-      const postsResponse = await axios.get('http://localhost:8000/api/posts?limit=1000', {
+      const postsResponse = await axios.get(`${API_BASE_URL}/posts?limit=1000`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       // Fetch shared posts from MongoDB
-      const sharedPostsResponse = await axios.get('http://localhost:8000/api/shared-posts?limit=1000', {
+      const sharedPostsResponse = await axios.get(`${API_BASE_URL}/shared-posts?limit=1000`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -380,14 +381,27 @@ const ProfilePage = ({ onBack }) => {
                 return photoSrc;
               })()} 
               alt="Profile"
+              crossOrigin="anonymous"
               style={{
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover'
               }}
               onError={(e) => {
-                console.error('❌ Image failed to load:', e.target.src);
+                console.error('❌ [Profile Avatar] Google image load failed (429 rate limit):', {
+                  src: e.target.src,
+                  photoURL: user?.photoURL,
+                  timestamp: new Date().toISOString(),
+                  userGender: user?.gender,
+                  reason: 'Google servers are rate limiting this image URL'
+                });
+                
+                // Google is rate limiting - don't retry, just use default icon immediately
+                console.log('⚠️ [Profile Avatar] Google rate limit detected. Using default icon instead.');
                 e.target.src = getDefaultProfileIcon(null, user?.gender);
+              }}
+              onLoad={() => {
+                console.log('✅ Profile image loaded successfully');
               }}
             />
           </div>

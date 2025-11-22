@@ -83,17 +83,25 @@ const Post = mongoose.models.Post || mongoose.model('Post', postSchema);
 
 function formatPost(postDoc, requesterId = 'anonymous') {
   if (!postDoc) return null;
+  const authorPhoto = postDoc.authorPhoto || postDoc.author?.photoURL || '/pages/TeamPage/profile.png';
+  const authorUid = typeof postDoc.author === 'string'
+    ? postDoc.author
+    : postDoc.author?.uid || postDoc.author?._id?.toString() || 'anonymous';
+  const authorName = postDoc.authorName || postDoc.author?.displayName || postDoc.author?.name || 'مستخدم';
   return {
     id: postDoc._id.toString(),
     content: postDoc.content || 'منشور من قاعدة البيانات',
     media: postDoc.media || [],
-    author: postDoc.author || {
-      displayName: postDoc.authorName || 'مستخدم',
-      photoURL: postDoc.authorPhoto || '/pages/TeamPage/profile.png',
-      uid: postDoc.author?.uid || 'anonymous'
+    author: {
+      displayName: authorName,
+      name: authorName,
+      photoURL: authorPhoto,
+      photo: authorPhoto,
+      uid: authorUid,
+      gender: postDoc.author?.gender
     },
-    authorName: postDoc.authorName || 'مستخدم',
-    authorPhoto: postDoc.authorPhoto || '/pages/TeamPage/profile.png',
+    authorName: authorName,
+    authorPhoto: authorPhoto,
     likeCount: (postDoc.likes || []).length,
     commentCount: (postDoc.comments || []).length,
     saveCount: (postDoc.saves || []).length,

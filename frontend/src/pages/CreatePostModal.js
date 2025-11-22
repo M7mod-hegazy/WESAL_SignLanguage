@@ -15,6 +15,13 @@ const CreatePostModal = ({ onClose, onPostCreated }) => {
     const files = Array.from(e.target.files);
     
     files.forEach(file => {
+      // Validate file size (max 50MB)
+      const maxSize = 50 * 1024 * 1024;
+      if (file.size > maxSize) {
+        setError('حجم الملف كبير جداً (الحد الأقصى 50 ميجابايت)');
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (event) => {
         const mediaType = file.type.startsWith('image/') ? 'image' : 'video';
@@ -44,17 +51,24 @@ const CreatePostModal = ({ onClose, onPostCreated }) => {
     try {
       const token = await user.getIdToken();
 
-      const mediaPayload = mediaFiles.map(media => ({
-        type: media.type,
-        url: media.url
-      }));
-
-      const response = await axios.post(`${API_BASE_URL}/posts`, {
-        content: postContent,
-        media: mediaPayload
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
+      // Use FormData to send files instead of base64
+      const formData = new FormData();
+      formData.append('content', postContent);
+      
+      // Append all media files
+      mediaFiles.forEach((media, index) => {
+        formData.append(`media`, media.file);
       });
+
+      const response = await axios.post(`${API_BASE_URL}/posts`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        },
+        timeout: 30000
+      });
+
+      console.log('Post creation response:', response.data);
 
       if (response.data.success) {
         setError('');
@@ -64,10 +78,13 @@ const CreatePostModal = ({ onClose, onPostCreated }) => {
 
         onPostCreated && onPostCreated(response.data.post);
         onClose && onClose();
+      } else {
+        setError(response.data.message || 'فشل نشر المنشور، حاول مرة أخرى');
+        setLoading(false);
       }
     } catch (err) {
       console.error('❌ Create post error:', err);
-      setError('فشل نشر المنشور، حاول مرة أخرى');
+      setError(err.response?.data?.message || 'فشل نشر المنشور، حاول مرة أخرى');
       setLoading(false);
     }
   };

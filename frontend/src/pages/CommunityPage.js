@@ -80,6 +80,8 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       }
       
       console.log('📡 [FRONTEND] Fetching posts from MongoDB...');
+      console.log('🔗 API Base URL:', API_BASE_URL);
+      console.log('🔗 Full endpoint:', `${API_BASE_URL}/posts?page=1&limit=3`);
       const fetchStart = performance.now();
       const response = await axios.get(`${API_BASE_URL}/posts?page=1&limit=3`, { 
         headers,
@@ -94,8 +96,20 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       if (response.data.success && response.data.posts) {
         console.log('✅ Loaded', response.data.posts.length, 'posts from MongoDB');
         
-        // Use MongoDB posts directly - no localStorage
-        setPosts(response.data.posts);
+        // Hydrate posts with user's local interaction states from localStorage
+        const userId = user?.uid || 'guest';
+        const userLikes = JSON.parse(localStorage.getItem(`userLikes_${userId}`) || '[]');
+        const userSaves = JSON.parse(localStorage.getItem(`userSaves_${userId}`) || '[]');
+        const userShares = JSON.parse(localStorage.getItem(`userShares_${userId}`) || '[]');
+        
+        const hydratedPosts = response.data.posts.map(post => ({
+          ...post,
+          isLiked: userLikes.includes(post.id),
+          isSaved: userSaves.includes(post.id),
+          isSharedByCurrentUser: userShares.includes(post.id)
+        }));
+        
+        setPosts(hydratedPosts);
         
         setHasMore(response.data.pagination?.pages > 1);
         setLoading(false);
@@ -107,14 +121,32 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
         setPostsLoading(false);
       }
     } catch (error) {
-      console.error('❌ Error fetching posts:', error.message);
-      console.warn('⚠️ MongoDB timeout - showing empty feed. Please run: node scripts/clearPosts.js');
-      setPostsLoading(false);
+      const isLocalhost = API_BASE_URL.includes('localhost');
+      const isConnectionRefused = error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK' || error.message.includes('ERR_CONNECTION_REFUSED');
       
-      // Show empty feed - no localStorage fallback
+      console.error('❌ Error fetching posts:', {
+        message: error.message,
+        code: error.code,
+        endpoint: `${API_BASE_URL}/posts?page=1&limit=3`,
+        environment: isLocalhost ? 'LOCAL' : 'PRODUCTION',
+        isConnectionRefused
+      });
+      
+      if (isLocalhost && isConnectionRefused) {
+        console.warn('⚠️ [LOCAL] Backend server is NOT running on localhost:8000');
+        console.warn('🔴 Connection refused - server is down');
+        console.warn('📝 To fix: Start your backend server');
+        console.warn('   - Node.js: npm start');
+        console.warn('   - Python Django: python manage.py runserver');
+        console.warn('   - Then refresh this page');
+      } else if (!isLocalhost) {
+        console.warn('⚠️ [PRODUCTION] Failed to fetch posts from Vercel backend');
+        console.warn('📝 Check backend API configuration and server status');
+      }
+      
+      setPostsLoading(false);
       setPosts([]);
       setLoading(false);
-      setPostsLoading(false);
     }
     
     const totalTime = performance.now() - startTime;
@@ -140,17 +172,18 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       });
       
       if (response.data.success && response.data.posts.length > 0) {
-        // Get current user's shared post IDs from global storage
-        const savedSharedPosts = JSON.parse(localStorage.getItem('communityPosts') || '[]');
-        const currentUserName = user?.displayName || user?.email?.split('@')[0];
-        const userSharedPostIds = savedSharedPosts
-          .filter(post => post.sharedBy?.name === currentUserName)
-          .map(post => post.originalPostId || post.id);
+        // Hydrate posts with user's local interaction states from localStorage
+        const userId = user?.uid || 'guest';
+        const userLikes = JSON.parse(localStorage.getItem(`userLikes_${userId}`) || '[]');
+        const userSaves = JSON.parse(localStorage.getItem(`userSaves_${userId}`) || '[]');
+        const userShares = JSON.parse(localStorage.getItem(`userShares_${userId}`) || '[]');
         
-        // Mark new posts
+        // Mark new posts with user's interaction states
         const newPosts = response.data.posts.map(post => ({
           ...post,
-          isSharedByCurrentUser: userSharedPostIds.includes(post.id)
+          isLiked: userLikes.includes(post.id),
+          isSaved: userSaves.includes(post.id),
+          isSharedByCurrentUser: userShares.includes(post.id)
         }));
         
         // Append new posts
@@ -192,6 +225,10 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
   const fetchStories = useCallback(async () => {
     // Load stories from MongoDB
     try {
+      console.log('📡 [FRONTEND] Fetching stories from MongoDB...');
+      console.log('🔗 API Base URL:', API_BASE_URL);
+      console.log('🔗 Full endpoint:', `${API_BASE_URL}/stories`);
+      
       const response = await axios.get(`${API_BASE_URL}/stories`, {
         timeout: 10000
       });
@@ -223,7 +260,30 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
         setStories(hydratedStoryGroups);
       }
     } catch (error) {
-      // Silently continue with empty stories - app works in offline mode
+      const isLocalhost = API_BASE_URL.includes('localhost');
+      const isConnectionRefused = error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK' || error.message.includes('ERR_CONNECTION_REFUSED');
+      
+      console.error('❌ Error fetching stories:', {
+        message: error.message,
+        code: error.code,
+        endpoint: `${API_BASE_URL}/stories`,
+        environment: isLocalhost ? 'LOCAL' : 'PRODUCTION',
+        isConnectionRefused
+      });
+      
+      if (isLocalhost && isConnectionRefused) {
+        console.warn('⚠️ [LOCAL] Backend server is NOT running on localhost:8000');
+        console.warn('🔴 Connection refused - server is down');
+        console.warn('📝 To fix: Start your backend server');
+        console.warn('   - Node.js: npm start');
+        console.warn('   - Python Django: python manage.py runserver');
+        console.warn('   - Then refresh this page');
+      } else if (!isLocalhost) {
+        console.warn('⚠️ [PRODUCTION] Failed to fetch stories from Vercel backend');
+        console.warn('📝 Check backend API configuration and server status');
+      } else {
+        console.warn('⚠️ App works in offline mode - stories not available');
+      }
     }
   }, []);
 
@@ -678,10 +738,34 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
 
     try {
       const token = await user.getIdToken();
+
+      // Use FormData to send files instead of base64
+      const formData = new FormData();
+      formData.append('content', editContent);
+      
+      // Append all media files (only actual files, not base64 data URLs)
+      editMedia.forEach((media) => {
+        // Check if it's a file object or base64 data URL
+        if (media.file) {
+          // New file added during edit
+          formData.append('media', media.file);
+        } else if (media.url && !media.url.startsWith('data:')) {
+          // Existing Cloudinary URL - keep as is by sending the URL
+          formData.append('existingMedia', JSON.stringify(media));
+        }
+        // Skip base64 data URLs - they shouldn't be sent
+      });
+
       const response = await axios.put(
         `${API_BASE_URL}/posts/${postId}`,
-        { content: editContent, media: editMedia },
-        { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
+        formData,
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }, 
+          timeout: 30000 
+        }
       );
 
       if (response.data.success) {
@@ -689,7 +773,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
         // Update local state
         setPosts(posts.map(post => 
           post.id === postId 
-            ? { ...post, content: editContent, media: editMedia }
+            ? { ...post, content: editContent, media: response.data.post?.media || editMedia }
             : post
         ));
         setEditingPost(null);
@@ -699,7 +783,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
       }
     } catch (error) {
       console.error('Error updating post:', error);
-      alert('فشل تحديث المنشور، حاول مرة أخرى');
+      alert(error.response?.data?.message || 'فشل تحديث المنشور، حاول مرة أخرى');
     }
   };
 
@@ -1080,6 +1164,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
               <img 
                 src={getDefaultProfileIcon(user?.photoURL, user?.gender)}
                 alt="Profile"
+                crossOrigin="anonymous"
                 style={{
                   width: '45px',
                   height: '45px',
@@ -1087,6 +1172,18 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                   border: `2px solid ${theme.colors.primary.orange}`,
                   background: 'white',
                   objectFit: 'cover'
+                }}
+                onError={(e) => {
+                  console.error('❌ [Create Post Profile] Google image load failed (429 rate limit):', {
+                    src: e.target.src,
+                    photoURL: user?.photoURL,
+                    timestamp: new Date().toISOString(),
+                    reason: 'Google servers are rate limiting this image URL'
+                  });
+                  
+                  // Google is rate limiting - don't retry, just use default icon immediately
+                  console.log('⚠️ [Create Post Profile] Google rate limit detected. Using default icon instead.');
+                  e.target.src = getDefaultProfileIcon(null, user?.gender);
                 }}
               />
             </div>
@@ -1259,11 +1356,26 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                 <img 
                   src={getDefaultProfileIcon(post.author?.photo || post.author?.photoURL || post.originalAuthor?.photo, post.author?.gender)}
                   alt={post.originalAuthor?.name || post.author?.name}
+                  crossOrigin="anonymous"
                   style={{
                     width: '40px',
                     height: '40px',
                     borderRadius: '50%',
                     objectFit: 'cover'
+                  }}
+                  onError={(e) => {
+                    const photoUrl = post.author?.photo || post.author?.photoURL || post.originalAuthor?.photo;
+                    // Retry once for Google images that fail due to rate limiting
+                    if (photoUrl && !e.target.dataset.retried) {
+                      e.target.dataset.retried = 'true';
+                      setTimeout(() => {
+                        // Add cache-busting parameter to bypass rate limiting
+                        const separator = photoUrl.includes('?') ? '&' : '?';
+                        e.target.src = `${photoUrl}${separator}t=${Date.now()}`;
+                      }, 2000);
+                    } else {
+                      e.target.src = getDefaultProfileIcon(null, post.author?.gender);
+                    }
                   }}
                 />
                 <div style={{

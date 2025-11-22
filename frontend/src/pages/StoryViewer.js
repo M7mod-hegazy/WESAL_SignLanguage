@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import theme from '../theme/designSystem';
+import { API_BASE_URL } from '../config/api';
 
 const StoryViewer = ({ storyGroup, allStoryGroups, initialGroupIndex, onClose, onStoryDeleted }) => {
   const { user } = useAuth();
@@ -67,9 +68,9 @@ const StoryViewer = ({ storyGroup, allStoryGroups, initialGroupIndex, onClose, o
       try {
         const token = await user.getIdToken();
         await axios.post(
-          `http://localhost:8000/api/stories/${currentStory.id}/like`,
+          `${API_BASE_URL}/stories/${currentStory.id}/like`,
           {},
-          { headers: { Authorization: `Bearer ${token}` }, timeout: 2000 }
+          { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
         );
         console.log('✅ Story like synced to MongoDB');
       } catch (error) {
@@ -117,11 +118,12 @@ const StoryViewer = ({ storyGroup, allStoryGroups, initialGroupIndex, onClose, o
     try {
       const token = await user.getIdToken();
       const response = await axios.delete(
-        `http://localhost:8000/api/stories/${currentStory.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API_BASE_URL}/stories/${currentStory.id}`,
+        { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
       );
 
       if (response.data.success) {
+        console.log('✅ Story deleted successfully');
         onStoryDeleted && onStoryDeleted();
         
         // If this was the last story in the group, close viewer
@@ -131,10 +133,12 @@ const StoryViewer = ({ storyGroup, allStoryGroups, initialGroupIndex, onClose, o
           // Move to next story or previous
           handleNext();
         }
+        
+        alert('تم حذف القصة بنجاح');
       }
     } catch (error) {
-      console.error('Error deleting story:', error);
-      alert('فشل حذف القصة');
+      console.error('❌ Error deleting story:', error);
+      alert(error.response?.data?.message || 'فشل حذف القصة، حاول مرة أخرى');
     }
   };
 

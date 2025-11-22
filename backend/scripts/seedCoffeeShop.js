@@ -6,73 +6,59 @@ const Sign = require('../models/Sign');
 const coffeeShopSigns = [
   {
     word: 'محاكاة_مقهى_1',
-    correctAnswer: 'مرحباً، كيف حالك اليوم؟',
-    wrongAnswer1: 'أود كأس قهوة من فضلك',
-    wrongAnswer2: 'شكراً جزيلاً',
-    wrongAnswer3: 'مع السلامة',
-    animation_url: '/videos/coffee/scene1.webm',
+    correctAnswer: 'السلام عيكم',
+    wrongAnswer1: 'صباح الخير',
+    wrongAnswer2: 'مساء الخير',
+    wrongAnswer3: 'مرحبا',
+    animation_url: '/videos/coffee/1_greeting.webm',
     animationData: null, // Using video instead
     duration: 5,
-    difficulty: 'متوسط',
+    difficulty: 'سهل',
     category: 'محاكاة المقهى',
     order: 1,
-    coinsReward: 10
+    coinsReward: 50
   },
   {
     word: 'محاكاة_مقهى_2',
-    correctAnswer: 'أود كأس قهوة كبيرة من فضلك',
-    wrongAnswer1: 'مرحباً، كيف حالك؟',
-    wrongAnswer2: 'هل يمكن أن تكون باردة؟',
-    wrongAnswer3: 'شكراً جزيلاً',
-    animation_url: '/videos/coffee/scene2.webm',
+    correctAnswer: 'اريد كوبا من القهوه',
+    wrongAnswer1: 'اريد كوبا من الشاي',
+    wrongAnswer2: 'اريد كوبا من الماء',
+    wrongAnswer3: 'اريد عصيرا',
+    animation_url: '/videos/coffee/2_order_coffee.webm',
     animationData: null,
     duration: 5,
     difficulty: 'متوسط',
     category: 'محاكاة المقهى',
     order: 2,
-    coinsReward: 10
+    coinsReward: 50
   },
   {
     word: 'محاكاة_مقهى_3',
-    correctAnswer: 'مع الحليب والقليل من السكر',
-    wrongAnswer1: 'بدون سكر من فضلك',
-    wrongAnswer2: 'أود كأس قهوة',
-    wrongAnswer3: 'هل يمكن أن تكون ساخنة؟',
-    animation_url: '/videos/coffee/scene3.webm',
+    correctAnswer: 'حسنا',
+    wrongAnswer1: 'نعم',
+    wrongAnswer2: 'لا',
+    wrongAnswer3: 'ربما',
+    animation_url: '/videos/coffee/3_okay.webm',
     animationData: null,
     duration: 5,
-    difficulty: 'متوسط',
+    difficulty: 'سهل',
     category: 'محاكاة المقهى',
     order: 3,
-    coinsReward: 10
+    coinsReward: 50
   },
   {
     word: 'محاكاة_مقهى_4',
-    correctAnswer: 'هل يمكن أن تكون ساخنة، من فضلك؟',
-    wrongAnswer1: 'هل يمكن أن تكون باردة؟',
-    wrongAnswer2: 'مع الحليب من فضلك',
-    wrongAnswer3: 'شكراً جزيلاً',
-    animation_url: '/videos/coffee/scene4.webm',
+    correctAnswer: 'تفضل بالجلوس',
+    wrongAnswer1: 'تفضل بالوقوف',
+    wrongAnswer2: 'تفضل بالدخول',
+    wrongAnswer3: 'تفضل بالخروج',
+    animation_url: '/videos/coffee/4_please_sit.webm',
     animationData: null,
     duration: 5,
     difficulty: 'متوسط',
     category: 'محاكاة المقهى',
     order: 4,
-    coinsReward: 10
-  },
-  {
-    word: 'محاكاة_مقهى_5',
-    correctAnswer: 'شكراً جزيلاً، سأنتظر هنا',
-    wrongAnswer1: 'مع السلامة',
-    wrongAnswer2: 'أود كأس قهوة',
-    wrongAnswer3: 'مرحباً، كيف حالك؟',
-    animation_url: '/videos/coffee/scene5.webm',
-    animationData: null,
-    duration: 5,
-    difficulty: 'متوسط',
-    category: 'محاكاة المقهى',
-    order: 5,
-    coinsReward: 10
+    coinsReward: 50
   }
 ];
 

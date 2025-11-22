@@ -7,12 +7,13 @@ const {
   deleteStory
 } = require('../controllers/storyController');
 const { verifyToken, optionalAuth } = require('../middleware/authMiddleware');
+const { handleFileUpload } = require('../middleware/uploadMiddleware');
 
 // Public routes
 router.get('/', optionalAuth, getAllStories);
 
 // Protected routes
-router.post('/', verifyToken, createStory);
+router.post('/', verifyToken, handleFileUpload, createStory);
 router.post('/:id/view', verifyToken, viewStory);
 router.delete('/:id', verifyToken, deleteStory);
 
