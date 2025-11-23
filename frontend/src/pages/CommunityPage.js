@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
 import theme from '../theme/designSystem';
-import { API_BASE_URL } from '../config/api';
-import { getDefaultProfileIcon } from '../utils/getProfileIcon';
+import BottomNav from '../components/BottomNav';
+import { getProfileIcon } from '../utils/profileIconUtils';
+import { incrementChallengesCount } from '../utils/challengeCounter';
 import CreatePostModal from './CreatePostModal';
 import CreateStoryModal from './CreateStoryModal';
 import StoryViewer from './StoryViewer';
@@ -28,6 +29,9 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
   const [loadingMore, setLoadingMore] = useState(false);
   const [showCreateStory, setShowCreateStory] = useState(false);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryImages, setGalleryImages] = useState([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Helper function to get user profile stats (for profile page)
   const getUserProfileStats = useCallback(() => {
@@ -952,6 +956,14 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     fetchPosts();
   };
 
+  const openGallery = (media, startIndex = 0) => {
+    // Filter only images for the gallery
+    const images = media.filter(m => m.type === 'image');
+    setGalleryImages(images);
+    setCurrentImageIndex(startIndex);
+    setGalleryOpen(true);
+  };
+
   const formatTime = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -1730,49 +1742,86 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
               {/* Post Media */}
               {post.media && post.media.length > 0 && (
                 <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: post.media.length === 1 ? '1fr' : 'repeat(2, 1fr)',
-                  gap: '10px',
+                  position: 'relative',
                   marginBottom: '12px'
                 }}>
-                  {post.media.map((media, index) => {
-                    const imageUrl = media.url;
-                    
-                    if (!imageUrl) {
-                      return null; // Skip if no valid image
-                    }
-                    
-                    return (
-                    <div key={index}>
-                      {media.type === 'image' ? (
-                        <img 
-                          src={imageUrl}
-                          alt="Post media"
-                          style={{
-                            width: '100%',
-                            borderRadius: '10px',
-                            objectFit: 'cover',
-                            maxHeight: '300px'
-                          }}
-                          onError={(e) => {
-                            console.error('❌ Failed to load image:', media.url);
-                            e.target.style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <video 
-                          src={imageUrl}
-                          controls
-                          style={{
-                            width: '100%',
-                            borderRadius: '10px',
-                            maxHeight: '300px'
-                          }}
-                        />
-                      )}
-                    </div>
-                  );
-                  })}
+                  {/* Fullscreen Button */}
+                  <button
+                    onClick={() => openGallery(post.media, 0)}
+                    style={{
+                      position: 'absolute',
+                      top: '8px',
+                      left: '8px',
+                      background: 'rgba(0, 0, 0, 0.6)',
+                      border: 'none',
+                      color: 'white',
+                      borderRadius: '8px',
+                      padding: '6px 10px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      zIndex: 5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0, 0, 0, 0.6)'}
+                  >
+                    ⛶ عرض
+                  </button>
+
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: post.media.length === 1 ? '1fr' : 'repeat(2, 1fr)',
+                    gap: '10px'
+                  }}>
+                    {post.media.map((media, index) => {
+                      const imageUrl = media.url;
+                      
+                      if (!imageUrl) {
+                        return null;
+                      }
+                      
+                      return (
+                      <div key={index} style={{ position: 'relative' }}>
+                        {media.type === 'image' ? (
+                          <img 
+                            src={imageUrl}
+                            alt="Post media"
+                            onClick={() => openGallery(post.media, index)}
+                            style={{
+                              width: '100%',
+                              height: 'auto',
+                              borderRadius: '10px',
+                              objectFit: 'contain',
+                              maxHeight: 'none',
+                              cursor: 'pointer',
+                              transition: 'transform 0.2s',
+                              display: 'block'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                            onError={(e) => {
+                              console.error('❌ Failed to load image:', media.url);
+                              e.target.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <video 
+                            src={imageUrl}
+                            controls
+                            style={{
+                              width: '100%',
+                              borderRadius: '10px',
+                              maxHeight: '300px'
+                            }}
+                          />
+                        )}
+                      </div>
+                    );
+                    })}
+                  </div>
                 </div>
               )}
 
@@ -2210,6 +2259,154 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
             setShowCreatePost(false);
           }}
         />
+      )}
+
+      {/* Image Gallery Modal */}
+      {galleryOpen && galleryImages.length > 0 && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.95)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          {/* Close Button */}
+          <button
+            onClick={() => setGalleryOpen(false)}
+            style={{
+              position: 'absolute',
+              top: '20px',
+              right: '20px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              border: 'none',
+              color: 'white',
+              fontSize: '28px',
+              cursor: 'pointer',
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+          >
+            ✕
+          </button>
+
+          {/* Main Image */}
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            maxWidth: '90vw',
+            maxHeight: '80vh'
+          }}>
+            <img 
+              src={galleryImages[currentImageIndex]?.url}
+              alt="Gallery"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '100%',
+                objectFit: 'contain'
+              }}
+            />
+          </div>
+
+          {/* Navigation */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '20px',
+            marginBottom: '20px',
+            color: 'white'
+          }}>
+            {/* Previous Button */}
+            <button
+              onClick={() => setCurrentImageIndex(prev => prev === 0 ? galleryImages.length - 1 : prev - 1)}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                color: 'white',
+                fontSize: '24px',
+                cursor: 'pointer',
+                padding: '10px 15px',
+                borderRadius: '8px',
+                transition: 'background 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+            >
+              ◀
+            </button>
+
+            {/* Image Counter */}
+            <span style={{ fontSize: '16px', minWidth: '60px', textAlign: 'center' }}>
+              {currentImageIndex + 1} / {galleryImages.length}
+            </span>
+
+            {/* Next Button */}
+            <button
+              onClick={() => setCurrentImageIndex(prev => prev === galleryImages.length - 1 ? 0 : prev + 1)}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                color: 'white',
+                fontSize: '24px',
+                cursor: 'pointer',
+                padding: '10px 15px',
+                borderRadius: '8px',
+                transition: 'background 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+            >
+              ▶
+            </button>
+          </div>
+
+          {/* Thumbnail Strip */}
+          {galleryImages.length > 1 && (
+            <div style={{
+              display: 'flex',
+              gap: '10px',
+              padding: '20px',
+              overflowX: 'auto',
+              maxWidth: '90vw',
+              justifyContent: 'center'
+            }}>
+              {galleryImages.map((img, index) => (
+                <img
+                  key={index}
+                  src={img.url}
+                  alt={`Thumbnail ${index + 1}`}
+                  onClick={() => setCurrentImageIndex(index)}
+                  style={{
+                    width: '60px',
+                    height: '60px',
+                    objectFit: 'cover',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    border: currentImageIndex === index ? '3px solid #F18A21' : '2px solid rgba(255, 255, 255, 0.3)',
+                    transition: 'all 0.2s',
+                    opacity: currentImageIndex === index ? 1 : 0.6
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = currentImageIndex === index ? '1' : '0.6'}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
     </div>
