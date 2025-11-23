@@ -5,7 +5,7 @@ import Timer from './Timer';
 import AnswerButton from './AnswerButton';
 import theme from '../theme/designSystem';
 
-const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 30, onBackClick, onUseHint, teamMode = false, players = [], isSequential = false }) => {
+const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 30, onBackClick, onUseHint, teamMode = false, players = [], isSequential = false, onTimeUp }) => {
   const navigate = useNavigate();
   console.log('🎯 [QuizInterface] Props received:', { isSequential, teamMode, quizData: quizData ? 'exists' : 'UNDEFINED' });
   
@@ -130,7 +130,14 @@ const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 
       setShowFeedback(true);
       setIsCorrect(false);
       
-      // Team mode: Navigate back to team spin/roller page after timer ends
+      // Team mode with onTimeUp callback (modal mode): Call the callback to close modal
+      if (teamMode && onTimeUp) {
+        console.log('⏱️ [QuizInterface] Timer ended in modal mode - calling onTimeUp');
+        onTimeUp();
+        return;
+      }
+      
+      // Team mode without callback (regular page): Navigate back to team spin/roller page after timer ends
       if (teamMode) {
         setTimeout(() => {
           navigate('/team-spin', { 
@@ -185,7 +192,9 @@ const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 
       position: 'relative',
       background: '#F5F5F0',
       direction: 'rtl',
-      fontFamily: 'Arial, sans-serif'
+      fontFamily: 'Arial, sans-serif',
+      borderRadius: '10PX'
+      
     }}>
       {/* Back Button - Top Left */}
       <button

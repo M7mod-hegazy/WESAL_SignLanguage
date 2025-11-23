@@ -521,24 +521,36 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
               transform: translateY(0);
             }
           }
+          
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+          
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
         `}
       </style>
     </div>
 
     {/* Quiz Modal - OUTSIDE relative container */}
+    {console.log('🔍 MODAL CHECK:', { showQuizModal, questionsLength: allQuestions.length, shouldRender: showQuizModal && allQuestions.length > 0 })}
     {showQuizModal && allQuestions.length > 0 && (
+      <>
+      {console.log('✅ MODAL IS RENDERING NOW!')}
       <div style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'rgba(0, 0, 0, 0.5)',
+        background: 'rgba(0, 0, 0, 0.7)',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 9999,
-        backdropFilter: 'blur(2px)',
+        backdropFilter: 'blur(5px)',
         padding: '20px'
       }}>
         {/* Modal Container */}
@@ -546,20 +558,24 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
           position: 'relative',
           width: '100%',
           maxWidth: '420px',
-          background: '#FFF9F0',
+          background: 'transparent',
           borderRadius: '20px',
-          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+          boxShadow: 'none',
           padding: '20px',
           maxHeight: '80vh',
-          overflow: 'auto'
-        }}>
+          overflow: 'auto',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }}
+        className="hide-scrollbar"
+        >
           {/* Close Button */}
           <button
             onClick={() => setShowQuizModal(false)}
             style={{
               position: 'absolute',
-              top: '15px',
-              right: '15px',
+              top: '5px',
+              right: '5px',
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
@@ -576,8 +592,8 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
               src="/pages/quiz/quit.png" 
               alt="Close"
               style={{
-                width: '32px',
-                height: '32px',
+                width: '36px',
+                height: '36px',
                 objectFit: 'contain'
               }}
             />
@@ -585,27 +601,70 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
 
           {/* Quiz Interface */}
           {allQuestions.length > 0 && currentQuestionIndex < allQuestions.length ? (
-            <QuizInterface
-              quizData={allQuestions[currentQuestionIndex]}
-              onAnswer={() => {
-                if (currentQuestionIndex < allQuestions.length - 1) {
-                  setCurrentQuestionIndex(currentQuestionIndex + 1);
-                } else {
-                  setShowQuizModal(false);
+            <>
+              <style>{`
+                /* Hide icons and reclaim space ONLY in modal */
+                .team-spin-modal-quiz button[style*="position: absolute"][style*="top: 20px"][style*="left: 20px"] {
+                  display: none !important;
                 }
-              }}
-              onNextQuestion={() => {
-                if (currentQuestionIndex < allQuestions.length - 1) {
-                  setCurrentQuestionIndex(currentQuestionIndex + 1);
-                } else {
-                  setShowQuizModal(false);
+                
+                .team-spin-modal-quiz div[style*="position: absolute"][style*="top: 15px"][style*="right: 15px"] {
+                  display: none !important;
                 }
-              }}
-              timeLimit={timeLimit}
-              teamMode={true}
-              players={players}
-              onBackClick={() => setShowQuizModal(false)}
-            />
+                
+                .team-spin-modal-quiz img[src="/coin.png"],
+                .team-spin-modal-quiz img[src="/hint.png"],
+                .team-spin-modal-quiz img[src="/pages/back.png"] {
+                  display: none !important;
+                }
+                
+                /* Remove top padding/margin from quiz content */
+                .team-spin-modal-quiz > div[style*="min-height"] {
+                  min-height: auto !important;
+                  padding-top: 0 !important;
+                  margin-top: 0 !important;
+                }
+                
+                .team-spin-modal-quiz > div[style*="width: 100%"][style*="max-width"] {
+                  margin-top: 0 !important;
+                  padding-top: 0 !important;
+                }
+                
+                /* Reduce marginTop to 30px ONLY in modal */
+                .team-spin-modal-quiz div[style*="marginTop: '80px'"],
+                .team-spin-modal-quiz div[style*="margin-top"][style*="80px"] {
+                  margin-top: 30px !important;
+                }
+              `}</style>
+              <div className="team-spin-modal-quiz">
+                <QuizInterface
+                  quizData={allQuestions[currentQuestionIndex]}
+                onAnswer={() => {
+                  if (currentQuestionIndex < allQuestions.length - 1) {
+                    setCurrentQuestionIndex(currentQuestionIndex + 1);
+                  } else {
+                    setShowQuizModal(false);
+                  }
+                }}
+                onNextQuestion={() => {
+                  if (currentQuestionIndex < allQuestions.length - 1) {
+                    setCurrentQuestionIndex(currentQuestionIndex + 1);
+                  } else {
+                    setShowQuizModal(false);
+                  }
+                }}
+                onTimeUp={() => {
+                  console.log('⏱️ [TeamSpinPage Modal] Timer ended - closing modal');
+                  setShowQuizModal(false);
+                }}
+                timeLimit={timeLimit}
+                teamMode={true}
+                players={players}
+                onBackClick={undefined}
+                hideHeader={true}
+              />
+              </div>
+            </>
           ) : (
             <div style={{ color: '#F18A21', textAlign: 'center', padding: '20px' }}>
               ⏳ جاري تحميل...
@@ -613,6 +672,7 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
           )}
         </div>
       </div>
+      </>
     )}
     </>
   );
