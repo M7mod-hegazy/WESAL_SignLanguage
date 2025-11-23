@@ -16,14 +16,14 @@ const AboutUsPage = () => {
       {/* Responsive Container */}
       <div style={{
         width: '100%',
-        height: '100vh',
+        minHeight: '100vh',
         background: '#F5F5F0',
         display: 'flex',
         flexDirection: 'column',
         direction: 'rtl',
         fontFamily: theme.typography.fonts.secondary,
         position: 'relative',
-        overflow: 'hidden',
+        overflow: 'auto',
         boxShadow: 'rgba(0, 0, 0, 0.1) 0px 0px 20px',
         maxWidth: '480px'
       }}>
