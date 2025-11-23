@@ -120,7 +120,15 @@ const TutorialPage2 = () => {
             justifyContent: 'center',
             gap: '10px'
           }}>
-            <span style={{ fontSize: '28px' }}>⭐</span>
+            <img 
+              src="/new_star.png" 
+              alt="Star"
+              style={{
+                width: '28px',
+                height: '28px',
+                objectFit: 'contain'
+              }}
+            />
             <p style={{
               fontSize: '20px',
               fontWeight: theme.typography.weights.bold,
