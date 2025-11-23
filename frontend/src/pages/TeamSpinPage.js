@@ -97,6 +97,7 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
   const segmentAngle = 360 / players.length;
 
   return (
+    <>
     <div style={{
       minHeight: '100vh',
       background: '#F5F5F0',
@@ -508,105 +509,6 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
         </div>
       )}
 
-      {/* Quiz Modal - Overlay with spin page behind */}
-      {console.log('🎬 [TeamSpinPage] Modal render check - showQuizModal:', showQuizModal, 'allQuestions.length:', allQuestions.length)}
-      {showQuizModal && allQuestions.length > 0 && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.3)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 2000,
-          backdropFilter: 'blur(2px)',
-          padding: '20px'
-        }}>
-          {/* Modal Container - Compact size for video and answer only */}
-          <div style={{
-            position: 'relative',
-            width: '100%',
-            maxWidth: '420px',
-            background: '#FFF9F0',
-            borderRadius: '20px',
-            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
-            padding: '20px',
-            maxHeight: '80vh',
-            overflow: 'auto'
-          }}>
-            {/* Close Button - Using quit.png */}
-            <button
-              onClick={() => setShowQuizModal(false)}
-              style={{
-                position: 'absolute',
-                top: '15px',
-                right: '15px',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '0',
-                zIndex: 10,
-                width: '32px',
-                height: '32px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <img 
-                src="/pages/quiz/quit.png" 
-                alt="Close"
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  objectFit: 'contain'
-                }}
-              />
-            </button>
-
-            {/* Quiz Interface - Compact */}
-            {allQuestions.length > 0 ? (
-              <>
-                {console.log('📊 [TeamSpinPage Modal] Questions loaded:', allQuestions.length, 'Current index:', currentQuestionIndex)}
-                {currentQuestionIndex < allQuestions.length && (
-                  <>
-                    {console.log('📊 [TeamSpinPage Modal] Rendering question:', allQuestions[currentQuestionIndex]?.correctAnswer)}
-                    <QuizInterface
-                      quizData={allQuestions[currentQuestionIndex]}
-                      onAnswer={() => {
-                        console.log('✅ [TeamSpinPage Modal] Answer selected');
-                        if (currentQuestionIndex < allQuestions.length - 1) {
-                          setCurrentQuestionIndex(currentQuestionIndex + 1);
-                        } else {
-                          setShowQuizModal(false);
-                        }
-                      }}
-                      onNextQuestion={() => {
-                        console.log('➡️ [TeamSpinPage Modal] Next question');
-                        if (currentQuestionIndex < allQuestions.length - 1) {
-                          setCurrentQuestionIndex(currentQuestionIndex + 1);
-                        } else {
-                          setShowQuizModal(false);
-                        }
-                      }}
-                      timeLimit={timeLimit}
-                      teamMode={true}
-                      players={players}
-                      onBackClick={() => setShowQuizModal(false)}
-                    />
-                  </>
-                )}
-              </>
-            ) : (
-              <div style={{ textAlign: 'center', color: '#F18A21' }}>⏳ جاري تحميل الأسئلة...</div>
-            )}
-          </div>
-        </div>
-      )}
-
       <style>
         {`
           @keyframes fadeIn {
@@ -622,6 +524,93 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
         `}
       </style>
     </div>
+
+    {/* Quiz Modal - OUTSIDE relative container */}
+    {showQuizModal && allQuestions.length > 0 && (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.3)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 9999,
+        backdropFilter: 'blur(2px)',
+        padding: '20px'
+      }}>
+        {/* Modal Container */}
+        <div style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: '420px',
+          background: '#FFF9F0',
+          borderRadius: '20px',
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+          padding: '20px',
+          maxHeight: '80vh',
+          overflow: 'auto'
+        }}>
+          {/* Close Button */}
+          <button
+            onClick={() => setShowQuizModal(false)}
+            style={{
+              position: 'absolute',
+              top: '15px',
+              right: '15px',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '0',
+              zIndex: 10,
+              width: '32px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <img 
+              src="/pages/quiz/quit.png" 
+              alt="Close"
+              style={{
+                width: '32px',
+                height: '32px',
+                objectFit: 'contain'
+              }}
+            />
+          </button>
+
+          {/* Quiz Interface */}
+          {allQuestions.length > 0 && currentQuestionIndex < allQuestions.length && (
+            <QuizInterface
+              quizData={allQuestions[currentQuestionIndex]}
+              onAnswer={() => {
+                if (currentQuestionIndex < allQuestions.length - 1) {
+                  setCurrentQuestionIndex(currentQuestionIndex + 1);
+                } else {
+                  setShowQuizModal(false);
+                }
+              }}
+              onNextQuestion={() => {
+                if (currentQuestionIndex < allQuestions.length - 1) {
+                  setCurrentQuestionIndex(currentQuestionIndex + 1);
+                } else {
+                  setShowQuizModal(false);
+                }
+              }}
+              timeLimit={timeLimit}
+              teamMode={true}
+              players={players}
+              onBackClick={() => setShowQuizModal(false)}
+            />
+          )}
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 
