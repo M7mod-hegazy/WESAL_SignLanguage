@@ -7,7 +7,8 @@ import theme from '../theme/designSystem';
 
 const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 30, onBackClick, onUseHint, teamMode = false, players = [], isSequential = false }) => {
   const navigate = useNavigate();
-  console.log('🎯 [QuizInterface] Props received:', { isSequential, teamMode });
+  console.log('🎯 [QuizInterface] Props received:', { isSequential, teamMode, quizData: quizData ? 'exists' : 'UNDEFINED' });
+  
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -18,20 +19,17 @@ const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 
   const [isPaused, setIsPaused] = useState(false);
   const [hintUsed, setHintUsed] = useState(false);
 
-  // Convert to Arabic-Indic numerals
-  const toArabicNumerals = (num) => {
-    const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return num.toString().split('').map(digit => arabicNumerals[parseInt(digit)] || digit).join('');
-  };
-
+  // All hooks MUST be called before any conditional returns
   useEffect(() => {
     // Reset state when new question loads
-    setSelectedAnswer(null);
-    setShowFeedback(false);
-    setIsCorrect(false);
-    setTimerReset(prev => prev + 1);
-    setIsPaused(false);
-    setHintUsed(false); // Reset hint for new question
+    if (quizData) {
+      setSelectedAnswer(null);
+      setShowFeedback(false);
+      setIsCorrect(false);
+      setTimerReset(prev => prev + 1);
+      setIsPaused(false);
+      setHintUsed(false); // Reset hint for new question
+    }
   }, [quizData]);
 
   // Pause video and timer when any modal is open
@@ -42,6 +40,42 @@ const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 
       setIsPaused(false);
     }
   }, [showModal, showQuitModal]);
+
+  // Expose handleBackClick to parent via onBackClick prop
+  useEffect(() => {
+    if (onBackClick) {
+      const handleBackClick = () => {
+        setShowQuitModal(true);
+        setIsPaused(true);
+      };
+      onBackClick(handleBackClick);
+    }
+  }, [onBackClick]);
+
+  // Early return if no quiz data (AFTER all hooks)
+  if (!quizData) {
+    console.error('❌ [QuizInterface] quizData is undefined!');
+    return (
+      <div style={{
+        padding: '20px',
+        textAlign: 'center',
+        color: '#F18A21',
+        fontSize: '16px'
+      }}>
+        ⏳ جاري تحميل السؤال...
+      </div>
+    );
+  }
+
+  // Convert to Arabic-Indic numerals
+  const toArabicNumerals = (num) => {
+    if (!num && num !== 0) {
+      console.warn('⚠️ [toArabicNumerals] num is undefined or null:', num);
+      return '';
+    }
+    const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return num.toString().split('').map(digit => arabicNumerals[parseInt(digit)] || digit).join('');
+  };
 
   const handleHintClick = async () => {
     // Check if user has enough coins FIRST
@@ -127,18 +161,6 @@ const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 
     navigate(-1); // Go back to previous page
   };
 
-  const handleBackClick = () => {
-    setShowQuitModal(true);
-    setIsPaused(true);
-  };
-
-  // Expose handleBackClick to parent via onBackClick prop
-  useEffect(() => {
-    if (onBackClick) {
-      onBackClick(() => handleBackClick);
-    }
-  }, []);
-
   const handleConfirmQuit = () => {
     navigate(-1);
   };
@@ -148,21 +170,12 @@ const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 
     setIsPaused(false);
   };
 
-  if (!quizData) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        fontSize: '24px',
-        color: '#FF9933'
-      }}>
-        Loading...
-      </div>
-    );
-  }
+  const handleBackClick = () => {
+    setShowQuitModal(true);
+    setIsPaused(true);
+  };
 
+  // Render quiz content (quizData is guaranteed to exist here)
   return (
     <div style={{
       minHeight: '100vh',
