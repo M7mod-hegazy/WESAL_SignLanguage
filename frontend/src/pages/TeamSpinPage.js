@@ -97,7 +97,7 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
   const segmentAngle = 360 / players.length;
 
   return (
-    <>
+    <div>
     <div style={{
       minHeight: '100vh',
       background: '#F5F5F0',
@@ -533,7 +533,7 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'rgba(0, 0, 0, 0.3)',
+        background: 'rgba(0, 0, 0, 0.5)',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
@@ -584,7 +584,7 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
           </button>
 
           {/* Quiz Interface */}
-          {allQuestions.length > 0 && currentQuestionIndex < allQuestions.length && (
+          {allQuestions.length > 0 && currentQuestionIndex < allQuestions.length ? (
             <QuizInterface
               quizData={allQuestions[currentQuestionIndex]}
               onAnswer={() => {
@@ -606,6 +606,10 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
               players={players}
               onBackClick={() => setShowQuizModal(false)}
             />
+          ) : (
+            <div style={{ color: '#F18A21', textAlign: 'center', padding: '20px' }}>
+              ⏳ جاري تحميل...
+            </div>
           )}
         </div>
       </div>
