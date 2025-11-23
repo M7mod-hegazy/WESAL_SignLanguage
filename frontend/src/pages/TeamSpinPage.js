@@ -24,7 +24,7 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
 
   // Load quiz questions when modal opens
   useEffect(() => {
-    console.log('🎯 [TeamSpinPage] showQuizModal changed:', showQuizModal);
+    console.log('🎯 [TeamSpinPage] showQuizModal changed:', showQuizModal, 'allQuestions.length:', allQuestions.length);
     if (showQuizModal && allQuestions.length === 0) {
       console.log('📚 [TeamSpinPage] Loading questions...');
       const questions = getAllQuestionsRandomized();
@@ -32,7 +32,7 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
       setAllQuestions(questions);
       setCurrentQuestionIndex(0);
     }
-  }, [showQuizModal, allQuestions.length]);
+  }, [showQuizModal]);
 
   const handleSpin = () => {
     if (isSpinning) return;
