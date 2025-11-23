@@ -509,6 +509,7 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
       )}
 
       {/* Quiz Modal - Overlay with spin page behind */}
+      {console.log('🎬 [TeamSpinPage] Modal render check - showQuizModal:', showQuizModal, 'allQuestions.length:', allQuestions.length)}
       {showQuizModal && allQuestions.length > 0 && (
         <div style={{
           position: 'fixed',
