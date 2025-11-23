@@ -30,6 +30,9 @@ const QuizPage = () => {
   
   const [quizBackHandler] = useState(null);
 
+  // Debug: Log isSequential state
+  console.log('🎯 [QuizPage] Current state - isSequential:', isSequential, 'type:', type);
+
   const handleBack = () => {
     if (quizBackHandler) {
       quizBackHandler(); // Call QuizInterface's back handler (shows quit modal)
@@ -203,6 +206,7 @@ const QuizPage = () => {
           currentPlayer={firstPlayer}
           players={players}
           onBackClick={null}
+          isSequential={isSequential}
         />
       </div>
     </div>

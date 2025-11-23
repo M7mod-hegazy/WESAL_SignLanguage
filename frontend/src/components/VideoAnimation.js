@@ -11,7 +11,8 @@ const VideoAnimation = ({
   isPlaying = true,
   loop = true,
   className = '',
-  style = {}
+  style = {},
+  isSimulation = false  // Special styling for simulation quiz
 }) => {
   const videoRef = useRef(null);
   const [videoError, setVideoError] = useState(false);
@@ -22,7 +23,7 @@ const VideoAnimation = ({
   const videoPath = isFullPath ? videoSrc : (videoSrc ? `${videoSrc}_alpha.webm` : null);
   
   // Debug logging
-  console.log('🎬 VideoAnimation props:', { videoSrc, isFullPath, videoPath, isPlaying });
+  console.log('🎬 VideoAnimation props:', { videoSrc, isFullPath, videoPath, isPlaying, isSimulation });
 
   useEffect(() => {
     const video = videoRef.current;
@@ -137,7 +138,7 @@ const VideoAnimation = ({
       className={className}
       style={{
         width: '170%',
-        height: '100%',
+        height: isSimulation ? '150%' : '100%',
         objectFit: 'contain',
         background: 'transparent',
         display: 'block',

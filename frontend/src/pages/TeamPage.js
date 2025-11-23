@@ -132,7 +132,7 @@ const TeamPage = ({ onBack, onHome, onNotifications }) => {
 
           {/* Back Button Overlay - Right Side */}
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/home')}
             style={{
               position: 'absolute',
               top: '15px',

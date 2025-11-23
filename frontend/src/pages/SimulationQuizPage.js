@@ -187,6 +187,7 @@ const SimulationQuizPage = () => {
           onUseHint={handleUseHint}
           timeLimit={30}
           onBackClick={null}
+          isSequential={true}
         />
       </div>
     </div>

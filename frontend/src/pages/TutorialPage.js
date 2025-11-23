@@ -120,13 +120,7 @@ const TutorialPage = () => {
             justifyContent: 'center',
             gap: '10px'
           }}>
-               <div style={{
-              width: '80px',
-              height: '4px',
-              background: theme.colors.primary.blue,
-              borderRadius: '2px'
-            }}></div>
-            <span style={{ fontSize: '28px' }}>⭐</span>
+            <img src="/new_star.png" alt="Star" style={{ width: '28px', height: '28px' }} />
          
             <p style={{
               fontSize: '20px',

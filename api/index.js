@@ -564,6 +564,52 @@ async function handleUpdateCoins(req, res) {
   }
 }
 
+// PUT /api/auth/update-gender - Update user's gender
+async function handleUpdateGender(req, res) {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    let decodedToken;
+    try {
+      decodedToken = await admin.auth().verifyIdToken(token);
+    } catch (error) {
+      return res.status(401).json({ success: false, error: 'Invalid token' });
+    }
+
+    const { gender } = req.body;
+    if (!gender || !['male', 'female'].includes(gender)) {
+      return res.status(400).json({ success: false, error: 'Invalid gender value. Must be "male" or "female"' });
+    }
+
+    const dbConnection = await connectToDatabase();
+    if (!dbConnection) {
+      return res.status(500).json({ success: false, error: 'Database connection failed' });
+    }
+
+    const user = await User.findOne({ firebaseUid: decodedToken.uid });
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    console.log('🔄 [Gender Update] Updating user gender from', user.gender, 'to', gender);
+    user.gender = gender;
+    await user.save();
+    console.log('✅ [Gender Update] User gender updated successfully');
+
+    return res.status(200).json({
+      success: true,
+      gender: user.gender,
+      message: `Gender updated to ${gender}`
+    });
+  } catch (error) {
+    console.error('❌ [Gender Update] Error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
 // Helper function to format post response
 // REMOVED: Duplicate formatPost function - using the complete one above (line 215)
 
@@ -1221,6 +1267,9 @@ module.exports = async (req, res) => {
     }
     if (path === '/api/auth/update-coins' && req.method === 'POST') {
       return await handleUpdateCoins(req, res);
+    }
+    if (path === '/api/auth/update-gender' && req.method === 'PUT') {
+      return await handleUpdateGender(req, res);
     }
 
     // Posts routes

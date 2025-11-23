@@ -5,8 +5,9 @@ import Timer from './Timer';
 import AnswerButton from './AnswerButton';
 import theme from '../theme/designSystem';
 
-const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 30, onBackClick, onUseHint, teamMode = false, players = [] }) => {
+const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 30, onBackClick, onUseHint, teamMode = false, players = [], isSequential = false }) => {
   const navigate = useNavigate();
+  console.log('🎯 [QuizInterface] Props received:', { isSequential, teamMode });
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -264,7 +265,7 @@ const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 
       }}>
         {/* Character Card with Animation */}
         <div style={{
-          background: '#FFFFFF',
+          background: isSequential ? '#efd1a7' : '#FFFFFF',
           borderRadius: '20px',
           padding: '20px',
           marginBottom: '20px',
@@ -274,13 +275,11 @@ const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 
           {/* Video Animation */}
           <div style={{
             width: '100%',
-            aspectRatio: '1',
-            position: 'relative',
-            marginBottom: '15px',
+            height: '300px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: '#FFFFFF',
+            background: isSequential ? '#EDD0A5' : '#FFFFFF',
             overflow: 'hidden',
             borderRadius: '15px'
           }}>
@@ -288,6 +287,7 @@ const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 
               videoSrc={quizData?.videoPath}
               isPlaying={!showFeedback && !isPaused}
               loop={true}
+              isSimulation={isSequential}
               style={{
                 background: 'transparent'
               }}

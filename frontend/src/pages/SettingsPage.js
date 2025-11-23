@@ -7,6 +7,8 @@ import axios from 'axios';
 import theme from '../theme/designSystem';
 import BottomNav from '../components/BottomNav';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '/api';
+
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -49,15 +51,20 @@ const SettingsPage = () => {
     // Save to MongoDB
     try {
       const token = await user.getIdToken();
-      await axios.put('http://localhost:8000/api/auth/update-gender', 
+      console.log('🔄 [Gender] Updating gender to:', selectedGender);
+      console.log('🔄 [Gender] API URL:', `${API_BASE_URL}/auth/update-gender`);
+      
+      const response = await axios.put(`${API_BASE_URL}/auth/update-gender`, 
         { gender: selectedGender },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
       );
+      
+      console.log('✅ [Gender] Gender updated successfully:', response.data);
       alert(`✅ تم تغيير الأيقونة إلى ${selectedGender === 'male' ? 'ذكر' : 'أنثى'}`);
       // Trigger page refresh to update all icons
       window.location.reload();
     } catch (error) {
-      console.error('Error updating gender:', error);
+      console.error('❌ [Gender] Error updating gender:', error);
       alert('❌ فشل تحديث الأيقونة');
     }
   };
