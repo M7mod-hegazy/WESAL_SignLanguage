@@ -10,7 +10,9 @@ import CreatePostModal from './CreatePostModal';
 import CreateStoryModal from './CreateStoryModal';
 import StoryViewer from './StoryViewer';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? '/api' 
+  : (process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api');
 
 const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreateStory }) => {
   const navigate = useNavigate();
