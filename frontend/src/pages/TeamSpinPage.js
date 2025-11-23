@@ -97,7 +97,7 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
   const segmentAngle = 360 / players.length;
 
   return (
-    <div>
+    <>
     <div style={{
       minHeight: '100vh',
       background: '#F5F5F0',
