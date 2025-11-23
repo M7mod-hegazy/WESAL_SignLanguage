@@ -4,11 +4,13 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import theme from '../theme/designSystem';
 import BottomNav from '../components/BottomNav';
-import { getProfileIcon } from '../utils/profileIconUtils';
+import { getProfileIcon, getDefaultProfileIcon } from '../utils/getProfileIcon';
 import { incrementChallengesCount } from '../utils/challengeCounter';
 import CreatePostModal from './CreatePostModal';
 import CreateStoryModal from './CreateStoryModal';
 import StoryViewer from './StoryViewer';
+
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
 const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreateStory }) => {
   const navigate = useNavigate();
