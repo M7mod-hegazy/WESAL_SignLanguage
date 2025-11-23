@@ -24,8 +24,11 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
 
   // Load quiz questions when modal opens
   useEffect(() => {
+    console.log('🎯 [TeamSpinPage] showQuizModal changed:', showQuizModal);
     if (showQuizModal && allQuestions.length === 0) {
+      console.log('📚 [TeamSpinPage] Loading questions...');
       const questions = getAllQuestionsRandomized();
+      console.log('✅ [TeamSpinPage] Questions loaded:', questions.length);
       setAllQuestions(questions);
       setCurrentQuestionIndex(0);
     }
@@ -357,8 +360,13 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
             {/* Start Challenge Button */}
             <button
               onClick={() => {
+                console.log('🔘 [TeamSpinPage] Challenge button clicked');
+                console.log('📍 selectedPlayer:', selectedPlayer);
                 if (selectedPlayer) {
+                  console.log('✅ [TeamSpinPage] Setting showQuizModal to true');
                   setShowQuizModal(true);
+                } else {
+                  console.log('❌ [TeamSpinPage] No player selected');
                 }
               }}
               disabled={!selectedPlayer || isSpinning}
