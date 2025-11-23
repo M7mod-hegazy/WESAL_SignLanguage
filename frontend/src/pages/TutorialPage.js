@@ -107,11 +107,13 @@ const TutorialPage = () => {
       }}>
         {/* Description Text */}
         <div style={{
-          textAlign: 'center',
+          textAlign: 'left',
           display: 'flex',
           flexDirection: 'column',
-          gap: '12px',
-          maxWidth: '400px'
+          alignItems: 'flex-start',
+          gap: '4px',
+          maxWidth: '400px',
+          width: '100%'
         }}>
           {/* First Line with Star and Blue Line */}
           <div style={{
@@ -123,8 +125,8 @@ const TutorialPage = () => {
             <img src="/new_star.png" alt="Star" style={{ width: '28px', height: '28px' }} />
          
             <p style={{
-              fontSize: '20px',
-              fontWeight: theme.typography.weights.bold,
+              fontSize: '28px',
+              fontWeight: 'bold',
               color: theme.colors.primary.blue,
               margin: 0,
               lineHeight: 1.6
@@ -135,22 +137,22 @@ const TutorialPage = () => {
 
           {/* Second Line - Orange */}
           <p style={{
-            fontSize: '18px',
+            fontSize: '22px',
             color: theme.colors.primary.orange,
             margin: 0,
             lineHeight: 1.8,
-            fontWeight: theme.typography.weights.medium
+            fontWeight: 'bold'
           }}>
             نمط جماعي وتفاعلي لتعليم لغة
           </p>
 
           {/* Third Line - Orange */}
           <p style={{
-            fontSize: '18px',
+            fontSize: '22px',
             color: theme.colors.primary.orange,
             margin: 0,
             lineHeight: 1.8,
-            fontWeight: theme.typography.weights.medium
+            fontWeight: 'bold'
           }}>
             الإشارة يجمع بين المتعة والتحدي.
           </p>

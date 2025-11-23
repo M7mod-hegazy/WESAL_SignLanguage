@@ -69,8 +69,7 @@ const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 
 
   // Convert to Arabic-Indic numerals
   const toArabicNumerals = (num) => {
-    if (!num && num !== 0) {
-      console.warn('⚠️ [toArabicNumerals] num is undefined or null:', num);
+    if (num === null || num === undefined) {
       return '';
     }
     const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];

@@ -107,11 +107,13 @@ const TutorialPage2 = () => {
       }}>
         {/* Description Text */}
         <div style={{
-          textAlign: 'center',
+          textAlign: 'left',
           display: 'flex',
           flexDirection: 'column',
-          gap: '12px',
-          maxWidth: '400px'
+          alignItems: 'flex-start',
+          gap: '4px',
+          maxWidth: '400px',
+          width: '100%'
         }}>
           {/* First Line with Star */}
           <div style={{
@@ -130,8 +132,8 @@ const TutorialPage2 = () => {
               }}
             />
             <p style={{
-              fontSize: '20px',
-              fontWeight: theme.typography.weights.bold,
+              fontSize: '28px',
+              fontWeight: 'bold',
               color: theme.colors.primary.blue,
               margin: 0,
               lineHeight: 1.6
@@ -142,22 +144,22 @@ const TutorialPage2 = () => {
 
           {/* Second Line - Orange */}
           <p style={{
-            fontSize: '18px',
+            fontSize: '22px',
             color: theme.colors.primary.orange,
             margin: 0,
             lineHeight: 1.8,
-            fontWeight: theme.typography.weights.medium
+            fontWeight: 'bold'
           }}>
             خلك داخل القصة وتعلم كيف تتواصل
           </p>
 
           {/* Third Line - Orange */}
           <p style={{
-            fontSize: '18px',
+            fontSize: '22px',
             color: theme.colors.primary.orange,
             margin: 0,
             lineHeight: 1.8,
-            fontWeight: theme.typography.weights.medium
+            fontWeight: 'bold'
           }}>
             بالإشارة في مشاهد من حياتك اليومية.
           </p>
