@@ -24,11 +24,8 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
 
   // Load quiz questions when modal opens
   useEffect(() => {
-    console.log('🎯 [TeamSpinPage] showQuizModal changed:', showQuizModal, 'allQuestions.length:', allQuestions.length);
     if (showQuizModal && allQuestions.length === 0) {
-      console.log('📚 [TeamSpinPage] Loading questions...');
       const questions = getAllQuestionsRandomized();
-      console.log('✅ [TeamSpinPage] Questions loaded:', questions.length);
       setAllQuestions(questions);
       setCurrentQuestionIndex(0);
     }
@@ -361,13 +358,8 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
             {/* Start Challenge Button */}
             <button
               onClick={() => {
-                console.log('🔘 [TeamSpinPage] Challenge button clicked');
-                console.log('📍 selectedPlayer:', selectedPlayer);
                 if (selectedPlayer) {
-                  console.log('✅ [TeamSpinPage] Setting showQuizModal to true');
                   setShowQuizModal(true);
-                } else {
-                  console.log('❌ [TeamSpinPage] No player selected');
                 }
               }}
               disabled={!selectedPlayer || isSpinning}
@@ -535,10 +527,8 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
     </div>
 
     {/* Quiz Modal - OUTSIDE relative container */}
-    {console.log('🔍 MODAL CHECK:', { showQuizModal, questionsLength: allQuestions.length, shouldRender: showQuizModal && allQuestions.length > 0 })}
     {showQuizModal && allQuestions.length > 0 && (
       <>
-      {console.log('✅ MODAL IS RENDERING NOW!')}
       <div style={{
         position: 'fixed',
         top: 0,
@@ -654,7 +644,6 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
                   }
                 }}
                 onTimeUp={() => {
-                  console.log('⏱️ [TeamSpinPage Modal] Timer ended - closing modal');
                   setShowQuizModal(false);
                 }}
                 timeLimit={timeLimit}

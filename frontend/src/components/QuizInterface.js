@@ -7,7 +7,6 @@ import theme from '../theme/designSystem';
 
 const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 30, onBackClick, onUseHint, teamMode = false, players = [], isSequential = false, onTimeUp }) => {
   const navigate = useNavigate();
-  console.log('🎯 [QuizInterface] Props received:', { isSequential, teamMode, quizData: quizData ? 'exists' : 'UNDEFINED' });
   
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -54,7 +53,6 @@ const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 
 
   // Early return if no quiz data (AFTER all hooks)
   if (!quizData) {
-    console.error('❌ [QuizInterface] quizData is undefined!');
     return (
       <div style={{
         padding: '20px',
@@ -132,7 +130,6 @@ const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 
       
       // Team mode with onTimeUp callback (modal mode): Call the callback to close modal
       if (teamMode && onTimeUp) {
-        console.log('⏱️ [QuizInterface] Timer ended in modal mode - calling onTimeUp');
         onTimeUp();
         return;
       }

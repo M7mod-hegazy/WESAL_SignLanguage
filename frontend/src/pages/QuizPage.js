@@ -17,21 +17,7 @@ const QuizPage = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isSequential, setIsSequential] = useState(false);
   
-  // Log team mode data
-  useEffect(() => {
-    if (mode === 'team') {
-      console.log('Team Mode Active');
-      console.log('Time Limit per question:', timeLimit, 'seconds');
-      console.log('First Player:', firstPlayer);
-      console.log('All Players:', players);
-      console.log('Category:', category);
-    }
-  }, [mode, timeLimit, firstPlayer, players, category]);
-  
   const [quizBackHandler] = useState(null);
-
-  // Debug: Log isSequential state
-  console.log('🎯 [QuizPage] Current state - isSequential:', isSequential, 'type:', type);
 
   const handleBack = () => {
     if (quizBackHandler) {
@@ -45,36 +31,25 @@ const QuizPage = () => {
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
-        console.log('🎯 QuizPage: Fetching quiz...');
-        console.log('🎯 type:', type, 'category:', category);
-        
         // Check if this is a simulation (sequential) quiz
         if (type === 'simulation' && category) {
-          console.log('🎯 Loading simulation quiz...');
           setIsSequential(true);
           const response = await fetch(`http://localhost:8000/api/signs/sequential_quiz/${encodeURIComponent(category)}`);
           const data = await response.json();
           
           if (data.success && data.questions) {
-            console.log('🎯 Simulation quiz loaded:', data.questions.length, 'questions');
             setAllQuestions(data.questions);
             setCurrentQuiz(data.questions[0]);
           }
         } else {
           // Random quiz (existing behavior)
-          console.log('🎯 Loading random quiz...');
           const questions = getAllQuestionsRandomized();
-          console.log('🎯 Random quiz loaded:', questions.length, 'questions');
-          console.log('🎯 First question:', questions[0]);
           setAllQuestions(questions);
           setCurrentQuiz(questions[0]);
         }
       } catch (error) {
-        console.error('❌ Error fetching quiz:', error);
         // Fallback to local data
-        console.log('🎯 Falling back to local data...');
         const questions = getAllQuestionsRandomized();
-        console.log('🎯 Fallback quiz loaded:', questions.length, 'questions');
         setAllQuestions(questions);
         setCurrentQuiz(questions[0]);
       } finally {
@@ -89,19 +64,15 @@ const QuizPage = () => {
     if (isCorrect && currentQuiz) {
       // Only add coins if hint was NOT used
       if (!hintWasUsed) {
-        console.log('✅ Correct answer without hint! Adding 50 coins');
         addCoins(50);
-      } else {
-        console.log('⚠️ Hint was used, no coins awarded');
       }
       
       // Increment challenges counter ONLY in solo mode (not team mode)
       if (mode === 'solo' && user?.uid) {
         try {
           await incrementChallengesCount(user.uid);
-          console.log('✅ Challenge incremented successfully');
         } catch (error) {
-          console.error('Failed to increment challenge:', error);
+          // Silent fail
         }
       }
     }

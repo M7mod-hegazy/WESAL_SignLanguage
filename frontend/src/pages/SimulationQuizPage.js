@@ -19,30 +19,17 @@ const SimulationQuizPage = () => {
   // Load quiz data from local file (no API call needed)
   useEffect(() => {
     try {
-      console.log('🎯 SimulationQuizPage: Loading quiz...');
-      console.log('🎯 category:', category);
-      console.log('🎯 quizDataModule:', quizDataModule);
-      
       // Get simulation questions in order (not randomized)
       const allQuestions = quizDataModule.getSimulationQuestions();
-      
-      console.log('🎯 allQuestions returned:', allQuestions);
-      console.log('🎯 allQuestions length:', allQuestions?.length);
       
       if (allQuestions && allQuestions.length > 0) {
         setAllQuestions(allQuestions);
         setCurrentQuiz(allQuestions[0]);
-        console.log('✅ Loaded', allQuestions.length, 'simulation quiz questions');
-        console.log('✅ First question:', allQuestions[0]);
       } else {
-        console.error('❌ No questions found in quiz data');
-        console.error('❌ allQuestions:', allQuestions);
         alert('لا توجد أسئلة متاحة');
         navigate(-1);
       }
     } catch (error) {
-      console.error('❌ Error loading simulation quiz:', error);
-      console.error('❌ Error stack:', error.stack);
       alert('فشل تحميل التحدي، حاول مرة أخرى');
       navigate(-1);
     } finally {
@@ -51,23 +38,18 @@ const SimulationQuizPage = () => {
   }, [category, navigate]);
 
   const handleAnswer = useCallback(async (isCorrect, answer, hintWasUsed) => {
-    console.log('🎯 handleAnswer called:', { isCorrect, currentQuiz: !!currentQuiz, hintWasUsed });
     if (isCorrect && currentQuiz) {
       // Only add coins if hint was NOT used
       if (!hintWasUsed) {
-        console.log('✅ Correct answer without hint! Adding 50 coins');
         addCoins(50);
-      } else {
-        console.log('⚠️ Hint was used, no coins awarded');
       }
       
       // Increment challenges counter (simulation is always solo mode)
       if (user?.uid) {
         try {
           await incrementChallengesCount(user.uid);
-          console.log('✅ Challenge incremented successfully');
         } catch (error) {
-          console.error('Failed to increment challenge:', error);
+          // Silent fail
         }
       }
     }
