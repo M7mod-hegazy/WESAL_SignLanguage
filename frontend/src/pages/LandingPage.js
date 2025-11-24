@@ -94,7 +94,7 @@ const LandingPage = () => {
             e.target.style.boxShadow = theme.shadows.lg;
           }}
         >
-          العب!
+          إلعب!
         </button>
       </div>
 
