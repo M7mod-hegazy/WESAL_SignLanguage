@@ -69,26 +69,34 @@ const teamQuizQuestions = [
 // Keep regularQuizQuestions for backward compatibility (defaults to solo)
 const regularQuizQuestions = soloQuizQuestions;
 
-// Pool of wrong answers to randomly select from
+// Pool of wrong answers - semantically similar to correct answers to make quiz harder
 const wrongAnswersPool = [
-  "مرحباً، كيف يمكنني مساعدتك؟",
-  "أتمنى لك يوماً سعيداً",
-  "شكراً لك على وقتك",
-  "هل تحتاج إلى مساعدة إضافية؟",
-  "نحن سعداء بخدمتك",
-  "أهلاً وسهلاً بك",
-  "نتمنى لك تجربة ممتعة",
-  "شكراً على تفهمك",
-  "نقدر ثقتك بنا",
-  "مساء الخير والسرور",
-  "أريد كأساً من الماء",
-  "أعتذر لارتباطي بعمل",
-  "السلام عليكم",
-  "صباح الخير",
-  "كل عام وانت بخير",
-  "مبروك المولود",
-  "نجاح مبارك",
-  "هل أنت بخير؟"
+  // Clothing/Accessories (similar to سجادة, طاولة, عقال)
+  "غترة",
+  "شماغ",
+  "ثوب",
+  "جلباب",
+  "عباءة",
+  "كرسي",
+  "سرير",
+  "دولاب",
+  "رف",
+  "خزانة",
+  
+  // Emotions (similar to متضايق, سعيد, إلهام, اطمئنان, بخيل)
+  "مكتئب",
+  "حزين",
+  "مسرور",
+  "فرحان",
+  "قلق",
+  "مرتاح",
+  "هادئ",
+  "متوتر",
+  "مطمئن",
+  "جشع",
+  "بخل",
+  "كرم",
+  "سخاء"
 ];
 
 // Function to generate 3 random wrong answers (different from correct answer)
