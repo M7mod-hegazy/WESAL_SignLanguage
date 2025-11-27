@@ -1,65 +1,73 @@
-// Quiz data for REGULAR QUIZ
+// Quiz data for SOLO MODE
 // Videos: /videos/new/webm/ (Arabic-named WebM files)
-// Each video filename is the correct answer
-
-const regularQuizQuestions = [
+// Solo videos: سجادة, طاولة, عقال
+const soloQuizQuestions = [
   {
     "id": 1,
-    "videoPath": "/videos/new/webm/أريد كأساً من ا.webm",
-    "correctAnswer": "أريد كأساً من الماء",
+    "videoPath": "/videos/new/webm/سجادة_alpha.webm",
+    "correctAnswer": "سجادة",
     "difficulty": "easy",
     "coins_reward": 10
   },
   {
     "id": 2,
-    "videoPath": "/videos/new/webm/أعتذر لارتباطي .webm",
-    "correctAnswer": "أعتذر لارتباطي بعمل",
-    "difficulty": "medium",
-    "coins_reward": 15
+    "videoPath": "/videos/new/webm/طاولة_alpha.webm",
+    "correctAnswer": "طاولة",
+    "difficulty": "easy",
+    "coins_reward": 10
   },
   {
     "id": 3,
-    "videoPath": "/videos/new/webm/السلام ع.webm",
-    "correctAnswer": "السلام عليكم",
+    "videoPath": "/videos/new/webm/عقال_alpha.webm",
+    "correctAnswer": "عقال",
+    "difficulty": "easy",
+    "coins_reward": 10
+  }
+];
+
+// Quiz data for TEAM MODE
+// Videos: /videos/final2/webm_alpha/ (Team videos)
+// Team videos: All except سجادة, طاولة, عقال
+const teamQuizQuestions = [
+  {
+    "id": 1,
+    "videoPath": "/videos/final2/webm_alpha/متضايق_alpha.webm",
+    "correctAnswer": "متضايق",
+    "difficulty": "easy",
+    "coins_reward": 10
+  },
+  {
+    "id": 2,
+    "videoPath": "/videos/final2/webm_alpha/حزين_alpha.webm",
+    "correctAnswer": "حزين",
+    "difficulty": "easy",
+    "coins_reward": 10
+  },
+  {
+    "id": 3,
+    "videoPath": "/videos/final2/webm_alpha/سعيد_alpha.webm",
+    "correctAnswer": "سعيد",
     "difficulty": "easy",
     "coins_reward": 10
   },
   {
     "id": 4,
-    "videoPath": "/videos/new/webm/صباح ا.webm",
-    "correctAnswer": "صباح الخير",
+    "videoPath": "/videos/final2/webm_alpha/غاضب_alpha.webm",
+    "correctAnswer": "غاضب",
     "difficulty": "easy",
     "coins_reward": 10
   },
   {
     "id": 5,
-    "videoPath": "/videos/new/webm/كل عام و انت .webm",
-    "correctAnswer": "كل عام وانت بخير",
-    "difficulty": "medium",
-    "coins_reward": 15
-  },
-  {
-    "id": 6,
-    "videoPath": "/videos/new/webm/مبروك الم.webm",
-    "correctAnswer": "مبروك المولود",
-    "difficulty": "medium",
-    "coins_reward": 15
-  },
-  {
-    "id": 7,
-    "videoPath": "/videos/new/webm/نجاح م.webm",
-    "correctAnswer": "نجاح مبارك",
-    "difficulty": "medium",
-    "coins_reward": 15
-  },
-  {
-    "id": 8,
-    "videoPath": "/videos/new/webm/هل أنت بخ.webm",
-    "correctAnswer": "هل أنت بخير؟",
+    "videoPath": "/videos/final2/webm_alpha/خائف_alpha.webm",
+    "correctAnswer": "خائف",
     "difficulty": "easy",
     "coins_reward": 10
   }
 ];
+
+// Keep regularQuizQuestions for backward compatibility (defaults to solo)
+const regularQuizQuestions = soloQuizQuestions;
 
 // Pool of wrong answers to randomly select from
 const wrongAnswersPool = [
@@ -134,8 +142,17 @@ const simulationQuizQuestions = [
 ];
 
 // Function to get a quiz question with shuffled answers
-export const getQuizQuestion = (questionId, isSimulation = false) => {
-  const questionsArray = isSimulation ? simulationQuizQuestions : regularQuizQuestions;
+export const getQuizQuestion = (questionId, isSimulation = false, mode = 'solo') => {
+  let questionsArray;
+  
+  if (isSimulation) {
+    questionsArray = simulationQuizQuestions;
+  } else if (mode === 'team') {
+    questionsArray = teamQuizQuestions;
+  } else {
+    questionsArray = soloQuizQuestions;
+  }
+  
   const question = questionsArray.find(q => q.id === questionId);
   if (!question) return null;
 
@@ -161,24 +178,16 @@ export const getQuizQuestion = (questionId, isSimulation = false) => {
   };
 };
 
-// Function to get all questions in random order (REGULAR QUIZ)
-export const getAllQuestionsRandomized = () => {
-  console.log('📊 getAllQuestionsRandomized called');
-  console.log('📊 regularQuizQuestions count:', regularQuizQuestions.length);
-  console.log('📊 regularQuizQuestions:', regularQuizQuestions);
+// Function to get all questions in random order (SOLO or TEAM QUIZ)
+export const getAllQuestionsRandomized = (mode = 'solo') => {
+  const questionsArray = mode === 'team' ? teamQuizQuestions : soloQuizQuestions;
   
-  const shuffledQuestions = shuffleArray(regularQuizQuestions);
-  console.log('📊 shuffledQuestions:', shuffledQuestions);
+  const shuffledQuestions = shuffleArray(questionsArray);
   
   const mappedQuestions = shuffledQuestions.map(q => {
-    console.log('📊 Mapping question:', q.id, q.correctAnswer);
-    const mapped = getQuizQuestion(q.id, false);
-    console.log('📊 Mapped result:', mapped);
+    const mapped = getQuizQuestion(q.id, false, mode);
     return mapped;
   });
-  
-  console.log('📊 Final mappedQuestions count:', mappedQuestions.length);
-  console.log('📊 Final mappedQuestions:', mappedQuestions);
   
   return mappedQuestions;
 };

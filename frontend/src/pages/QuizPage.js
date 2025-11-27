@@ -42,8 +42,8 @@ const QuizPage = () => {
             setCurrentQuiz(data.questions[0]);
           }
         } else {
-          // Random quiz (existing behavior)
-          const questions = getAllQuestionsRandomized();
+          // Random quiz (solo mode)
+          const questions = getAllQuestionsRandomized('solo');
           setAllQuestions(questions);
           setCurrentQuiz(questions[0]);
         }
