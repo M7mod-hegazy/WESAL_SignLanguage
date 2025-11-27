@@ -140,7 +140,7 @@ const VideoAnimation = ({
         width: '170%',
         height: isSimulation ? '150%' : '100%',
         objectFit: 'contain',
-        background: isSimulation ? 'transparent':'#F6B03F',
+        background: isSimulation ? 'transparent' : '#F6B03F',
         display: 'block',
         ...style
       }}

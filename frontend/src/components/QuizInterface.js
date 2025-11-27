@@ -297,7 +297,7 @@ const QuizInterface = ({ quizData, onAnswer, onNextQuestion, coins, timeLimit = 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: isSequential ? '#EDD0A5' : '#FFFFFF',
+            background: isSequential ? '#EDD0A5' : '#F6B03F',
             overflow: 'hidden',
             borderRadius: '15px'
           }}>
