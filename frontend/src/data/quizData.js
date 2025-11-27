@@ -1,24 +1,24 @@
 // Quiz data for SOLO MODE
-// Videos: /videos/new/webm/ (Arabic-named WebM files)
+// Videos: /videos/final2/webm_alpha/ (Solo videos)
 // Solo videos: سجادة, طاولة, عقال
 const soloQuizQuestions = [
   {
     "id": 1,
-    "videoPath": "/videos/new/webm/سجادة_alpha.webm",
+    "videoPath": "/videos/final2/webm_alpha/سجادة",
     "correctAnswer": "سجادة",
     "difficulty": "easy",
     "coins_reward": 10
   },
   {
     "id": 2,
-    "videoPath": "/videos/new/webm/طاولة_alpha.webm",
+    "videoPath": "/videos/final2/webm_alpha/طاولة",
     "correctAnswer": "طاولة",
     "difficulty": "easy",
     "coins_reward": 10
   },
   {
     "id": 3,
-    "videoPath": "/videos/new/webm/عقال_alpha.webm",
+    "videoPath": "/videos/final2/webm_alpha/عقال",
     "correctAnswer": "عقال",
     "difficulty": "easy",
     "coins_reward": 10
@@ -27,40 +27,40 @@ const soloQuizQuestions = [
 
 // Quiz data for TEAM MODE
 // Videos: /videos/final2/webm_alpha/ (Team videos)
-// Team videos: All except سجادة, طاولة, عقال
+// Team videos: متضايق, سعيد, إلهام, اطمئنان, بخيل
 const teamQuizQuestions = [
   {
     "id": 1,
-    "videoPath": "/videos/final2/webm_alpha/متضايق_alpha.webm",
+    "videoPath": "/videos/final2/webm_alpha/متضايق",
     "correctAnswer": "متضايق",
     "difficulty": "easy",
     "coins_reward": 10
   },
   {
     "id": 2,
-    "videoPath": "/videos/final2/webm_alpha/حزين_alpha.webm",
-    "correctAnswer": "حزين",
-    "difficulty": "easy",
-    "coins_reward": 10
-  },
-  {
-    "id": 3,
-    "videoPath": "/videos/final2/webm_alpha/سعيد_alpha.webm",
+    "videoPath": "/videos/final2/webm_alpha/سعيد",
     "correctAnswer": "سعيد",
     "difficulty": "easy",
     "coins_reward": 10
   },
   {
+    "id": 3,
+    "videoPath": "/videos/final2/webm_alpha/إلهام",
+    "correctAnswer": "إلهام",
+    "difficulty": "easy",
+    "coins_reward": 10
+  },
+  {
     "id": 4,
-    "videoPath": "/videos/final2/webm_alpha/غاضب_alpha.webm",
-    "correctAnswer": "غاضب",
+    "videoPath": "/videos/final2/webm_alpha/اطمئنان",
+    "correctAnswer": "اطمئنان",
     "difficulty": "easy",
     "coins_reward": 10
   },
   {
     "id": 5,
-    "videoPath": "/videos/final2/webm_alpha/خائف_alpha.webm",
-    "correctAnswer": "خائف",
+    "videoPath": "/videos/final2/webm_alpha/بخيل",
+    "correctAnswer": "بخيل",
     "difficulty": "easy",
     "coins_reward": 10
   }
