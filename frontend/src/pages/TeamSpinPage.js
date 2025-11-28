@@ -534,7 +534,7 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
     </div>
 
     {/* Quiz Modal - OUTSIDE relative container */}
-    {showQuizModal && allQuestions.length > 0 && (
+    {showQuizModal && (
       <>
       <div style={{
         position: 'fixed',
@@ -596,7 +596,7 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
             />
           </button>
 
-          {/* Quiz Interface */}
+          {/* Quiz Interface or Loading State */}
           {allQuestions.length > 0 && currentQuestionIndex < allQuestions.length ? (
             <>
               <style>{`
@@ -662,8 +662,30 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
               </div>
             </>
           ) : (
-            <div style={{ color: '#F18A21', textAlign: 'center', padding: '20px' }}>
-              ⏳ جاري تحميل...
+            <div style={{ 
+              color: '#F18A21', 
+              textAlign: 'center', 
+              padding: '40px 20px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '15px'
+            }}>
+              <div style={{
+                width: '50px',
+                height: '50px',
+                border: '4px solid #F18A21',
+                borderTop: '4px solid transparent',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }} />
+              <span style={{
+                fontSize: '16px',
+                fontWeight: 'bold',
+                fontFamily: theme.typography.fonts.primary
+              }}>
+                جاري تحميل الأسئلة...
+              </span>
             </div>
           )}
         </div>
