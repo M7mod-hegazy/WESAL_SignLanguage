@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { register, loginGoogle } from '../../services/authService';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const RegisterPage = () => {
   const [email, setEmail] = useState('');
@@ -11,6 +12,7 @@ const RegisterPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { loginAsGuest } = useAuth();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -98,6 +100,11 @@ const RegisterPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGuestLogin = () => {
+    loginAsGuest();
+    navigate('/home');
   };
 
   return (
@@ -208,6 +215,18 @@ const RegisterPage = () => {
           🔍 التسجيل بجوجل
         </button>
 
+        <div style={styles.divider}>
+          <span>أو جرب أولاً</span>
+        </div>
+
+        <button 
+          onClick={handleGuestLogin}
+          style={styles.guestButton}
+          disabled={loading}
+        >
+          👤 العب كضيف
+        </button>
+
         <p style={styles.footer}>
           لديك حساب بالفعل؟ <a href="/login" style={styles.link}>تسجيل الدخول</a>
         </p>
@@ -295,6 +314,20 @@ const styles = {
   },
   googleButton: {
     background: '#DB4437'
+  },
+  guestButton: {
+    padding: '15px',
+    fontSize: '18px',
+    fontFamily: 'Harmattan, sans-serif',
+    fontWeight: 'bold',
+    background: '#F6B03F',
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    transition: 'background 0.3s',
+    width: '100%',
+    marginTop: '15px'
   },
   footer: {
     textAlign: 'center',
