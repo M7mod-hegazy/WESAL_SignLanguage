@@ -79,9 +79,9 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     const startTime = performance.now();
     setPostsLoading(true);
     try {
-      // Get auth token if user is logged in
+      // Get auth token if user is logged in (but not if guest)
       const headers = {};
-      if (user) {
+      if (user && user.getIdToken) {
         const tokenStart = performance.now();
         const token = await user.getIdToken();
         console.log(`⏱️ [FRONTEND] Token fetch: ${(performance.now() - tokenStart).toFixed(0)}ms`);
@@ -167,9 +167,9 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     
     setLoadingMore(true);
     try {
-      // Get auth token if user is logged in
+      // Get auth token if user is logged in (but not if guest)
       const headers = {};
-      if (user) {
+      if (user && user.getIdToken) {
         const token = await user.getIdToken();
         headers.Authorization = `Bearer ${token}`;
       }
@@ -355,6 +355,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     
     // Send to MongoDB (use actualPostId for shared posts)
     try {
+      if (!user || !user.getIdToken) return; // Skip for guests
       const token = await user.getIdToken();
       const response = await axios.post(
         `${API_BASE_URL}/posts/${actualPostId}/like`,
@@ -468,6 +469,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     
     // Send to MongoDB (use actualPostId for shared posts)
     try {
+      if (!user || !user.getIdToken) return; // Skip for guests
       const token = await user.getIdToken();
       const response = await axios.post(
         `${API_BASE_URL}/posts/${actualPostId}/comment`,
@@ -557,6 +559,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     
     // Send to MongoDB (use actualPostId for shared posts)
     try {
+      if (!user || !user.getIdToken) return; // Skip for guests
       const token = await user.getIdToken();
       const response = await axios.post(
         `${API_BASE_URL}/posts/${actualPostId}/save`,
@@ -673,6 +676,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     
     // Save shared post to MongoDB
     try {
+      if (!user || !user.getIdToken) return; // Skip for guests
       const token = await user.getIdToken();
       console.log('🔄 [Share] Original post media:', originalPost.media);
       
@@ -787,6 +791,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     }
 
     try {
+      if (!user || !user.getIdToken) return; // Skip for guests
       const token = await user.getIdToken();
 
       // Use FormData to send files
@@ -895,6 +900,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
     
     // Try to delete from MongoDB
     try {
+      if (!user || !user.getIdToken) return; // Skip for guests
       const token = await user.getIdToken();
       const response = await axios.delete(
         `${API_BASE_URL}/posts/${postId}`,

@@ -5,16 +5,18 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage, auth } from '../config/firebase';
 import theme from '../theme/designSystem';
 import axios from 'axios';
+import guestStorage from '../utils/guestStorage';
 
 const EditProfilePage = ({ onBack, onSave }) => {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   
   // Initialize form data
   const [formData, setFormData] = useState({
     displayName: user?.displayName || '',
     username: user?.email?.split('@')[0] || '',
     email: user?.email || '',
-    phone: user?.phoneNumber || ''
+    phone: user?.phoneNumber || '',
+    gender: user?.gender || 'male'
   });
 
   const [photoFile, setPhotoFile] = useState(null);
@@ -51,6 +53,29 @@ const EditProfilePage = ({ onBack, onSave }) => {
     
     setSaving(true);
     try {
+      // For guest users, just save to localStorage
+      if (isGuest) {
+        const guestUser = guestStorage.getUser();
+        guestStorage.setUser({
+          ...guestUser,
+          displayName: formData.displayName,
+          gender: formData.gender
+        });
+        
+        if (onSave) {
+          onSave({
+            ...formData,
+            photoURL: photoURL
+          });
+        }
+        
+        alert('تم حفظ التغييرات بنجاح!');
+        if (onBack) {
+          onBack();
+        }
+        return;
+      }
+
       let newPhotoURL = photoURL;
 
       // Upload photo to Firebase Storage if changed
@@ -102,7 +127,8 @@ const EditProfilePage = ({ onBack, onSave }) => {
         await axios.post('http://localhost:8000/api/auth/verify', {
           displayName: formData.displayName,
           photoURL: newPhotoURL,
-          email: formData.email
+          email: formData.email,
+          gender: formData.gender
         }, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -467,6 +493,101 @@ const EditProfilePage = ({ onBack, onSave }) => {
               </label>
             </div>
           )}
+
+          {/* Gender Selection */}
+          <div style={{
+            background: '#FFE8CC',
+            borderRadius: '15px',
+            padding: '15px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div style={{
+              display: 'flex',
+              gap: '10px',
+              flex: 1
+            }}>
+              {/* Female Option */}
+              <button
+                onClick={() => handleInputChange('gender', 'female')}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  border: `2px solid ${formData.gender === 'female' ? theme.colors.primary.orange : '#E8D5C4'}`,
+                  borderRadius: '10px',
+                  background: formData.gender === 'female' ? 'linear-gradient(135deg, #FFF9F0 0%, #FFFFFF 100%)' : '#FFFFFF',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '5px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  color: theme.colors.primary.blue,
+                  fontFamily: theme.typography.fonts.primary,
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <img 
+                  src="/pages/home_femaleIcon.png"
+                  alt="Female"
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    objectFit: 'cover'
+                  }}
+                />
+                أنثى
+              </button>
+
+              {/* Male Option */}
+              <button
+                onClick={() => handleInputChange('gender', 'male')}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  border: `2px solid ${formData.gender === 'male' ? theme.colors.primary.orange : '#E8D5C4'}`,
+                  borderRadius: '10px',
+                  background: formData.gender === 'male' ? theme.colors.primary.orange : '#FFFFFF',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '5px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  color: formData.gender === 'male' ? '#FFFFFF' : theme.colors.primary.blue,
+                  fontFamily: theme.typography.fonts.primary,
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <img 
+                  src="/pages/home_maleIcon.png"
+                  alt="Male"
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    filter: formData.gender === 'male' ? 'brightness(1.2)' : 'none'
+                  }}
+                />
+                ذكر
+              </button>
+            </div>
+            <label style={{
+              fontSize: '14px',
+              color: theme.colors.primary.blue,
+              fontFamily: theme.typography.fonts.secondary,
+              fontWeight: 'bold',
+              marginLeft: '15px',
+              whiteSpace: 'nowrap'
+            }}>
+              الأيقونة
+            </label>
+          </div>
         </div>
       </div>
     </div>

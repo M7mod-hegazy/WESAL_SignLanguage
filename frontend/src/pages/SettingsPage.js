@@ -6,12 +6,13 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import theme from '../theme/designSystem';
 import BottomNav from '../components/BottomNav';
+import guestStorage from '../utils/guestStorage';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '/api';
 
 const SettingsPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isGuest, logoutGuest } = useAuth();
   const [videoSpeed, setVideoSpeed] = useState(() => {
     return parseFloat(localStorage.getItem('videoSpeed')) || 1;
   });
@@ -48,7 +49,19 @@ const SettingsPage = () => {
   const handleGenderChange = async (selectedGender) => {
     setGender(selectedGender);
     
-    // Save to MongoDB
+    // For guests, save to localStorage
+    if (isGuest) {
+      const guestUser = guestStorage.getUser();
+      guestStorage.setUser({
+        ...guestUser,
+        gender: selectedGender
+      });
+      alert(`✅ تم تغيير الأيقونة إلى ${selectedGender === 'male' ? 'ذكر' : 'أنثى'}`);
+      window.location.reload();
+      return;
+    }
+    
+    // Save to MongoDB for registered users
     try {
       const token = await user.getIdToken();
       console.log('🔄 [Gender] Updating gender to:', selectedGender);

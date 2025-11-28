@@ -18,6 +18,8 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeUsername, setWelcomeUsername] = useState('');
+  const [showGenderSelection, setShowGenderSelection] = useState(false);
+  const [guestGender, setGuestGender] = useState('');
 
   const handleSubmit = async () => {
     setError('');
@@ -430,10 +432,7 @@ const AuthPage = () => {
 
         {/* Guest Login Button */}
         <button
-          onClick={() => {
-            loginAsGuest();
-            navigate('/home');
-          }}
+          onClick={() => setShowGenderSelection(true)}
           disabled={loading}
           style={{
             width: '100%',
@@ -572,6 +571,183 @@ const AuthPage = () => {
       </div>
       </div>
     </div>
+
+    {/* Guest Gender Selection Modal */}
+    {showGenderSelection && (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10000
+      }}>
+        <div style={{
+          background: theme.colors.background.cream,
+          borderRadius: '20px',
+          padding: '40px 30px',
+          maxWidth: '500px',
+          width: '90%',
+          textAlign: 'center',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
+        }}>
+          <h2 style={{
+            fontSize: '24px',
+            fontWeight: theme.typography.weights.bold,
+            color: theme.colors.primary.blue,
+            margin: '0 0 10px 0',
+            fontFamily: theme.typography.fonts.primary
+          }}>
+            اختر الأيقونة
+          </h2>
+          <p style={{
+            fontSize: '14px',
+            color: theme.colors.text.secondary,
+            margin: '0 0 30px 0',
+            fontFamily: theme.typography.fonts.secondary
+          }}>
+            اختر الأيقونة التي تفضلها
+          </p>
+
+          {/* Gender Options */}
+          <div style={{
+            display: 'flex',
+            gap: '20px',
+            justifyContent: 'center',
+            marginBottom: '30px'
+          }}>
+            {/* Female Option */}
+            <button
+              onClick={() => {
+                setGuestGender('female');
+                loginAsGuest('female');
+                navigate('/home');
+              }}
+              style={{
+                flex: 1,
+                padding: '30px 20px',
+                border: `3px solid ${guestGender === 'female' ? theme.colors.primary.orange : '#E8D5C4'}`,
+                borderRadius: '15px',
+                background: guestGender === 'female' ? 'linear-gradient(135deg, #FFF9F0 0%, #FFFFFF 100%)' : '#FFFFFF',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '15px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <img 
+                src="/pages/home_femaleIcon.png"
+                alt="Female"
+                style={{
+                  width: '60px',
+                  height: '60px',
+                  borderRadius: '50%',
+                  objectFit: 'cover'
+                }}
+              />
+              <span style={{
+                fontSize: '16px',
+                fontWeight: theme.typography.weights.bold,
+                color: theme.colors.primary.blue,
+                fontFamily: theme.typography.fonts.primary
+              }}>
+                أنثى
+              </span>
+            </button>
+
+            {/* Male Option */}
+            <button
+              onClick={() => {
+                setGuestGender('male');
+                loginAsGuest('male');
+                navigate('/home');
+              }}
+              style={{
+                flex: 1,
+                padding: '30px 20px',
+                border: `3px solid ${guestGender === 'male' ? theme.colors.primary.orange : '#E8D5C4'}`,
+                borderRadius: '15px',
+                background: guestGender === 'male' ? theme.colors.primary.orange : '#FFFFFF',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '15px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <img 
+                src="/pages/home_maleIcon.png"
+                alt="Male"
+                style={{
+                  width: '60px',
+                  height: '60px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  filter: guestGender === 'male' ? 'brightness(1.2)' : 'none'
+                }}
+              />
+              <span style={{
+                fontSize: '16px',
+                fontWeight: theme.typography.weights.bold,
+                color: guestGender === 'male' ? '#FFFFFF' : theme.colors.primary.blue,
+                fontFamily: theme.typography.fonts.primary
+              }}>
+                ذكر
+              </span>
+            </button>
+          </div>
+
+          {/* Cancel Button */}
+          <button
+            onClick={() => setShowGenderSelection(false)}
+            style={{
+              width: '100%',
+              padding: '12px 20px',
+              background: '#E8E8E8',
+              color: '#666',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: theme.typography.weights.bold,
+              cursor: 'pointer',
+              fontFamily: theme.typography.fonts.primary,
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = '#D0D0D0';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = '#E8E8E8';
+            }}
+          >
+            إلغاء
+          </button>
+        </div>
+      </div>
+    )}
     </>
   );
 };

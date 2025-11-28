@@ -36,13 +36,14 @@ export const guestStorage = {
     localStorage.removeItem(`${GUEST_PREFIX}coins`);
   },
 
-  // Create new guest user
-  createGuest: () => {
+  // Create new guest user with optional gender
+  createGuest: (gender = 'male') => {
     const guestUser = {
       uid: `guest_${Date.now()}`,
       displayName: 'ضيف',
       email: null,
       isGuest: true,
+      gender: gender,
       createdAt: new Date().toISOString()
     };
     guestStorage.setUser(guestUser);

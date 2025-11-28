@@ -133,8 +133,8 @@ export const AuthProvider = ({ children }) => {
     return true;
   };
 
-  const loginAsGuest = () => {
-    const guestUser = guestStorage.createGuest();
+  const loginAsGuest = (gender = 'male') => {
+    const guestUser = guestStorage.createGuest(gender);
     setUser(guestUser);
     setCoins(100);
     setIsGuest(true);
