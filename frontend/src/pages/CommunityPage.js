@@ -16,7 +16,7 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
 
 const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreateStory }) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const [posts, setPosts] = useState([]);
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +36,7 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryImages, setGalleryImages] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showGuestWarning, setShowGuestWarning] = useState(false);
 
   // Helper function to get user profile stats (for profile page)
   const getUserProfileStats = useCallback(() => {
@@ -1062,7 +1063,13 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
             }}>
               {/* Add Story Button */}
               <button
-                onClick={() => setShowCreateStory(true)}
+                onClick={() => {
+                  if (isGuest) {
+                    setShowGuestWarning(true);
+                  } else {
+                    setShowCreateStory(true);
+                  }
+                }}
                 style={{
                   background: 'transparent',
                   border: `3px solid ${theme.colors.primary.orange}`,
@@ -1070,15 +1077,16 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                   width: '60px',
                   height: '60px',
                   padding: 0,
-                  cursor: 'pointer',
+                  cursor: isGuest ? 'not-allowed' : 'pointer',
                   flexShrink: 0,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  transition: 'transform 0.2s ease'
+                  transition: 'transform 0.2s ease',
+                  opacity: isGuest ? 0.6 : 1
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.05)';
+                  !isGuest && (e.currentTarget.style.transform = 'scale(1.05)');
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';
@@ -1209,7 +1217,13 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
 
           {/* Post Creation Card - Clickable */}
           <div 
-            onClick={() => setShowCreatePost(true)}
+            onClick={() => {
+              if (isGuest) {
+                setShowGuestWarning(true);
+              } else {
+                setShowCreatePost(true);
+              }
+            }}
             style={{
             border: `2px solid ${theme.colors.primary.orange}`,
             borderRadius: '20px',
@@ -1839,18 +1853,25 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
               }}>
                 {/* Like Button */}
                 <button 
-                  onClick={() => handleLike(post.id)}
+                  onClick={() => {
+                    if (isGuest) {
+                      setShowGuestWarning(true);
+                    } else {
+                      handleLike(post.id);
+                    }
+                  }}
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    cursor: 'pointer',
+                    cursor: isGuest ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
                     transition: 'transform 0.2s ease',
-                    padding: '5px'
+                    padding: '5px',
+                    opacity: isGuest ? 0.6 : 1
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15)'}
+                  onMouseEnter={(e) => !isGuest && (e.currentTarget.style.transform = 'scale(1.15)')}
                   onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" 
@@ -1867,18 +1888,25 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
 
                 {/* Comment Button */}
                 <button 
-                  onClick={() => setShowComments({...showComments, [post.id]: !showComments[post.id]})}
+                  onClick={() => {
+                    if (isGuest) {
+                      setShowGuestWarning(true);
+                    } else {
+                      setShowComments({...showComments, [post.id]: !showComments[post.id]});
+                    }
+                  }}
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    cursor: 'pointer',
+                    cursor: isGuest ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
                     transition: 'transform 0.2s ease',
-                    padding: '5px'
+                    padding: '5px',
+                    opacity: isGuest ? 0.6 : 1
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15)'}
+                  onMouseEnter={(e) => !isGuest && (e.currentTarget.style.transform = 'scale(1.15)')}
                   onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="2" y="4" width="20" height="14" rx="3" 
@@ -1896,18 +1924,25 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
                 {/* Share Button - Hide for shared posts */}
                 {!post.isShared && !post.sharedBy && (
                   <button 
-                    onClick={() => handleShare(post.id)}
+                    onClick={() => {
+                      if (isGuest) {
+                        setShowGuestWarning(true);
+                      } else {
+                        handleShare(post.id);
+                      }
+                    }}
                     style={{
                       background: 'transparent',
                       border: 'none',
-                      cursor: 'pointer',
+                      cursor: isGuest ? 'not-allowed' : 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
                       transition: 'transform 0.2s ease',
-                      padding: '5px'
+                      padding: '5px',
+                      opacity: isGuest ? 0.6 : 1
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15)'}
+                    onMouseEnter={(e) => !isGuest && (e.currentTarget.style.transform = 'scale(1.15)')}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <circle cx="18" cy="5" r="3" 
@@ -1933,18 +1968,25 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
 
                 {/* Save Button */}
                 <button 
-                  onClick={() => handleSave(post.id)}
+                  onClick={() => {
+                    if (isGuest) {
+                      setShowGuestWarning(true);
+                    } else {
+                      handleSave(post.id);
+                    }
+                  }}
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    cursor: 'pointer',
+                    cursor: isGuest ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
                     transition: 'transform 0.2s ease',
-                    padding: '5px'
+                    padding: '5px',
+                    opacity: isGuest ? 0.6 : 1
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15)'}
+                  onMouseEnter={(e) => !isGuest && (e.currentTarget.style.transform = 'scale(1.15)')}
                   onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" 
@@ -2410,6 +2452,84 @@ const CommunityPage = ({ onBack, onHome, onNotifications, onCreatePost, onCreate
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Guest Warning Modal */}
+      {showGuestWarning && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: '#FFFFFF',
+            borderRadius: '16px',
+            padding: '30px',
+            maxWidth: '300px',
+            textAlign: 'center',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+          }}>
+            <h2 style={{
+              color: '#F18A21',
+              fontSize: '20px',
+              fontWeight: 'bold',
+              marginBottom: '15px',
+              fontFamily: theme.typography.fonts.primary
+            }}>إنشاء منشور</h2>
+            <p style={{
+              color: '#666',
+              fontSize: '14px',
+              marginBottom: '20px',
+              fontFamily: theme.typography.fonts.secondary
+            }}>يجب عليك إنشاء حساب لمشاركة المنشورات مع المجتمع.</p>
+            <div style={{
+              display: 'flex',
+              gap: '10px',
+              justifyContent: 'center'
+            }}>
+              <button
+                onClick={() => setShowGuestWarning(false)}
+                style={{
+                  background: '#E0E0E0',
+                  color: '#333',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontFamily: theme.typography.fonts.primary
+                }}
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={() => {
+                  setShowGuestWarning(false);
+                  navigate('/auth');
+                }}
+                style={{
+                  background: '#F18A21',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontFamily: theme.typography.fonts.primary
+                }}
+              >
+                سجل الآن
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

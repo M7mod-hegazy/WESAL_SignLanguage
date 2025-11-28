@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import theme from '../theme/designSystem';
 import BottomNav from '../components/BottomNav';
 import QuizInterface from '../components/QuizInterface';
@@ -8,6 +9,7 @@ import { getAllQuestionsRandomized } from '../data/quizData';
 const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, onNotifications }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isGuest } = useAuth();
   
   // Get players from either props (when used as component) or location state (when used as route)
   const players = propPlayers || location.state?.players || [];
@@ -20,6 +22,7 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
   const [showQuizModal, setShowQuizModal] = useState(false);
   const [allQuestions, setAllQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [showGuestWarning, setShowGuestWarning] = useState(false);
   const colors = ['#F8B817', '#F18A21']; // Yellow and Orange alternating
 
   // Load quiz questions when modal opens
@@ -359,7 +362,11 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
             <button
               onClick={() => {
                 if (selectedPlayer) {
-                  setShowQuizModal(true);
+                  if (isGuest) {
+                    setShowGuestWarning(true);
+                  } else {
+                    setShowQuizModal(true);
+                  }
                 }
               }}
               disabled={!selectedPlayer || isSpinning}
@@ -661,6 +668,84 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
           )}
         </div>
       </div>
+
+      {/* Guest Warning Modal */}
+      {showGuestWarning && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: '#FFFFFF',
+            borderRadius: '16px',
+            padding: '30px',
+            maxWidth: '300px',
+            textAlign: 'center',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+          }}>
+            <h2 style={{
+              color: '#F18A21',
+              fontSize: '20px',
+              fontWeight: 'bold',
+              marginBottom: '15px',
+              fontFamily: theme.typography.fonts.primary
+            }}>تحدي الفريق</h2>
+            <p style={{
+              color: '#666',
+              fontSize: '14px',
+              marginBottom: '20px',
+              fontFamily: theme.typography.fonts.secondary
+            }}>تحدي الفريق متاح فقط للمستخدمين المسجلين. يرجى إنشاء حساب لتشغيل هذه الميزة.</p>
+            <div style={{
+              display: 'flex',
+              gap: '10px',
+              justifyContent: 'center'
+            }}>
+              <button
+                onClick={() => setShowGuestWarning(false)}
+                style={{
+                  background: '#E0E0E0',
+                  color: '#333',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontFamily: theme.typography.fonts.primary
+                }}
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={() => {
+                  setShowGuestWarning(false);
+                  navigate('/register');
+                }}
+                style={{
+                  background: '#F18A21',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontFamily: theme.typography.fonts.primary
+                }}
+              >
+                سجل الآن
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </>
     )}
     </>

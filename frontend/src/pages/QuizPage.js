@@ -67,8 +67,8 @@ const QuizPage = () => {
         addCoins(50);
       }
       
-      // Increment challenges counter ONLY in solo mode (not team mode)
-      if (mode === 'solo' && user?.uid) {
+      // Increment challenges counter ONLY in solo mode (not team mode) and NOT for guests
+      if (mode === 'solo' && user?.uid && !user?.isGuest) {
         try {
           await incrementChallengesCount(user.uid);
         } catch (error) {

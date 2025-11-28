@@ -9,7 +9,7 @@ import { getDefaultProfileIcon } from '../utils/getProfileIcon';
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { user, coins } = useAuth();
+  const { user, coins, isGuest, logoutGuest } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,11 @@ const HomePage = () => {
   const handleLogout = async () => {
     if (window.confirm('هل أنت متأكد من تسجيل الخروج؟')) {
       try {
-        await signOut(auth);
+        if (isGuest) {
+          logoutGuest();
+        } else {
+          await signOut(auth);
+        }
         navigate('/');
       } catch (error) {
         console.error('Logout error:', error);

@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { login, register, loginGoogle, loginFacebook, loginTwitter } from '../services/authService';
 import WelcomeNotification from '../components/WelcomeNotification';
 import theme from '../theme/designSystem';
+import { useAuth } from '../contexts/AuthContext';
 
 const AuthPage = () => {
   const navigate = useNavigate();
+  const { loginAsGuest } = useAuth();
   const [activeTab, setActiveTab] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -426,6 +428,40 @@ const AuthPage = () => {
           {activeTab === 'login' ? 'سجل الدخول' : 'سجل الآن'}
         </button>
 
+        {/* Guest Login Button */}
+        <button
+          onClick={() => {
+            loginAsGuest();
+            navigate('/home');
+          }}
+          disabled={loading}
+          style={{
+            width: '100%',
+            padding: '16px 40px',
+            background: '#F6B03F',
+            color: theme.colors.text.white,
+            border: 'none',
+            borderRadius: '50px',
+            fontSize: '18px',
+            fontWeight: theme.typography.weights.bold,
+            fontFamily: theme.typography.fonts.primary,
+            cursor: 'pointer',
+            boxShadow: '0 6px 20px rgba(246, 176, 63, 0.4)',
+            transition: 'all 0.3s ease',
+            marginTop: '12px'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.boxShadow = '0 8px 25px rgba(246, 176, 63, 0.5)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = '0 6px 20px rgba(246, 176, 63, 0.4)';
+          }}
+        >
+          👤 العب كضيف
+        </button>
+
         {/* Divider */}
         <div style={{
           textAlign: 'center',
@@ -434,7 +470,26 @@ const AuthPage = () => {
           fontSize: '14px'
         }}>
           {activeTab === 'login' 
-            ? 'أو لم يكن لديك حساب؟ سجل الآن' 
+            ? (
+              <>
+                أو لم يكن لديك حساب؟{' '}
+                <button
+                  onClick={() => setActiveTab('signup')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: theme.colors.primary.orange,
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    fontFamily: theme.typography.fonts.primary,
+                    textDecoration: 'underline'
+                  }}
+                >
+                  سجل الآن
+                </button>
+              </>
+            )
             : 'أو سجل الدخول باستخدام:'}
         </div>
 
