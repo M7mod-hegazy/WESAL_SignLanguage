@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import theme from '../theme/designSystem';
 import BottomNav from '../components/BottomNav';
 import QuizInterface from '../components/QuizInterface';
@@ -9,7 +8,6 @@ import { getAllQuestionsRandomized } from '../data/quizData';
 const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, onNotifications }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isGuest } = useAuth();
   
   // Get players from either props (when used as component) or location state (when used as route)
   const players = propPlayers || location.state?.players || [];
@@ -25,14 +23,16 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
   const [showGuestWarning, setShowGuestWarning] = useState(false);
   const colors = ['#F8B817', '#F18A21']; // Yellow and Orange alternating
 
-  // Load quiz questions when modal opens
+  // Load random quiz question when modal opens
   useEffect(() => {
-    console.log('🎯 [TeamSpinPage] useEffect triggered - showQuizModal:', showQuizModal, 'allQuestions.length:', allQuestions.length);
     if (showQuizModal && allQuestions.length === 0) {
-      console.log('📝 [TeamSpinPage] Loading quiz questions...');
-      const questions = getAllQuestionsRandomized('team');
-      console.log('✅ [TeamSpinPage] Questions loaded:', questions.length, 'questions');
-      setAllQuestions(questions);
+      // Get all available questions
+      const allAvailableQuestions = getAllQuestionsRandomized('team');
+      // Pick a random one
+      const randomIndex = Math.floor(Math.random() * allAvailableQuestions.length);
+      const randomQuestion = allAvailableQuestions[randomIndex];
+      // Set only this random question
+      setAllQuestions([randomQuestion]);
       setCurrentQuestionIndex(0);
     }
   }, [showQuizModal, allQuestions.length]);
@@ -364,14 +364,8 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
             {/* Start Challenge Button */}
             <button
               onClick={() => {
-                console.log('🔘 [TeamSpinPage] "لمعرفة التحدي" button clicked');
-                console.log('📊 [TeamSpinPage] selectedPlayer:', selectedPlayer);
-                console.log('👤 [TeamSpinPage] isGuest:', isGuest);
                 if (selectedPlayer) {
-                  console.log('✅ [TeamSpinPage] Opening quiz modal for all users (including guests)');
                   setShowQuizModal(true);
-                } else {
-                  console.log('❌ [TeamSpinPage] No player selected');
                 }
               }}
               disabled={!selectedPlayer || isSpinning}
@@ -541,7 +535,6 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
     {/* Quiz Modal - OUTSIDE relative container */}
     {showQuizModal && (
       <>
-      {console.log('🎬 [TeamSpinPage] Rendering quiz modal - showQuizModal:', showQuizModal, 'allQuestions.length:', allQuestions.length)}
       <div style={{
         position: 'fixed',
         top: 0,
