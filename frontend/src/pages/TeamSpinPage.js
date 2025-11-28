@@ -27,12 +27,15 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
 
   // Load quiz questions when modal opens
   useEffect(() => {
+    console.log('🎯 [TeamSpinPage] useEffect triggered - showQuizModal:', showQuizModal, 'allQuestions.length:', allQuestions.length);
     if (showQuizModal && allQuestions.length === 0) {
+      console.log('📝 [TeamSpinPage] Loading quiz questions...');
       const questions = getAllQuestionsRandomized('team');
+      console.log('✅ [TeamSpinPage] Questions loaded:', questions.length, 'questions');
       setAllQuestions(questions);
       setCurrentQuestionIndex(0);
     }
-  }, [showQuizModal]);
+  }, [showQuizModal, allQuestions.length]);
 
   const handleSpin = () => {
     if (isSpinning) return;
@@ -361,12 +364,14 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
             {/* Start Challenge Button */}
             <button
               onClick={() => {
+                console.log('🔘 [TeamSpinPage] "لمعرفة التحدي" button clicked');
+                console.log('📊 [TeamSpinPage] selectedPlayer:', selectedPlayer);
+                console.log('👤 [TeamSpinPage] isGuest:', isGuest);
                 if (selectedPlayer) {
-                  if (isGuest) {
-                    setShowGuestWarning(true);
-                  } else {
-                    setShowQuizModal(true);
-                  }
+                  console.log('✅ [TeamSpinPage] Opening quiz modal for all users (including guests)');
+                  setShowQuizModal(true);
+                } else {
+                  console.log('❌ [TeamSpinPage] No player selected');
                 }
               }}
               disabled={!selectedPlayer || isSpinning}
@@ -536,6 +541,7 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
     {/* Quiz Modal - OUTSIDE relative container */}
     {showQuizModal && (
       <>
+      {console.log('🎬 [TeamSpinPage] Rendering quiz modal - showQuizModal:', showQuizModal, 'allQuestions.length:', allQuestions.length)}
       <div style={{
         position: 'fixed',
         top: 0,
