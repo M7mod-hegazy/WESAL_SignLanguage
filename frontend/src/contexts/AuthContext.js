@@ -3,6 +3,7 @@ import { auth } from '../config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
+import guestStorage from '../utils/guestStorage';
 
 const AuthContext = createContext();
 
@@ -18,8 +19,19 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [coins, setCoins] = useState(100);
   const [loading, setLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
+    // Check if guest user exists in localStorage first
+    const guestUser = guestStorage.getUser();
+    if (guestUser) {
+      setUser(guestUser);
+      setCoins(guestStorage.getCoins());
+      setIsGuest(true);
+      setLoading(false);
+      return;
+    }
+
     // Listen to Firebase auth state changes
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -30,9 +42,11 @@ export const AuthProvider = ({ children }) => {
           displayName: firebaseUser.displayName,
           photoURL: firebaseUser.photoURL,
           gender: 'male', // Default, will be updated from backend
+          isGuest: false,
           getIdToken: () => firebaseUser.getIdToken()
         };
         setUser(userData);
+        setIsGuest(false);
         
         try {
           // Try to get user data from backend
@@ -67,6 +81,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         setUser(null);
         setCoins(100);
+        setIsGuest(false);
       }
       setLoading(false);
     });
@@ -78,7 +93,13 @@ export const AuthProvider = ({ children }) => {
     console.log('💰 updateCoins called:', newCoins);
     setCoins(newCoins);
     
-    // Save to backend
+    // For guest users, save to localStorage
+    if (user?.isGuest) {
+      guestStorage.setCoins(newCoins);
+      return;
+    }
+    
+    // Save to backend for registered users
     if (user && user.getIdToken) {
       try {
         const token = await user.getIdToken();
@@ -112,13 +133,30 @@ export const AuthProvider = ({ children }) => {
     return true;
   };
 
+  const loginAsGuest = () => {
+    const guestUser = guestStorage.createGuest();
+    setUser(guestUser);
+    setCoins(100);
+    setIsGuest(true);
+  };
+
+  const logoutGuest = () => {
+    guestStorage.clearGuest();
+    setUser(null);
+    setCoins(100);
+    setIsGuest(false);
+  };
+
   const value = {
     user,
     coins,
     loading,
+    isGuest,
     updateCoins,
     addCoins,
-    subtractCoins
+    subtractCoins,
+    loginAsGuest,
+    logoutGuest
   };
 
   return (

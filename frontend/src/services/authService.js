@@ -246,4 +246,10 @@ export const onAuthStateChange = (callback) => {
   });
 };
 
+// Guest login (handled in AuthContext, this is just a placeholder for consistency)
+export const loginAsGuest = () => {
+  // Guest login is handled in AuthContext.js via loginAsGuest function
+  return Promise.resolve({ isGuest: true });
+};
+
 export { api };

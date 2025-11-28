@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { login, loginGoogle, loginFacebook, loginTwitter } from '../../services/authService';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -8,6 +9,7 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { loginAsGuest } = useAuth();
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
@@ -137,6 +139,11 @@ const LoginPage = () => {
     }
   };
 
+  const handleGuestLogin = () => {
+    loginAsGuest();
+    navigate('/home');
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.card}>
@@ -203,6 +210,18 @@ const LoginPage = () => {
             🐦 تسجيل الدخول بتويتر
           </button>
         </div>
+
+        <div style={styles.divider}>
+          <span>أو العب كضيف</span>
+        </div>
+
+        <button 
+          onClick={handleGuestLogin}
+          style={styles.guestButton}
+          disabled={loading}
+        >
+          👤 العب كضيف
+        </button>
 
         <p style={styles.footer}>
           ليس لديك حساب؟ <a href="/register" style={styles.link}>إنشاء حساب</a>
@@ -301,6 +320,20 @@ const styles = {
   },
   twitterButton: {
     background: '#1DA1F2'
+  },
+  guestButton: {
+    padding: '15px',
+    fontSize: '18px',
+    fontFamily: 'Harmattan, sans-serif',
+    fontWeight: 'bold',
+    background: '#F6B03F',
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    transition: 'background 0.3s',
+    width: '100%',
+    marginTop: '15px'
   },
   footer: {
     textAlign: 'center',
