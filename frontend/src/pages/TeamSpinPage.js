@@ -25,7 +25,7 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
 
   // Load random quiz question when modal opens
   useEffect(() => {
-    if (showQuizModal && allQuestions.length === 0) {
+    if (showQuizModal) {
       // Get all available questions
       const allAvailableQuestions = getAllQuestionsRandomized('team');
       // Pick a random one
@@ -34,8 +34,11 @@ const TeamSpinPage = ({ onBack, players: propPlayers, onStartChallenge, onHome, 
       // Set only this random question
       setAllQuestions([randomQuestion]);
       setCurrentQuestionIndex(0);
+    } else {
+      // Reset questions when modal closes
+      setAllQuestions([]);
     }
-  }, [showQuizModal, allQuestions.length]);
+  }, [showQuizModal]);
 
   const handleSpin = () => {
     if (isSpinning) return;
